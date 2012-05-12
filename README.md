@@ -27,3 +27,8 @@ Notifications:
 * Jabber
 * Email
 * other via plugins
+
+
+Credits
+=======
+Makes heavy use of tslought1r's bcmvc code.

@@ -1,0 +1,12 @@
+{application, kha,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { kha_app, []}},
+  {env, []}
+ ]}.
