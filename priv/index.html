@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<title>Template • BuildMVC</title>
+	<link rel="stylesheet" href="css/base.css">
+	<!-- CSS overrides - remove if you don't need it -->
+	<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+	<section id="buildapp">
+		<header id="header">
+			<h1>builds</h1>
+                        <form data-formfor-build="controllers.builds.emptyBuild" data-event-submit="controllers.builds.create">
+                          <input id="new-build" placeholder="What needs to be done?"
+                          data-bind="build.body" autofocus />
+                        </form>
+		</header>
+		<!-- This section should be hidden by default and shown when there are builds -->
+		<section id="main">
+			<input id="toggle-all" type="checkbox">
+			<label for="toggle-all">Mark all as complete</label>
+			<ul id="build-list">
+			  <!-- These are here just to show the structure of the list items -->
+			  <!-- List items should get the class
+			  `editing` when editing and `completed`
+			  when marked as completed -->
+                          <li data-foreach-build="Build.all"
+			      data-event-doubleclick="controllers.builds.edit"
+			      data-addclass-completed="build.isDone">
+			    <div class="view">
+			      <input class="toggle" type="checkbox" data-bind="build.isDone" data-event-change="build.save"/>
+			      <label data-bind="build.body"></label>
+			      <button class="destroy" data-event-click="build.destroy"></button>
+			    </div>
+                            <input data-bind-id="build.id" class="edit"
+                                   data-bind-value="build.body" data-event-submit="controllers.builds.update">
+			  </li>
+			</ul>
+		</section>
+		<!-- This footer should hidden by default and shown when there are builds -->
+		<footer id="footer">
+			<!-- This should be `0 items left` by default -->
+			<span id="build-count"><strong data-bind="Build.all.length"></strong> items left</span>
+			<!-- Remove this if you don't implement routing -->
+			<ul id="filters">
+				<li>
+					<a class="selected" href="#/">All</a>
+				</li>
+				<li>
+					<a href="#/active">Active</a>
+				</li>
+				<li>
+					<a href="#/completed">Completed</a>
+				</li>
+			</ul>
+			<button id="clear-completed">Clear completed
+			(<span data-bind="Build.done"></span>)</button>
+		</footer>
+	</section>
+	<footer id="info">
+		<p>Double-click to edit a build</p>
+		<p>Template by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>
+		<!-- Change this out with your name and url ↓ -->
+		<p>Created by <a href="http://github.com/tsloughter/bcmvc/">Tristan Sloughter</a></p>
+		<p>Part of <a href="http://buildmvc.com">BuildMVC</a></p>
+	</footer>
+	<script src="js/jquery-1.7.2.min.js"></script>
+	<script src="js/es5-shim.js"></script>
+	<script src="js/batman.js"></script>
+	<script src="js/batman.jquery.js"></script>
+	<!-- Scripts here. Don't remove this ↓ -->
+	<script src="js/kha.js"></script>
+</body>
+</html>
