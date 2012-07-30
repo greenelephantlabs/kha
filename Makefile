@@ -4,8 +4,11 @@ all: $(REBAR)
 	$(REBAR) get-deps
 	$(REBAR) compile
 
-fast:
+normal:
 	$(REBAR) compile
+
+fast:
+	$(REBAR) compile skip_deps=true
 
 clean:  $(REBAR)
 	$(REBAR) clean
