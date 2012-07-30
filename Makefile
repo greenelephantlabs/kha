@@ -1,7 +1,18 @@
-all:	rebar get-deps
-	rebar compile
+REBAR=$(shell which rebar || echo ./rebar)
 
-fast:	rebar compile
+all: $(REBAR)
+	$(REBAR) get-deps
+	$(REBAR) compile
+
+fast:
+	$(REBAR) compile
+
+clean:  $(REBAR)
+	$(REBAR) clean
+	make distclean
+
+tests:  $(REBAR)
+	$(REBAR) eunit
 
 ALL=    priv/coffee/app.js \
 	priv/models/build.js \
@@ -12,3 +23,16 @@ ALL=    priv/coffee/app.js \
 
 priv/js/kha.js: $(ALL)
 	cat $^ > $@
+
+
+# Detect or download rebar
+
+REBAR_URL=http://cloud.github.com/downloads/basho/rebar/rebar
+./rebar:
+	erl -noshell -s inets -s ssl \
+	-eval 'httpc:request(get, {"$(REBAR_URL)", []}, [], [{stream, "./rebar"}])' \
+		-s init stop
+	chmod +x ./rebar
+
+distclean:
+	rm -f ./rebar
