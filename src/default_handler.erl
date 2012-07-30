@@ -4,7 +4,6 @@
          handle/2,
          terminate/2]).
 
-%% -include_lib("alog/include/alog.hrl").
 
 init({_Any, http}, Req, []) ->
     {ok, Req, undefined}.
@@ -15,7 +14,7 @@ handle(Req, State) ->
                [] -> ["index.html"];
                _ -> Path0
            end,
-    FilePath = filename:join(Path),,
+    FilePath = filename:join(Path),
     {ok, Cwd} = file:get_cwd(),
     File = filename:join([Cwd, "priv", FilePath]),
     %% io:format("Request to file: ~p~n", [File]),
