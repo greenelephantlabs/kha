@@ -24,7 +24,34 @@
         notifications :: list(#notification())
     }
 
+## GET /project/<id>/build/<id>
+
+### Response
+
+    {
+        id            :: integer(),
+        project       :: integer(),
+        title         :: string(),
+        branch        :: string(),
+        revision      :: string(),
+        author        :: string(),
+        start         :: time(),
+        stop          :: time(),
+        exit          :: integer(),
+        output        :: list(string()),
+        tags          :: list(tag())
+    }
+
 ## POST /project/<id>/build
+
+### Variables
+
+    {
+        id     :: integer(),
+        branch :: string()
+    }
+
+### Response
 
     {
         project       :: integer(),
