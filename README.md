@@ -94,7 +94,3 @@ gproc:bcast/3
 Notifications
 * Notificators will be independent processes which will be getting
 broadcasts from builders/processes
-
-Credits
-=======
-Makes heavy use of tslought1r's bcmvc code.
