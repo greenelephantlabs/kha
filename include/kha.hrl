@@ -18,7 +18,8 @@
         }).
 
 -record(build,
-        {project       :: project_id(),
+        {id            :: {integer(), project_id()},
+         project       :: project_id(),
          title         :: string() | 'undefined',
          branch        :: string(),
          revision      :: string(),
