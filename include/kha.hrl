@@ -1,5 +1,5 @@
 -type project_id() :: integer().
--type time() :: {int(), int(), int()}.
+-type time() :: {integer(), integer(), integer()}.
 -type tag() :: string().
 -type command() :: string().
 
@@ -14,7 +14,7 @@
          local         :: filename:filename(), %% git clone remote local
          remote        :: string(),
          build         :: list(command()),
-         notifications :: list(#notification())
+         notifications :: list(#notification{})
         }).
 
 -record(build,
