@@ -1,9 +1,7 @@
-all: priv/js/kha.js
-	rebar get-deps
+all:	rebar get-deps
 	rebar compile
 
-fast: priv/js/kha.js
-	rebar compile
+fast:	rebar compile
 
 ALL=    priv/coffee/app.js \
 	priv/models/build.js \
