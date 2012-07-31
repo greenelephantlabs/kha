@@ -1,7 +1,7 @@
 %%% @author Paul Peter Flis <pawel@flycode.pl>
 %%% @copyright (C) 2012, Green Elephant Labs
 %%% @doc
-%%% Mnesia database 
+%%% Mnesia database
 %%% @end
 %%% Created : 30 Jul 2012 by Paul Peter Flis <pawel@flycode.pl>
 
@@ -28,9 +28,10 @@
          get_record/2,
          select/2,
          get_match_object/1,
-         
+         get_last/2,
+
          transaction/1,
-         
+
          get_current_id/1,
          get_next_id/1,
          get_next_id/2,
@@ -43,7 +44,7 @@ start() ->
     ok = mnesia:start().
 
 init() ->
-    ?LOG("Init mnesia", []),    
+    ?LOG("Init mnesia", []),
     case mnesia:create_schema([node()]) of
         {error, {_, {already_exists, _}}} ->
             ?LOG("Database already exists", []),
@@ -51,7 +52,7 @@ init() ->
         {error, Reason} ->
             ?LOG("Error: ~p", [Reason]);
         ok ->
-            start(),            
+            start(),
             init_sequences(),
             init_schema(),
             kha_project:create_fake()
@@ -65,7 +66,7 @@ init_sequences() ->
 
 init_schema() ->
     create_table(project),
-    create_table(build),
+    create_table(build, ordered_set),
     create_table(id_seq).
 
 create_table(Name) ->
@@ -153,7 +154,7 @@ get_current_id(Whose) ->
     mnesia:dirty_update_counter(id_seq, Whose, 0).
 
 get_next_id(Whose) ->
-    get_next_id(Whose, 1).   
+    get_next_id(Whose, 1).
 get_next_id(Whose, Step) ->
     mnesia:dirty_update_counter(id_seq, Whose, Step). %%GP: nie działa w tranzakcjach
 
@@ -163,7 +164,7 @@ update_current_id(Whose, Id) ->
     case Diff of
         X when 0<X ->
             get_next_id(Whose, X),
-            ok;        
+            ok;
         X when 0>=X ->
             ok
     end.
@@ -176,4 +177,21 @@ transaction(Fun) ->
             throw(X);
         {aborted, Error} ->
             {error, Error}
+    end.
+
+get_last(Table, N) ->
+    try transaction(fun() ->
+                            mnesia:foldr(fun(_, {A, C}) when C == N ->
+                                                 throw({A,C});
+                                            (R, {A, C}) ->
+                                                 {[R|A], C+1}
+                                         end, {[], 0}, Table)
+                    end) of
+        {ok, {A, _}} ->
+            {ok, lists:reverse(A)};
+        Error ->
+            Error
+    catch
+        throw:{A, N} ->
+            {ok, lists:reverse(A)}
     end.
