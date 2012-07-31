@@ -3,4 +3,6 @@ deps
 *.o
 *.beam
 *.plt
-/ebin/kha.app
+ebin/*
+erl_crash.dump
+*~
