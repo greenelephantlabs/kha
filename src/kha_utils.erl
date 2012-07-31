@@ -8,6 +8,10 @@
          i2b/1,
          b2i/1]).
 
+-export([headers/0]).
+
+-export([sh/1,
+         sh/2]).
 
 to_int(X) when is_binary(X) -> to_int(binary_to_list(X));
 to_int(X) when is_list(X) -> list_to_integer(X);
@@ -102,3 +106,38 @@ convert(_, bool) ->
 
 convert(Val, _) ->
     Val.
+
+headers() ->
+    [{<<"Content-Type">>, <<"application/json">>},
+     {<<"Cache-Control">>, <<"max-age=0, private">>},
+     {<<"Date">>, <<"Sun, 03 Jun 2012 16:31:11 GMT">>},
+     {<<"Expires">>, <<"Sun, 03 Jun 2012 16:31:10 GMT">>}].
+
+
+%% @doc Exec given command.
+%% @throws {exec_error, {Command, ErrCode, Output}}.
+-spec sh(list(), list()) -> list().
+sh(Command, Opts0) ->
+    Port = open_port({spawn, Command}, Opts0 ++ [
+        exit_status, {line, 255}, stderr_to_stdout
+    ]),
+
+    case sh_receive_loop(Port, []) of
+        {ok, Data} -> Data;
+        {error, {ErrCode, Output}} ->
+            throw({exec_error, {Command, ErrCode, Output}})
+    end.
+
+sh(Command) ->
+    sh(Command, []).
+
+sh_receive_loop(Port, Acc) ->
+    receive
+        {Port, {data, {eol, Line}}} -> sh_receive_loop(Port, [Line ++ "\n"|Acc]);
+        {Port, {data, {noeol, Line}}} ->
+            sh_receive_loop(Port, [Line|Acc]);
+        {Port, {exit_status, 0}} ->
+            {ok, lists:flatten(lists:reverse(Acc))};
+        {Port, {exit_status, E}} ->
+            {error, {E, lists:flatten(lists:reverse(Acc))}}
+    end.
