@@ -34,7 +34,7 @@
         <h2>Project {{projectId}}</h2>
         <h5>Total builds: {{getTotalBuilds()}}</h5>
         <table>
-          <tr ng-repeat="build in builds" class="build-{{build.status}}">
+          <tr ng-repeat="build in builds | orderBy:predicate:true" class="build-{{build.status}}">
             <td>{{build.id}}</td>
             <td>{{build.status}}</td>
             <td>{{build.branch}}</td>

@@ -25,6 +25,7 @@ function ProjectCtrl($scope, Project) {
 ProjectCtrl.$inject = ['$scope', 'Project'];
 
 function BuildCtrl($scope, Build) {
+    $scope.predicate = 'id';
     $scope.builds = [];
     $scope.$watch('projectId', function(newValue, oldValue) {
         $scope.builds = Build.query({projectId: $scope.projectId, id: ''});
