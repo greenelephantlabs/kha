@@ -28,7 +28,7 @@ handle(Req, State) ->
     %%     end,
     io:fwrite("URL: ~p~n~n", [Url0]),
     ResponseData = jsx:to_json([<<"a">>, <<"b">>]),
-    {ok, Req5} = cowboy_http_req:reply(Code,
+    {ok, Req5} = cowboy_http_req:reply(200,
                                        [{<<"Content-Type">>, <<"application/json">>}, %%GP: code duplication!
                                         {<<"Cache-Control">>, <<"max-age=0, private">>},
                                         {<<"Date">>, <<"Sun, 03 Jun 2012 16:31:11 GMT">>},
