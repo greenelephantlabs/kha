@@ -24,7 +24,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {busy = false,
+-record(state, {busy = false :: 'false' | {pid(), term()},
                 queue}).
 
 %%%===================================================================
@@ -86,8 +86,8 @@ handle_call({add_to_queue, ProjectId, BuildId}, _From,
     NewQueue = queue:in({ProjectId, BuildId}, Queue),
     NewState = S#state{queue = NewQueue},
     case Busy of
-        true -> do_nothing;
-        false -> kha_builder:process()
+        false -> kha_builder:process();
+        _ -> do_nothing
     end,
     {reply, ok, NewState};
 
@@ -105,14 +105,14 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast(process, #state{queue = Queue} = S) ->
-    NewState =
-        case queue:out(Queue) of
-            {empty, _} -> S#state{busy = false};
-            {{value, Job}, NewQueue} ->
-                proc_lib:spawn(fun() -> do_process(Job) end),
-                S#state{busy = true, queue = NewQueue}
-        end,
-    {noreply, NewState};
+    case queue:out(Queue) of
+        {empty, _} ->
+            {noreply, S#state{busy = false}};
+        {{value, Job}, NewQueue} ->
+            Pid = proc_lib:spawn(fun() -> do_process(Job) end),
+            erlang:monitor(process, Pid),
+            {noreply, S#state{busy = {Pid, Job}, queue = NewQueue}}
+    end;
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -127,6 +127,16 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({'DOWN', _, process, Pid, normal}, #state{busy = {Pid, _}} = State) ->
+    kha_builder:process(),
+    {noreply, State#state{busy = false}};
+
+handle_info({'DOWN', _, process, Pid, _Reason}, #state{busy = {Pid, Job}} = State) ->
+    {ProjectId, BuildId} = Job,
+    {ok, Build0} = kha_build:get(ProjectId, BuildId),
+    kha_build:update(Build0#build{status = failed}),
+    {noreply, State};
+
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -201,9 +211,3 @@ do_process({ProjectId, BuildId}) ->
     ?LOG("End build: Project: ~b; Build: ~b", [ProjectId, BuildId]),
     kha_builder:process(),
     Build2.
-
-
-
-
-    
-
