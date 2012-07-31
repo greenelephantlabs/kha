@@ -23,8 +23,6 @@ handle(Req, State) ->
     {Url, Req3} = cowboy_http_req:path(Req2),
     Ids = cut_url(Url),
     {ResponseData, Code, Req4} = do(Method, Ids, Req3),
-    ?LOG("Request: ~p~n", [Url]),
-    ?LOG("Response: ~p~n", [ResponseData]),
     {ok, Req5} = cowboy_http_req:reply(Code, kha_utils:headers(),
                                        jsx:to_json(ResponseData), Req4),
     {ok, Req5, State}.

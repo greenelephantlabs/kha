@@ -10,7 +10,8 @@
 -include("kha.hrl").
 
 -export([create/2,
-         get/2]).
+         get/2,
+         update/1]).
 
 create(ProjectId, Build) ->
     {ok, Response} = db:transaction(fun() -> do_create(ProjectId, Build) end),
@@ -37,3 +38,6 @@ get(ProjectId, BuildId) ->
 
 do_get(ProjectId, BuildId) ->
     db:get_record(build, {BuildId, ProjectId}).
+
+update(Build) ->
+    db:add_record(Build).

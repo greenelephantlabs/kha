@@ -24,5 +24,6 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, []} }.
+    Builder = ?CHILD(kha_builder, worker),
+    {ok, { {one_for_one, 5, 10}, [Builder]} }.
 

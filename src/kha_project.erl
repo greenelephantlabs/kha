@@ -40,7 +40,7 @@ create_fake() ->
     R = #project{name  = <<"kha test project">>,
                  local  = <<"/tmp/test_build">>,
                  remote = <<"https://github.com/greenelephantlabs/kha.git">>,
-                 build  = [<<"make">>],
+                 build  = [<<"rebar get-deps">>, <<"make">>],
                  notifications = []},
     {ok, PId} = kha_project:create(R),
     ?LOG("Create fake project - ID: ~b", [PId]),
@@ -48,7 +48,7 @@ create_fake() ->
 
 example_builds() ->
     [#build{title    = "Test 1",
-            branch   = "test_branch_1",
+            branch   = "origin/master",
             revision = "revision",
             author   = "Paul Peter Flis",
             stop     = now(),

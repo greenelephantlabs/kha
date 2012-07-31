@@ -70,7 +70,7 @@ build_to_term(#build{id       = Id,
      {<<"stop">>, kha_utils:now_to_binary(Stop)},
      {<<"status">>, kha_utils:convert(Status, bin)},
      {<<"exit">>, Exit},
-     {<<"output">>, kha_utils:convert(Output, bin)},
+     {<<"output">>, kha_utils:convert(lists:reverse(Output), bin)},
      {<<"tags">>, kha_utils:list_convert(Tags, bin)}
     ].
 
@@ -185,8 +185,10 @@ headers() ->
 %% @doc Exec given command.
 %% @throws {exec_error, {Command, ErrCode, Output}}.
 -spec sh(list(), list()) -> list().
-sh(Command, Opts0) ->
-    Port = open_port({spawn, Command}, Opts0 ++ [
+sh(Command, Opts) ->
+    ?LOG("CMD: ~s", [Command]),
+    Command2 = lists:flatten(io_lib:fwrite("~s", [Command])),
+    Port = open_port({spawn, Command2}, Opts ++ [
                                                  exit_status, {line, 255}, stderr_to_stdout
                                                 ]),
 
