@@ -5,7 +5,9 @@
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib
+                  stdlib,
+                  cowboy,
+                  mimetypes
                  ]},
   {mod, { kha_app, []}},
   {env, []}

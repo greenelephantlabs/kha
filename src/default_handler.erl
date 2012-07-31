@@ -21,7 +21,7 @@ handle(Req, State) ->
     %% NOTE - THERE IS A SECURITY HOLE HERE!
     case file:read_file(File) of
         {ok, Data} ->
-            {ok, Req1} = cowboy_http_req:reply(200, [{<<"Content-Type">>, "text/html"}],
+            {ok, Req1} = cowboy_http_req:reply(200, [{<<"Content-Type">>, mimetypes:filename(File)}],
                                                Data, Req),
             {ok, Req1, State};
         {error, Reason} ->

@@ -13,6 +13,7 @@
 
 start() ->
     application:start(cowboy),
+    application:start(mimetypes),
     application:start(kha).
 
 start(_Type, _Args) ->
