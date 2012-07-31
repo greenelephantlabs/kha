@@ -30,14 +30,14 @@ handle(Req, State) ->
     {ok, Req5, State}.
 
 %% Get all builds
-do('GET', [_PId], Req) ->
-    E = example_builds(),
+do('GET', [PId], Req) ->
+    {ok, E} = kha_build:get(PId, all),
     Response = [ kha_utils:build_to_term(X) || X <- E ],
     {Response, 200, Req};
 
 %% Get build
-do('GET', [_PId, BId], Req) ->
-    E = example_builds(BId),
+do('GET', [PId, BId], Req) ->
+    {ok, E} = kha_build:get(PId, BId),
     Response = kha_utils:build_to_term(E),
     {Response, 200, Req};
 
@@ -58,52 +58,3 @@ cut_url([<<"project">>, Id, <<"build">>]) ->
 cut_url([<<"project">>, PId, <<"build">>, BId]) ->
     [kha_utils:convert(PId, int),
      kha_utils:convert(BId, int)].
-
-%% ONLY FOR DEBUG !!!
-example_builds() ->
-    [ example_builds(Id) || Id <- lists:seq(1,3) ].
-example_builds(Id) ->
-    L = [{1, #build{key      = {1,1},
-                    id       = 1,
-                    project  = 1,
-                    title    = "Test 1",
-                    branch   = "test_branch_1",
-                    revision = "revision",
-                    author   = "Paul Peter Flis",
-                    start    = now(),
-                    stop     = now(),
-                    status   = 'failed',
-                    exit     = 123,
-                    output   = "output, output",
-                    tags     = ["paul", "peter", "test_branch_1"]
-                   }},
-         {2, #build{key      = {2,1},
-                    id       = 2,
-                    project  = 1,
-                    title    = "Test 2",
-                    branch   = "test_branch_1",
-                    revision = "revision",
-                    author   = "Gleb Peregud",
-                    start    = now(),
-                    stop     = now(),
-                    status   = 'success',
-                    exit     = 0,
-                    output   = "output, output",
-                    tags     = ["gleber", "peregud", "test_branch_1"]
-                   }},
-         {3, #build{key      = {3,1},
-                    id       = 3,
-                    project  = 1,
-                    title    = "Test 3",
-                    branch   = "test_branch_2",
-                    revision = "revision",
-                    author   = "Paul Peregud",
-                    start    = now(),
-                    stop     = now(),
-                    status   = 'pending',
-                    exit     = 0,
-                    output   = "output, output",
-                    tags     = ["paul", "peregud", "test_branch_2"]
-                   }}
-        ],
-    proplists:get_value(Id, L).
