@@ -1,10 +1,5 @@
-td {
-  border: 1px solid #ddd;
-  padding: 5px;
-}
-
-table tr {
-  width: 100%;
+.table tr td {
+  vertical-align: middle;
 }
 
 .build-pending {

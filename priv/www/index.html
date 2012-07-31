@@ -5,8 +5,8 @@
     <script src="http://code.angularjs.org/1.0.1/angular-resource-1.0.1.js"></script>
     <script src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
     <script src="js/app.js"></script>
-    <link type="text/css" rel="stylesheet" href="/css/kha.css">
     <link type="text/css" rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.0.4/css/bootstrap-combined.min.css">
+    <link type="text/css" rel="stylesheet" href="/css/kha.css">
   </head>
   <body>
     <div class="row" ng-controller="ProjectCtrl">
@@ -33,7 +33,7 @@
       <div class="span9" ng-controller="BuildCtrl">
         <h2>Project {{projectId}}</h2>
         <h5>Total builds: {{getTotalBuilds()}}</h5>
-        <table>
+        <table class="table table-condensed">
           <tr ng-repeat="build in builds | orderBy:predicate:true" class="build-{{build.status}}">
             <td>{{build.id}}</td>
             <td>{{build.status}}</td>
