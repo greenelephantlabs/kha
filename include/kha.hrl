@@ -49,6 +49,8 @@
 
 %%FIXME: PF: A temporary solution -> should by replace by alog or lager
 -define(LOG(X,Y), (fun() ->
-                           %% Z = io_lib:fwrite("LOG[~p]: ~p~n", [?MODULE, X]),
-                           io:fwrite(X, Y)
+                           Z = io_lib:fwrite(X, Y),
+                           io:fwrite("\t[~p]LOG[~p]: ~s~n",
+                                     [calendar:local_time(),
+                                      ?MODULE, Z])
                    end)()).
