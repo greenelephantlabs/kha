@@ -1,7 +1,8 @@
 -type project_id() :: integer().
--type time() :: {integer(), integer(), integer()}.
--type tag() :: string().
--type command() :: string().
+-type build_id()   :: integer().
+-type time()       :: {integer(), integer(), integer()}.
+-type tag()        :: string().
+-type command()    :: string().
 
 -record(notification,
         {type          :: atom(), %% kha_notification_[type].erl
@@ -18,7 +19,8 @@
         }).
 
 -record(build,
-        {id            :: {integer(), project_id()},
+        {key           :: {build_id(), project_id()},
+         id            :: build_id()
          project       :: project_id(),
          title         :: string() | 'undefined',
          branch        :: string(),
