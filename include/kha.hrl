@@ -1,3 +1,11 @@
+%%% @author Paul Peter Flis <pawel@flycode.pl>
+%%% @author Gleb Peregud <gleber.p@gmail.com>
+%%% @copyright (C) 2012, Green Elephant Labs
+%%% @doc
+%%% RECORD DEFINITIONS
+%%% @end
+%%% Created : 30 Jul 2012 by Paul Peter Flis <pawel@flycode.pl>
+
 -type project_id() :: integer().
 -type build_id()   :: integer().
 -type time()       :: {integer(), integer(), integer()}.

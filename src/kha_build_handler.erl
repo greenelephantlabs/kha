@@ -1,3 +1,10 @@
+%%% @author Paul Peter Flis <pawel@flycode.pl>
+%%% @copyright (C) 2012, Green Elephant Labs
+%%% @doc
+%%% Cowboy HTTP handler for request to builder
+%%% @end
+%%% Created : 30 Jul 2012 by Paul Peter Flis <pawel@flycode.pl>
+
 -module(kha_build_handler).
 -behaviour(cowboy_http_handler).
 -export([init/3,
