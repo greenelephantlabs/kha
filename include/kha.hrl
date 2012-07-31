@@ -11,6 +11,7 @@
 -type time()       :: {integer(), integer(), integer()}.
 -type tag()        :: string().
 -type command()    :: string().
+-type b_string()   :: binary().
 
 -record(notification,
         {type          :: atom(), %% kha_notification_[type].erl
@@ -19,9 +20,9 @@
 
 -record(project,
         {id            :: project_id(),
-         name          :: string(),
+         name          :: b_string(),
          local         :: filename:filename(), %% git clone remote local
-         remote        :: string(),
+         remote        :: b_string(),
          build         :: list(command()),
          notifications :: list(#notification{})
         }).
@@ -30,15 +31,15 @@
         {key           :: {build_id(), project_id()},
          id            :: build_id(),
          project       :: project_id(),
-         title         :: string() | 'undefined',
-         branch        :: string(),
-         revision      :: string(),
-         author        :: string(),
+         title         :: b_string() | 'undefined',
+         branch        :: b_string(),
+         revision      :: b_string(),
+         author        :: b_string(),
          start         :: time(),
          stop          :: time(),
          status        :: 'pending' | 'building' | 'succeed' | 'failed',
          exit          :: integer(),
-         output        :: list(string()),
+         output        :: list(b_string()),
          tags          :: list(tag())
         }).
 
