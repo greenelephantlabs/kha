@@ -101,7 +101,7 @@ now_to_nice(undefined) ->
     <<"undefined">>;
 now_to_nice(Now) ->
     {{Y,M,D}, {H,Min, S}} = calendar:now_to_local_time(Now),
-    Out = io_lib:fwrite("~b/~b/~b ~b:~b:~b", [Y,M,D, H,Min,S]),
+    Out = io_lib:fwrite("~4.10.0B-~2.10.0B-~2.10.0B ~2.10.0B:~2.10.0B:~2.10.0B", [Y,M,D, H,Min,S]),
     convert(lists:flatten(Out), bin).
 
 convert(Val, int)
