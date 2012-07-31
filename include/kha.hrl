@@ -34,7 +34,7 @@
         }).
 
 %%FIXME: PF: A temporary solution -> should by replace by alog or lager
--define('LOG', fun(X,Y) ->
+-define(LOG(X,Y), fun(X,Y) ->
                      Z = io_lib:fwrite("LOG[~p]: ~p~n", [?MODULE, X]),
                      io:fwrite(Z, Y)
                end).
