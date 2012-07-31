@@ -8,19 +8,59 @@
 
 -module(kha_utils).
 
+-include("kha.hrl").
+
 -export([to_int/1,
+         list_convert/2,
          convert/2,
          fmt/2,
          b2a/1,
          a2b/1,
          i2b/1,
-         b2i/1]).
+         b2i/1,
 
--export([headers/0]).
+         now_to_binary/1]).
+
+-export([record_field/1,
+         build_to_term/1,
+         headers/0]).
 
 -export([sh/1,
          sh/2]).
 
+record_field(project) ->
+    record_info(fields, project);
+record_field(build) ->
+    record_info(fields, build);
+record_field(id_seq) ->
+    record_info(fields, id_seq).
+
+build_to_term(#build{id       = Id,
+                     project  = Project,
+                     title    = Title,
+                     branch   = Branch,
+                     revision = Revision,
+                     author   = Author,
+                     start    = Start,
+                     stop     = Stop,
+                     status   = Status,
+                     exit     = Exit,
+                     output   = Output,
+                     tags     = Tags}) ->
+    [{<<"id">>, Id},
+     {<<"project">>, Project},
+     {<<"title">>, kha_utils:convert(Title, bin)},
+     {<<"branch">>, kha_utils:convert(Branch, bin)},
+     {<<"revision">>, kha_utils:convert(Revision, bin)},
+     {<<"author">>, kha_utils:convert(Author, bin)},
+     {<<"start">>, kha_utils:now_to_binary(Start)},
+     {<<"stop">>, kha_utils:now_to_binary(Stop)},
+     {<<"status">>, kha_utils:convert(Status, bin)},
+     {<<"exit">>, Exit},
+     {<<"output">>, kha_utils:convert(Output, bin)},
+     {<<"tags">>, kha_utils:list_convert(Tags, bin)}
+    ].
+    
 to_int(X) when is_binary(X) -> to_int(binary_to_list(X));
 to_int(X) when is_list(X) -> list_to_integer(X);
 to_int(X) when is_integer(X) -> X;
@@ -40,6 +80,13 @@ i2b(I) when is_integer(I) ->
     list_to_binary(integer_to_list(I)).
 b2i(I) when is_binary(I) ->
     list_to_integer(binary_to_list(I)).
+
+list_convert(L, To) ->
+    [ convert(Val, To) || Val <- L ].
+
+now_to_binary(Now) ->
+    {A,B,C} = Now,
+    convert(lists:flatten(io_lib:fwrite("{~b, ~b, ~b}", [A,B,C])), bin).
 
 convert(Val, int)
   when is_list(Val) ->

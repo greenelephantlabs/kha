@@ -19,6 +19,7 @@ start(_Type, _Args) ->
     Dispatch = [
                 {'_', [
                        {[<<"project">>,'_', <<"build">>], kha_build_handler, []},
+                       {[<<"project">>,'_', <<"build">>, '_'], kha_build_handler, []},
                        %% {[<<"builds">>, build], kha_build_handler, []},
                        {'_', default_handler, []}
                       ]}
