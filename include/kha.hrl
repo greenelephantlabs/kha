@@ -36,13 +36,19 @@
          author        :: string(),
          start         :: time(),
          stop          :: time(),
+         status        :: 'pending' | 'building' | 'succeed' | 'failed',
          exit          :: integer(),
          output        :: list(string()),
          tags          :: list(tag())
         }).
 
+-record(id_seq,
+        {whose      :: atom(),
+         id = 10000 :: integer()
+        }).
+
 %%FIXME: PF: A temporary solution -> should by replace by alog or lager
--define(LOG(X,Y), fun(X,Y) ->
-                     Z = io_lib:fwrite("LOG[~p]: ~p~n", [?MODULE, X]),
-                     io:fwrite(Z, Y)
-               end).
+-define(LOG(X,Y), (fun() ->
+                           %% Z = io_lib:fwrite("LOG[~p]: ~p~n", [?MODULE, X]),
+                           io:fwrite(X, Y)
+                   end)()).
