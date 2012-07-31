@@ -39,14 +39,29 @@ do('GET', [PId, BId], Req) ->
     Response = kha_utils:build_to_term(E),
     {Response, 200, Req};
 
+%% Rerun build
+do('POST', [PId, BId], Req) ->
+    {ok, Old} = kha_build:get(PId, BId),
+    New = #build{title    = Old#build.title,
+                 branch   = Old#build.branch,
+                 revision = Old#build.revision,
+                 author   = Old#build.author,
+                 stop     = now(),
+                 tags     = Old#build.tags},
+    {ok, NewBId} = kha_build:create(PId, New),
+    kha_builder:add_to_queue(PId, NewBId),
+    R = [<<"create">>, NewBId],
+    {R, 200, Req}.
+
 %% Create new build
-do('POST', [Id], Req) ->
-    {ok, Data, Req2} = cowboy_http_req:body(Req),
-    Branch = proplists:get_value(<<"branch">>, Data),
-    {ok, BuildId} = builder:new(Id, {branch, Branch}),
-    Response = [{<<"project">> , Id},
-                {<<"id">>      , BuildId}],
-    {Response, 200, Req2}.
+%% do('POST', [Id], Req) ->
+%%     {ok, Data, Req2} = cowboy_http_req:body(Req),
+%%     Branch = proplists:get_value(<<"branch">>, Data),
+%%     Branch = proplists:get_value(<<"branch">>, Data),
+%%     {ok, BuildId} = builder:new(Id, {branch, Branch}),
+%%     Response = [{<<"project">> , Id},
+%%                 {<<"id">>      , BuildId}],
+%%     {Response, 200, Req2}.
 
 terminate(_Req, _State) ->
     ok.
