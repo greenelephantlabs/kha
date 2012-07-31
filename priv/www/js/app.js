@@ -7,9 +7,9 @@ angular.module('Kha', ['ngResource']).
         });
     }).
     factory('Build', function($resource){
-        return $resource('/project/:projectId/build/:id', {}, {
+        return $resource('/project/:projectId/build/:id', {projectId: '@project', id: '@id'}, {
             query: {method:'GET',
-                    params: {projectId: '', id: ''},
+                    params: {},
                     isArray:true}
         });
     });
@@ -27,12 +27,21 @@ ProjectCtrl.$inject = ['$scope', 'Project'];
 function BuildCtrl($scope, Build) {
     $scope.builds = [];
     $scope.$watch('projectId', function(newValue, oldValue) {
-        $scope.builds = Build.query({projectId: $scope.projectId});
+        $scope.builds = Build.query({projectId: $scope.projectId, id: ''});
     });
 
     $scope.getTotalBuilds = function () {
         return $scope.builds.length;
     };
+
+    $scope.rerun = function(build) {
+        console.log('rerun', arguments);
+        build.$save();
+    }
+    $scope.delete = function(build) {
+        console.log('delete', arguments);
+        build.$delete();
+    }
 }
 
 BuildCtrl.$inject = ['$scope', 'Build'];

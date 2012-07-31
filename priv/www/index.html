@@ -10,10 +10,10 @@
   </head>
   <body>
     <div class="row" ng-controller="ProjectCtrl">
-      <div class="span4">
+      <div class="span3">
         <ul>
           <li ng-repeat="project in projects">
-            <ul class="project-{{project.id}}">
+            <ul class="unstyled project-{{project.id}}">
               <li>
                 <span><button ng-click="setCurrentProject(project.id)">{{project.id}}</button></span>
               </li>
@@ -30,7 +30,7 @@
         </ul>
       </div>
 
-      <div class="span8" ng-controller="BuildCtrl">
+      <div class="span9" ng-controller="BuildCtrl">
         <h2>Project {{projectId}}</h2>
         <h5>Total builds: {{getTotalBuilds()}}</h5>
         <table>
@@ -42,6 +42,10 @@
             <td>{{build.author}}</td>
             <td>{{build.start}}</td>
             <td>{{build.stop}}</td>
+            <td>
+              <button class="btn" ng-click="rerun(build)"><i class="icon-play"></i>Rerun</button>
+              <button class="btn" ng-click="delete(build)"><i class="icon-trash"></i>Delete</button>
+            </td>
           </tr>
         </table>
       </div>
