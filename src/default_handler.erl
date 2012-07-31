@@ -16,7 +16,7 @@ handle(Req, State) ->
            end,
     FilePath = filename:join(Path),
     {ok, Cwd} = file:get_cwd(),
-    File = filename:join([Cwd, "priv", FilePath]),
+    File = filename:join([Cwd, "priv", "www", FilePath]),
     %% io:format("Request to file: ~p~n", [File]),
     %% NOTE - THERE IS A SECURITY HOLE HERE!
     case file:read_file(File) of

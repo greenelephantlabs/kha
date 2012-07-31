@@ -23,7 +23,10 @@ do_create(Project) ->
     R = Project#project{id = ProjectId},
     ok = db:add_record(R),
     {ok, ProjectId}.
-    
+
+get(all) ->
+    db:get_match_object(#project{_='_'});
+
 get(Id) ->
     {ok, Response} = db:transaction(fun() -> do_get(Id) end),
     Response.
@@ -62,8 +65,7 @@ example_builds() ->
             branch   = "test_branch_2",
             revision = "revision",
             author   = "Paul Peregud",
-            stop     = now(),            
+            stop     = now(),
             tags     = ["paul", "peregud", "test_branch_2"]
            }
     ].
-

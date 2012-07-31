@@ -22,6 +22,7 @@
          now_to_binary/1]).
 
 -export([record_field/1,
+         project_to_term/1,
          build_to_term/1,
          headers/0]).
 
@@ -34,6 +35,18 @@ record_field(build) ->
     record_info(fields, build);
 record_field(id_seq) ->
     record_info(fields, id_seq).
+
+project_to_term(#project{id            = Id,
+                         name          = Name,
+                         local         = Local,
+                         remote        = Remote,
+                         build         = _Build,
+                         notifications = _Notification}) ->
+    [{<<"id">>, Id},
+     {<<"name">>, kha_utils:convert(Name, bin)},
+     {<<"local">>, kha_utils:convert(Local, bin)},
+     {<<"remote">>, kha_utils:convert(Remote, bin)}
+    ].
 
 build_to_term(#build{id       = Id,
                      project  = Project,
@@ -60,7 +73,7 @@ build_to_term(#build{id       = Id,
      {<<"output">>, kha_utils:convert(Output, bin)},
      {<<"tags">>, kha_utils:list_convert(Tags, bin)}
     ].
-    
+
 to_int(X) when is_binary(X) -> to_int(binary_to_list(X));
 to_int(X) when is_list(X) -> list_to_integer(X);
 to_int(X) when is_integer(X) -> X;
@@ -174,8 +187,8 @@ headers() ->
 -spec sh(list(), list()) -> list().
 sh(Command, Opts0) ->
     Port = open_port({spawn, Command}, Opts0 ++ [
-        exit_status, {line, 255}, stderr_to_stdout
-    ]),
+                                                 exit_status, {line, 255}, stderr_to_stdout
+                                                ]),
 
     case sh_receive_loop(Port, []) of
         {ok, Data} -> Data;
