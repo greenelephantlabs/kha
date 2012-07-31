@@ -19,7 +19,7 @@
          i2b/1,
          b2i/1,
 
-         now_to_binary/1]).
+         now_to_nice/1]).
 
 -export([record_field/1,
          project_to_term/1,
@@ -66,8 +66,8 @@ build_to_term(#build{id       = Id,
      {<<"branch">>, kha_utils:convert(Branch, bin)},
      {<<"revision">>, kha_utils:convert(Revision, bin)},
      {<<"author">>, kha_utils:convert(Author, bin)},
-     {<<"start">>, kha_utils:now_to_binary(Start)},
-     {<<"stop">>, kha_utils:now_to_binary(Stop)},
+     {<<"start">>, kha_utils:now_to_nice(Start)},
+     {<<"stop">>, kha_utils:now_to_nice(Stop)},
      {<<"status">>, kha_utils:convert(Status, bin)},
      {<<"exit">>, Exit},
      {<<"output">>, kha_utils:convert(lists:reverse(Output), bin)},
@@ -97,9 +97,12 @@ b2i(I) when is_binary(I) ->
 list_convert(L, To) ->
     [ convert(Val, To) || Val <- L ].
 
-now_to_binary(Now) ->
-    {A,B,C} = Now,
-    convert(lists:flatten(io_lib:fwrite("{~b, ~b, ~b}", [A,B,C])), bin).
+now_to_nice(undefined) ->
+    <<"undefined">>;
+now_to_nice(Now) ->
+    {{Y,M,D}, {H,Min, S}} = calendar:now_to_local_time(Now),
+    Out = io_lib:fwrite("~b/~b/~b ~b:~b:~b", [Y,M,D, H,Min,S]),
+    convert(lists:flatten(Out), bin).
 
 convert(Val, int)
   when is_list(Val) ->

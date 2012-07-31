@@ -192,7 +192,7 @@ do_process({ProjectId, BuildId}) ->
          end,
     Build2 = try
                  B2 = lists:foldl(BF, Build, P#project.build),
-                 B2#build{status = success}
+                 B2#build{status = success, stop = now()}
              catch
                  throw:{error, Bb} ->
                      Bb
@@ -201,7 +201,6 @@ do_process({ProjectId, BuildId}) ->
     ?LOG("End build: Project: ~b; Build: ~b", [ProjectId, BuildId]),
     kha_builder:process(),
     Build2.
-    %% kha_build:close('success', 0).
 
 
 

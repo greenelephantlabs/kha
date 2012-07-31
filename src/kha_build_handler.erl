@@ -46,7 +46,6 @@ do('POST', [PId, BId], Req) ->
                  branch   = Old#build.branch,
                  revision = Old#build.revision,
                  author   = Old#build.author,
-                 stop     = now(),
                  tags     = Old#build.tags},
     {ok, NewBId} = kha_build:create(PId, New),
     kha_builder:add_to_queue(PId, NewBId),

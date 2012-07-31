@@ -51,21 +51,18 @@ example_builds() ->
             branch   = "origin/master",
             revision = "revision",
             author   = "Paul Peter Flis",
-            stop     = now(),
             tags     = ["paul", "peter", "test_branch_1"]
            },
      #build{title    = "Test 2",
             branch   = "test_branch_1",
             revision = "revision",
             author   = "Gleb Peregud",
-            stop     = now(),
             tags     = ["gleber", "peregud", "test_branch_1"]
            },
      #build{title    = "Test 3",
             branch   = "test_branch_2",
             revision = "revision",
             author   = "Paul Peregud",
-            stop     = now(),
             tags     = ["paul", "peregud", "test_branch_2"]
            }
     ].
