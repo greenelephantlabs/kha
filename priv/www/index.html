@@ -1,0 +1,50 @@
+<!doctype html>
+<html ng-app="Kha">
+  <head>
+    <script src="http://code.angularjs.org/1.0.1/angular-1.0.1.js"></script>
+    <script src="http://code.angularjs.org/1.0.1/angular-resource-1.0.1.js"></script>
+    <script src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
+    <script src="js/app.js"></script>
+    <link type="text/css" rel="stylesheet" href="/css/kha.css">
+    <link type="text/css" rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.0.4/css/bootstrap-combined.min.css">
+  </head>
+  <body>
+    <div class="row" ng-controller="ProjectCtrl">
+      <div class="span4">
+        <ul>
+          <li ng-repeat="project in projects">
+            <ul class="project-{{project.id}}">
+              <li>
+                <span><button ng-click="setCurrentProject(project.id)">{{project.id}}</button></span>
+              </li>
+              <li>
+                <span>{{project.name}}</span>
+              </li>
+              <li>
+                <span>{{project.local}}</span>
+              </li>
+              <li>
+                <span>{{project.remote}}</span>
+              </li>
+          </li>
+        </ul>
+      </div>
+
+      <div class="span8" ng-controller="BuildCtrl">
+        <h2>Project {{projectId}}</h2>
+        <h5>Total builds: {{getTotalBuilds()}}</h5>
+        <table>
+          <tr ng-repeat="build in builds" class="build-{{build.status}}">
+            <td>{{build.id}}</td>
+            <td>{{build.status}}</td>
+            <td>{{build.branch}}</td>
+            <td>{{build.title}}</td>
+            <td>{{build.author}}</td>
+            <td>{{build.start}}</td>
+            <td>{{build.stop}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

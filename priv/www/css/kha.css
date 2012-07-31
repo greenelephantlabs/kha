@@ -1,0 +1,20 @@
+td {
+  border: 1px solid #ddd;
+  padding: 5px;
+}
+
+table tr {
+  width: 100%;
+}
+
+.build-pending {
+  background-color: #ffd;
+}
+
+.build-succeed {
+  background-color: #cfc;
+}
+
+.build-fail {
+  background-color: #fdd;
+}
