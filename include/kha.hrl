@@ -32,3 +32,9 @@
          output        :: list(string()),
          tags          :: list(tag())
         }).
+
+%%FIXME: PF: A temporary solution -> should by replace by alog or lager
+-define('LOG', fun(X,Y) ->
+                     Z = io_lib:fwrite("LOG[~p]: ~p~n", [?MODULE, X]),
+                     io:fwrite(Z, Y)
+               end).

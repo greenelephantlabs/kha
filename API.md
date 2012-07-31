@@ -49,6 +49,8 @@
     {
         id     :: integer(),
         branch :: string()
+        [or]
+        commit :: string() %% current not use
     }
 
 ### Response
@@ -56,5 +58,10 @@
     {
         project       :: integer(),
         id            :: integer(),
-        start         :: timestamp()
+        %% PF: Usuwam poniewaz nie wnosi to w tym miejscu zadnych
+        %% uzytecznych informacji. Jesli bedzie chcialo sie w
+        %% jaki kolwiek sensowny sposob wyswietlic uruchomiony
+        %% build i tak bedzie trzeba pobrac wiecej informacji
+        %% z GET - a tam juz jest to pole zawarte. Do akceptacji.
+        %% start      :: timestamp()
     }
