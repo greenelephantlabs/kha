@@ -24,6 +24,11 @@
         notifications :: list(#notification())
     }
 
+## GET /project/<id>/build
+
+### Response
+    [build] %% See below
+
 ## GET /project/<id>/build/<id>
 
 ### Response
