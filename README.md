@@ -73,6 +73,13 @@ SVN/CVS support
 v1.4
 Build sandboxing using chroot
 
+v1.5
+Replace distributed Erlang with some MQ protocol
+
+v2.0
+Vagrant-based sandboxing
+
+
 v1.0 architecture
 ==================
 
