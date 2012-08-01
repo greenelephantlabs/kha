@@ -59,9 +59,10 @@ function ProjectCtrl($scope, Project) {
 }
 ProjectCtrl.$inject = ['$scope', 'Project'];
 
-function BuildCtrl($scope, $window, Build) {
+function BuildCtrl($scope, $window, $timeout, Build) {
     $scope.predicate = 'id';
     $scope.builds = [];
+
     $scope.$watch('currentProject', function(newValue, oldValue) {
         if (newValue === null)
             return;
@@ -82,6 +83,13 @@ function BuildCtrl($scope, $window, Build) {
         build.$delete();
         $event.stopPropagation();
     }
+
+    $timeout(function updateBuilds(){
+        Build.query({projectId: $scope.currentProject.id, id: ''}, function(builds) {
+            $scope.builds = builds;
+            $timeout(updateBuilds, 5000);
+        });
+    }, 5000);
 }
 
-BuildCtrl.$inject = ['$scope', '$window', 'Build'];
+BuildCtrl.$inject = ['$scope', '$window', '$timeout', 'Build'];
