@@ -24,7 +24,9 @@
 -export([record_field/1,
          project_to_term/1,
          build_to_term/1,
-         headers/0]).
+         headers/0,
+         get_app_path/0,
+         get_app_path/1]).
 
 -export([sh/1,
          sh/2]).
@@ -184,6 +186,13 @@ headers() ->
      {<<"Date">>, <<"Sun, 03 Jun 2012 16:31:11 GMT">>},
      {<<"Expires">>, <<"Sun, 03 Jun 2012 16:31:10 GMT">>}].
 
+get_app_path() ->
+    get_app_path("kha").
+get_app_path(App) ->
+    AppFile = App++".app",
+    FilePath = code:where_is_file(AppFile),
+    FilePath2 = filename:dirname(filename:absname(FilePath)),
+    filename:join([FilePath2, "../"]).
 
 %% @doc Exec given command.
 %% @throws {exec_error, {Command, ErrCode, Output}}.
@@ -214,3 +223,4 @@ sh_receive_loop(Port, Acc) ->
         {Port, {exit_status, E}} ->
             {error, {E, lists:flatten(lists:reverse(Acc))}}
     end.
+

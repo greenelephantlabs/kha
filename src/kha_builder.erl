@@ -186,6 +186,7 @@ do_process({ProjectId, BuildId}) ->
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
     Build = Build0#build{status = building},
     kha_build:update(Build),
+    kha_hooks:run(on_building, ProjectId, BuildId);
     Local = kha_utils:convert(P#project.local, str),
     Remote = kha_utils:convert(P#project.remote, str),
     Branch = kha_utils:convert(Build#build.branch, str),
@@ -225,6 +226,10 @@ do_process({ProjectId, BuildId}) ->
              end,
     catch timer:cancel(Ref),
     kha_build:update(Build2),
-    ?LOG("End build: Project: ~b; Build: ~b", [ProjectId, BuildId]),
+    case Build2#build.status of
+        success -> kha_hooks:run(on_success,   ProjectId, BuildId);
+        failed  -> kha_hooks:run(on_faileding, ProjectId, BuildId);
+        timeout -> kha_hooks:run(on_faileding, ProjectId, BuildId)
+    end,
     kha_builder:process(),
     Build2.
