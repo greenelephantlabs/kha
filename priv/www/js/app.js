@@ -7,11 +7,18 @@ angular.module('Kha', ['ngResource']).
         });
     }).
     factory('Build', function($resource){
-        return $resource('/project/:projectId/build/:id', {projectId: '@project', id: '@id'}, {
+        var b = $resource('/project/:projectId/build/:id', {projectId: '@project', id: '@id'}, {
             query: {method:'GET',
                     params: {},
-                    isArray:true}
+                    isArray:true},
+            do_rerun: {method: 'POST',
+                    params: {id: ''}}
         });
+        b.rerun = function(build) {
+            b.do_rerun({project: build.project,
+                        copy: build.id});
+        };
+        return b;
     });
 
 function ProjectCtrl($scope, Project) {
@@ -37,7 +44,7 @@ function BuildCtrl($scope, Build) {
 
     $scope.rerun = function(build) {
         console.log('rerun', arguments);
-        build.$save();
+        Build.rerun(build);
     }
     $scope.delete = function(build) {
         console.log('delete', arguments);
