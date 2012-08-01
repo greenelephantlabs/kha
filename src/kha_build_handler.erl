@@ -43,17 +43,14 @@ do('GET', [PId, BId], Req) ->
 do('POST', [PId], Req) ->
     {ok, Data0, Req2} = cowboy_http_req:body(Req),
     Data = jsx:to_term(Data0),
-    BId = proplists:get_value(<<"copy">>, Data),
-    {ok, Old} = kha_build:get(PId, BId),
-    New = #build{title    = Old#build.title,
-                 branch   = Old#build.branch,
-                 revision = Old#build.revision,
-                 author   = Old#build.author,
-                 tags     = Old#build.tags},
-    {ok, NewB} = kha_build:create(PId, New),
-    kha_builder:add_to_queue(NewB),
-    R = kha_utils:build_to_term(NewB),
-    {R, 200, Req2}.
+    case proplists:get_value(<<"copy">>, Data) of
+        undefined ->
+            {R, C} = create_build(PId, Data),
+            {R, C, Req2};
+        BId ->
+            {R, C} = copy_build(PId, BId, Data),
+            {R,C, Req2}
+    end.
 
 %% Rerun existing build
 %% do('POST', [PId, BId], Req) ->
@@ -65,15 +62,35 @@ do('POST', [PId], Req) ->
 %%     {R, 200, Req}.
 
 %% Create new build
-%% do('POST', [Id], Req) ->
-%%     {ok, Data, Req2} = cowboy_http_req:body(Req),
-%%     Branch = proplists:get_value(<<"branch">>, Data),
-%%     Branch = proplists:get_value(<<"branch">>, Data),
-%%     {ok, BuildId} = builder:new(Id, {branch, Branch}),
-%%     Response = [{<<"project">> , Id},
-%%                 {<<"id">>      , BuildId}],
-%%     {Response, 200, Req2}.
+create_build(ProjectId, Data) ->
+    Title    = proplists:get_value(<<"title">>, Data),
+    Branch   = proplists:get_value(<<"branch">>, Data),
+    Revision = proplists:get_value(<<"revision">>, Data),
+    Author   = proplists:get_value(<<"author">>, Data),
+    Tags     = proplists:get_value(<<"tags">>, Data),
+    New = #build{title    = Title,
+                 branch   = Branch,
+                 revision = Revision,
+                 author   = Author,
+                 tags     = Tags},
+    {ok, Build} = kha_build:create(ProjectId, New),
+    kha_builder:add_to_queue(Build),
+    Response = kha_utils:build_to_term(Build),
+    {Response, 200}.
 
+copy_build(ProjectId, BuildId, _Data) ->
+    {ok, Old} = kha_build:get(ProjectId, BuildId),
+    New = #build{title    = Old#build.title,
+                 branch   = Old#build.branch,
+                 revision = Old#build.revision,
+                 author   = Old#build.author,
+                 tags     = Old#build.tags},
+    {ok, Build} = kha_build:create(ProjectId, New),
+    kha_builder:add_to_queue(Build),
+    Response = kha_utils:build_to_term(Build),
+    {Response, 200}.
+
+    
 terminate(_Req, _State) ->
     ok.
 

@@ -22,7 +22,7 @@ do_create(Project) ->
     ProjectId = db:get_next_id(project),
     R = Project#project{id = ProjectId},
     ok = db:add_record(R),
-    {ok, ProjectId}.
+    {ok, R}.
 
 get(all) ->
     db:get_match_object(#project{_='_'});
@@ -42,7 +42,8 @@ create_fake() ->
                  remote = <<"https://github.com/greenelephantlabs/kha.git">>,
                  build  = [<<"rebar get-deps">>, <<"make">>],
                  notifications = []},
-    {ok, PId} = kha_project:create(R),
+    {ok, Project} = kha_project:create(R),
+    PId = Project#project.id,
     ?LOG("Create fake project - ID: ~b", [PId]),
     [ kha_build:create(PId, X) || X <- example_builds() ].
 
