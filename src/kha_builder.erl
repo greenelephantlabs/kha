@@ -15,7 +15,8 @@
 %% API
 -export([start_link/0]).
 
--export([add_to_queue/2,
+-export([add_to_queue/1,
+         add_to_queue/2,
          process/0]).
 
 %% gen_server callbacks
@@ -41,6 +42,8 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+add_to_queue(#build{project = Project, id = Id} = _Build) ->
+    add_to_queue(Project, Id).
 add_to_queue(ProjectId, BuildId) ->
     gen_server:call(?SERVER, {add_to_queue, ProjectId, BuildId}).
 

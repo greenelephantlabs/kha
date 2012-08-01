@@ -58,15 +58,12 @@
         commit :: string() %% current not use
     }
 
-### Response
+or
 
     {
-        project       :: integer(),
-        id            :: integer(),
-        %% PF: Usuwam poniewaz nie wnosi to w tym miejscu zadnych
-        %% uzytecznych informacji. Jesli bedzie chcialo sie w
-        %% jaki kolwiek sensowny sposob wyswietlic uruchomiony
-        %% build i tak bedzie trzeba pobrac wiecej informacji
-        %% z GET - a tam juz jest to pole zawarte. Do akceptacji.
-        %% start      :: timestamp()
+        copy   :: integer()
     }
+
+### Response
+
+Same as `GET /project/<id>/build/<id>`

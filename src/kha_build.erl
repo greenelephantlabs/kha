@@ -27,7 +27,7 @@ do_create(ProjectId, Build) ->
                     exit = -1, %% FIXME: PF: Should by 'undefined'
                     output = []},
     ok = db:add_record(R),
-    {ok, BuildId}.
+    {ok, R}.
 
 get(ProjectId, all) ->
     db:get_match_object(#build{key={'_', ProjectId}, _='_'});

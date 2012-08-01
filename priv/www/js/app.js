@@ -12,11 +12,14 @@ angular.module('Kha', ['ngResource']).
                     params: {},
                     isArray:true},
             do_rerun: {method: 'POST',
-                    params: {id: ''}}
+                       params: {id: ''}}
         });
-        b.rerun = function(build) {
+        b.rerun = function(build, $scope) {
             b.do_rerun({project: build.project,
-                        copy: build.id});
+                        copy: build.id},
+                       function(newBuild) {
+                           $scope.builds.push(newBuild);
+                       });
         };
         return b;
     });
@@ -44,7 +47,7 @@ function BuildCtrl($scope, Build) {
 
     $scope.rerun = function(build) {
         console.log('rerun', arguments);
-        Build.rerun(build);
+        Build.rerun(build, $scope);
     }
     $scope.delete = function(build) {
         console.log('delete', arguments);

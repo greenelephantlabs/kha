@@ -39,18 +39,30 @@ do('GET', [PId, BId], Req) ->
     Response = kha_utils:build_to_term(E),
     {Response, 200, Req};
 
-%% Rerun build
-do('POST', [PId, BId], Req) ->
+%% Rerun build by copying
+do('POST', [PId], Req) ->
+    {ok, Data0, Req2} = cowboy_http_req:body(Req),
+    Data = jsx:to_term(Data0),
+    BId = proplists:get_value(<<"copy">>, Data),
     {ok, Old} = kha_build:get(PId, BId),
     New = #build{title    = Old#build.title,
                  branch   = Old#build.branch,
                  revision = Old#build.revision,
                  author   = Old#build.author,
                  tags     = Old#build.tags},
-    {ok, NewBId} = kha_build:create(PId, New),
-    kha_builder:add_to_queue(PId, NewBId),
-    R = [<<"create">>, NewBId],
-    {R, 200, Req}.
+    {ok, NewB} = kha_build:create(PId, New),
+    kha_builder:add_to_queue(NewB),
+    R = kha_utils:build_to_term(NewB),
+    {R, 200, Req2};
+
+%% Rerun existing build
+%% do('POST', [PId, BId], Req) ->
+%%     {ok, Old0} = kha_build:get(PId, BId),
+%%     Old = Old0#build{start = now()},
+%%     kha_build:update(Old),
+%%     kha_builder:add_to_queue(PId, BId),
+%%     R = kha_utils:build_to_term(Old),
+%%     {R, 200, Req}.
 
 %% Create new build
 %% do('POST', [Id], Req) ->
