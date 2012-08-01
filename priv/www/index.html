@@ -11,43 +11,63 @@
   <body>
     <div class="row" ng-controller="ProjectCtrl">
       <div class="span3">
-        <ul>
-          <li ng-repeat="project in projects">
-            <ul class="unstyled project-{{project.id}}">
-              <li>
-                <span><button ng-click="setCurrentProject(project.id)">{{project.id}}</button></span>
-              </li>
-              <li>
-                <span>{{project.name}}</span>
-              </li>
-              <li>
-                <span>{{project.local}}</span>
-              </li>
-              <li>
-                <span>{{project.remote}}</span>
-              </li>
+        <h2>Projects</h2>
+        <ul class="nav nav-tabs nav-stacked">
+          <li ng:class="getClass(project.id)" ng-repeat="project in projects">
+            <a ng-click="setCurrentProject(project.id)">
+              <span>{{project.id}}</span> -
+              <span>{{project.name}}</span>
+            </a>
           </li>
         </ul>
       </div>
 
-      <div class="span9" ng-controller="BuildCtrl">
-        <h2>Project {{projectId}}</h2>
-        <h5>Total builds: {{getTotalBuilds()}}</h5>
-        <table class="table table-condensed">
-          <tr ng-repeat="build in builds | orderBy:predicate:true" class="build-{{build.status}}">
-            <td>{{build.id}}</td>
-            <td>{{build.status}}</td>
-            <td>{{build.branch}}</td>
-            <td>{{build.title}}</td>
-            <td>{{build.author}}</td>
-            <td>{{build.start}}</td>
-            <td>{{build.stop}}</td>
-            <td>
-              <button class="btn" ng-click="rerun(build)"><i class="icon-play"></i>Rerun</button>
-              <button class="btn" ng-click="delete(build)"><i class="icon-trash"></i>Delete</button>
-            </td>
-          </tr>
-        </table>
+      <div class="span9">
+        <h3>Project {{projectId}}</h3>
+        <ul class="nav nav-tabs">
+          <li ng:class="getTabClass('details')">
+            <a ng-click="tab='details'" href="#">Details</a></li>
+          <li ng:class="getTabClass('builds')">
+            <a ng-click="tab='builds'" href="#">Builds</a></li>
+          <li ng:class="getTabClass('build-details')">
+            <a href="#">Build details</a></li>
+        </ul>
+        <div class="details" ng:show="tab == 'details'">
+          <ul>
+            <li>
+              Local: <span>{{projects[projectId].local}}</span>
+            </li>
+            <li>
+              Remote: <span>{{projects[projectId].remote}}</span>
+            </li>
+            <li>
+              Build: <span>{{projects[projectId].build}}</span>
+            </li>
+            <li>
+              Notifications: <span>{{projects[projectId].notifications}}</span>
+            </li>
+          </ul>
+        </div>
+        <div class="builds" ng-controller="BuildCtrl" ng:show="tab == 'builds'">
+          <h5>Total builds: {{getTotalBuilds()}}</h5>
+          <table class="table table-condensed">
+            <tr ng-repeat="build in builds | orderBy:predicate:true" class="build-{{build.status}}">
+              <td>{{build.id}}</td>
+              <td>{{build.status}}</td>
+              <td>{{build.branch}}</td>
+              <td>{{build.title}}</td>
+              <td>{{build.author}}</td>
+              <td>{{build.start}}</td>
+              <td>{{build.stop}}</td>
+              <td>
+                <button class="btn" ng-click="rerun(build)"><i class="icon-play"></i>Rerun</button>
+                <button class="btn" ng-click="delete(build)"><i class="icon-trash"></i>Delete</button>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="build-details" ng:show="tab == 'build-details'">
+        </div>
       </div>
     </div>
   </body>

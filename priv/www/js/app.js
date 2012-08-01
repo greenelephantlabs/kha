@@ -31,6 +31,15 @@ function ProjectCtrl($scope, Project) {
         $scope.projectId = id;
     }
     $scope.setCurrentProject(1);
+    $scope.getProjectClass = function(id) {
+        return id === $scope.projectId ? 'active' : '';
+    }
+
+    $scope.tab = 'builds';
+    $scope.getTabClass = function(type) {
+        console.log($scope.tab, type);
+        return $scope.tab === type ? 'active' : '';
+    }
 }
 ProjectCtrl.$inject = ['$scope', 'Project'];
 
