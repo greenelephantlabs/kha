@@ -25,14 +25,18 @@ angular.module('Kha', ['ngResource']).
     });
 
 function ProjectCtrl($scope, Project) {
-    $scope.projects = Project.query();
-    $scope.currentBuild = {};
-    $scope.setCurrentProject = function(id) {
-        $scope.currentProject = id;
+    $scope.projects = Project.query(function(projects) {
+        if (projects)
+            $scope.setCurrentProject(projects[0]);
+    });
+    $scope.currentProject = null;
+    $scope.currentBuild = null;
+    $scope.setCurrentProject = function(project) {
+        $scope.currentProject = project;
+        $scope.currentBuild = null;
     }
-    $scope.setCurrentProject(1);
-    $scope.getProjectClass = function(id) {
-        return id === $scope.currentProject ? 'active' : '';
+    $scope.getProjectClass = function(project) {
+        return project === $scope.currentProject ? 'active' : '';
     }
 
     $scope.tab = 'builds';
@@ -47,9 +51,10 @@ function ProjectCtrl($scope, Project) {
         $scope.currentBuild = build;
         $scope.selectTab('build-details')
     }
-    $scope.printBuildDetails = function(b) {
-        return b.output;
-    }
+    // $scope.printBuildDetails = function(b) {
+    //     if (!b)
+    //     return b.output;
+    // }
 }
 ProjectCtrl.$inject = ['$scope', 'Project'];
 
@@ -57,7 +62,9 @@ function BuildCtrl($scope, $window, Build) {
     $scope.predicate = 'id';
     $scope.builds = [];
     $scope.$watch('currentProject', function(newValue, oldValue) {
-        $scope.builds = Build.query({projectId: $scope.currentProject, id: ''});
+        if (newValue === null)
+            return;
+        $scope.builds = Build.query({projectId: $scope.currentProject.id, id: ''});
     });
 
     $scope.getTotalBuilds = function () {

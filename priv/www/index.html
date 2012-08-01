@@ -13,8 +13,8 @@
       <div class="span3">
         <h2>Projects</h2>
         <ul class="nav nav-tabs nav-stacked">
-          <li ng:class="getClass(project.id)" ng-repeat="project in projects">
-            <a ng-click="setCurrentProject(project.id)">
+          <li ng:class="getProjectClass(project)" ng-repeat="project in projects">
+            <a ng-click="setCurrentProject(project)">
               <span>{{project.id}}</span> -
               <span>{{project.name}}</span>
             </a>
@@ -23,28 +23,30 @@
       </div>
 
       <div class="span9">
-        <h3>Project "{{projects[currentProject].name}}"</h3>
+        <h3>Project "{{currentProject.name}}"</h3>
         <ul class="nav nav-tabs">
           <li ng:class="getTabClass('details')">
-            <a ng-click="tab='details'" href="#">Details</a></li>
+            <a ng-click="selectTab('details')" href="#">Details</a></li>
           <li ng:class="getTabClass('builds')">
-            <a ng-click="tab='builds'" href="#">Builds</a></li>
-          <li ng:class="getTabClass('build-details')">
-            <a href="#">Build details</a></li>
+            <a ng-click="selectTab('builds')" href="#">Builds</a></li>
+          <li ng:class="getTabClass('build-details')"
+              ng:show="!!currentBuild">
+            <a ng-click="selectTab('build-details')" href="#">Build
+            details (#{{currentBuild.id}})</a></li>
         </ul>
         <div class="details" ng:show="tab == 'details'">
           <ul>
             <li>
-              Local: <span>{{projects[currentProject].local}}</span>
+              Local: <span>{{currentProject.local}}</span>
             </li>
             <li>
-              Remote: <span>{{projects[currentProject].remote}}</span>
+              Remote: <span>{{currentProject.remote}}</span>
             </li>
             <li>
-              Build: <span>{{projects[currentProject].build}}</span>
+              Build: <span>{{currentProject.build}}</span>
             </li>
             <li>
-              Notifications: <span>{{projects[currentProject].notifications}}</span>
+              Notifications: <span>{{currentProject.notifications}}</span>
             </li>
           </ul>
         </div>
@@ -68,9 +70,12 @@
           </table>
         </div>
         <div class="build-details" ng:show="tab == 'build-details'">
-          <pre>
-            {{printBuildDetails(currentBuild)}}
-          </pre>
+          <ul>
+            <li>
+              Build output:
+              <pre>{{currentBuild.output}}</pre>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
