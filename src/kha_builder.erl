@@ -141,6 +141,7 @@ handle_info({'DOWN', _, process, Pid, _Reason}, #state{busy = {Pid, Job}} = Stat
     {ProjectId, BuildId} = Job,
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
     kha_build:update(Build0#build{status = failed}),
+    kha_builder:process(),
     {noreply, State#state{busy = false}};
 
 handle_info(_Info, State) ->
@@ -192,18 +193,24 @@ do_process({ProjectId, BuildId}) ->
     Branch = kha_utils:convert(Build#build.branch, str),
 
     {ok, Ref} = timer:apply_after(timer:minutes(1), ?MODULE, build_timeout, [self(), ProjectId, BuildId]),
-    
+
     case filelib:is_dir(Local) of
         true -> ok;
         false ->
             ok = kha_git:clone(Remote, Local)
     end,
 
-    ok = kha_git:checkout(Local, Branch),
+    Steps = [ fun() ->
+                      ok = kha_git:checkout(Local, Branch),
+                      io_lib:format("git: Successfully checked out \"~s\" to \"~s\"~n", [Branch, Local])
+              end |
+              [ fun() ->
+                        kha_utils:sh(C, [{cd, Local}])
+                end || C <- P#project.build ] ],
 
     BF = fun(C, B) ->
                  try
-                     D = kha_utils:sh(C, [{cd, Local}]),
+                     D = C(),
                      B2 = B#build{output = [D | B#build.output]},
                      kha_build:update(B2),
                      B2
@@ -216,7 +223,7 @@ do_process({ProjectId, BuildId}) ->
                  end
          end,
     Build2 = try
-                 B2 = lists:foldl(BF, Build, P#project.build),
+                 B2 = lists:foldl(BF, Build, Steps),
                  B2#build{status = success,
                           stop = now(),
                           exit = 0}
@@ -231,5 +238,4 @@ do_process({ProjectId, BuildId}) ->
         failed  -> kha_hooks:run(on_failed, ProjectId, BuildId);
         timeout -> kha_hooks:run(on_failed, ProjectId, BuildId)
     end,
-    kha_builder:process(),
     Build2.
