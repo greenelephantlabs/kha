@@ -1,7 +1,7 @@
 #!/bin/bash
 #########################
 ### USE:
-### cp support/git_hooks/post-commit .git/hooks/
+### ln -s support/git_hooks/post-commit .git/hooks/post-commit
 #########################
 
 git_branch () {
@@ -21,4 +21,4 @@ AUTHOR=`git_author`
 echo $BRANCH
 echo $AUTHOR
 
-curl -X POST -d "{\"title\": \"test\", \"branch\": \"$BRANCH\", \"revision\": \"rev\", \"author\": \"$AUTHOR\", \"tags\": []}" http://jupiter.lan:8093/project/1/build
+curl -X POST -d "{\"title\": \"test\", \"branch\": \"origin/$BRANCH\", \"revision\": \"rev\", \"author\": \"$AUTHOR\", \"tags\": []}" http://jupiter.lan:8093/project/1/build
