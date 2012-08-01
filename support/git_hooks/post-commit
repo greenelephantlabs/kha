@@ -1,0 +1,24 @@
+#!/bin/bash
+#########################
+### USE:
+### cp support/git_hooks/post-commit .git/hooks/
+#########################
+
+git_branch () {
+    commit=`git show --quiet --format=%H`
+    br=`git branch --contains ${commit} -a`
+    br=${br/* /}
+    echo `echo $br | sed 's#remotes/origin/##g'`
+}
+
+git_author () {
+    echo `git show --quiet  --format=%an`
+}
+
+BRANCH=`git_branch`
+AUTHOR=`git_author`
+
+echo $BRANCH
+echo $AUTHOR
+
+curl -X POST -d "{\"title\": \"test\", \"branch\": \"$BRANCH\", \"revision\": \"rev\", \"author\": \"$AUTHOR\", \"tags\": []}" http://jupiter.lan:8093/project/1/build
