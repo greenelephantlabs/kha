@@ -47,7 +47,7 @@ v0.5
 Hooks, .travis.yml support
 
 v0.6
-Project git change polling
+[ci skip] support, build timeouts, project git change polling
 
 v0.7
 Realtime data push
@@ -56,11 +56,22 @@ v0.8
 Notifications
 
 v0.9
-SVN support, remote builders
+Remote builders
 
 v1.0
-Proper release
+Stable release
 
+v1.1
+Support for multiple Erlang versions via kerl
+
+v1.2
+GitHub pings support
+
+v1.3
+SVN/CVS support
+
+v1.4
+Build sandboxing using chroot
 
 Final architecture
 ==================
