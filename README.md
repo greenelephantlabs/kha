@@ -31,7 +31,7 @@ Notifications:
 Road map
 ========
 
-v0.1 ALMOST DONE
+v0.1 DONE
 Single project, build once, show build results
 
 v0.2 DONE
