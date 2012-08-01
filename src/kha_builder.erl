@@ -141,10 +141,10 @@ handle_info({'DOWN', _, process, Pid, _Reason}, #state{busy = {Pid, Job}} = Stat
     {ProjectId, BuildId} = Job,
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
     kha_build:update(Build0#build{status = failed}),
-    {noreply, State};
+    {noreply, State#state{busy = false}};
 
 handle_info(_Info, State) ->
-    {noreply, State}.
+    {stop, {unknown_info, _Info}, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -228,8 +228,8 @@ do_process({ProjectId, BuildId}) ->
     kha_build:update(Build2),
     case Build2#build.status of
         success -> kha_hooks:run(on_success,   ProjectId, BuildId);
-        failed  -> kha_hooks:run(on_faileding, ProjectId, BuildId);
-        timeout -> kha_hooks:run(on_faileding, ProjectId, BuildId)
+        failed  -> kha_hooks:run(on_failed, ProjectId, BuildId);
+        timeout -> kha_hooks:run(on_failed, ProjectId, BuildId)
     end,
     kha_builder:process(),
     Build2.
