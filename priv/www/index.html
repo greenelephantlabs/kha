@@ -32,7 +32,7 @@
           <li ng:class="getTabClass('build-details')"
               ng:show="!!currentBuild">
             <a ng-click="selectTab('build-details')" href="#">Build
-            details (#{{currentBuild.id}})</a></li>
+              details (#{{currentBuild.id}})</a></li>
         </ul>
         <div class="details" ng:show="tab == 'details'">
           <ul>
@@ -54,14 +54,11 @@
           <h5>Total builds: {{getTotalBuilds()}}</h5>
           <table class="table table-condensed">
             <tr ng-repeat="build in builds | orderBy:predicate:true"
-                class="build-{{build.status}} build-row" ng-click="showBuildDetails(build)">
-              <td>{{build.id}}</td>
-              <td>{{build.status}}</td>
-              <td>{{build.branch}}</td>
-              <td>{{build.title}}</td>
-              <td>{{build.author}}</td>
-              <td>{{build.start}}</td>
-              <td>{{build.stop}}</td>
+                class="build-{{build.status}} build-row"
+                ng-click="showBuildDetails(build)">
+              <td ng-repeat="key in ['id', 'status', 'branch', 'title', 'author', 'start', 'stop']">
+                {{build[key]}}
+              </td>
               <td>
                 <button class="btn" ng-click="rerun(build, $event)"><i class="icon-play"></i>Rerun</button>
                 <button class="btn" ng-click="delete(build, $event)"><i class="icon-trash"></i>Delete</button>
@@ -70,7 +67,10 @@
           </table>
         </div>
         <div class="build-details" ng:show="tab == 'build-details'">
-          <ul>
+          <ul>         
+            <li ng-repeat="key in ['title','branch','revision','author','start','stop','status','exit','tags']">
+              {{key}}: {{currentBuild[key]}}
+            </li>
             <li>
               Build output:
               <pre>{{currentBuild.output}}</pre>
