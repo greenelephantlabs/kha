@@ -205,7 +205,9 @@ do_process({ProjectId, BuildId}) ->
          end,
     Build2 = try
                  B2 = lists:foldl(BF, Build, P#project.build),
-                 B2#build{status = success, stop = now()}
+                 B2#build{status = success,
+                          stop = now(),
+                          exit = 0}
              catch
                  throw:{error, Bb} ->
                      Bb
