@@ -31,32 +31,32 @@ Notifications:
 Road map
 ========
 
-v0.1
+v0.1 ALMOST DONE
 Single project, build once, show build results
 
-v0.2
-Single project, single build, proper JS model
+v0.2 DONE
+Multiple projects, multiple builds, proper JS model
 
-v0.3
-Single project, build queueing
+v0.3 DONE
+Build queueing
 
-v0.4
-Single project, build multiple times, build results history
+v0.4 DONE
+Re-building, build results history
 
 v0.5
-Single project, realtime data push
+Hooks, .travis.yml support
 
 v0.6
-Single project polling
+Project git change polling
 
 v0.7
-Multiple projects
+Realtime data push
 
 v0.8
 Notifications
 
 v0.9
-Remote builders
+SVN support, remote builders
 
 v1.0
 Proper release
