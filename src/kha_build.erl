@@ -18,7 +18,7 @@ create(ProjectId, Build) ->
     Response.
 
 do_create(ProjectId, Build) ->
-    BuildId = db:get_next_id(build),
+    BuildId = db:get_next_id({build, ProjectId}),
     R = Build#build{key = {BuildId, ProjectId},
                     id = BuildId,
                     project = ProjectId,

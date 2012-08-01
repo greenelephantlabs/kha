@@ -53,7 +53,7 @@ do('POST', [PId], Req) ->
     {ok, NewB} = kha_build:create(PId, New),
     kha_builder:add_to_queue(NewB),
     R = kha_utils:build_to_term(NewB),
-    {R, 200, Req2};
+    {R, 200, Req2}.
 
 %% Rerun existing build
 %% do('POST', [PId, BId], Req) ->

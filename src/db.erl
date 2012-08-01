@@ -61,8 +61,7 @@ init() ->
 %%% internal
 
 init_sequences() ->
-    add_record(#id_seq{whose = project}),
-    add_record(#id_seq{whose = build}).
+    add_record(#id_seq{whose = project}).
 
 init_schema() ->
     create_table(project),
