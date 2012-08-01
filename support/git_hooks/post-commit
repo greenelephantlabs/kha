@@ -1,7 +1,8 @@
 #!/bin/bash
 #########################
 ### USE:
-### ln -s support/git_hooks/post-commit .git/hooks/post-commit
+### cd .git/hooks
+### ln -s ../../support/git_hooks/post-commit post-commit
 #########################
 
 git_branch () {
