@@ -200,26 +200,30 @@ do_process({ProjectId, BuildId}) ->
             ok = kha_git:clone(Remote, Local)
     end,
 
-    Steps = [ fun() ->
-                      ok = kha_git:checkout(Local, Branch),
-                      io_lib:format("git: Successfully checked out \"~s\" to \"~s\"~n", [Branch, Local])
-              end |
-              [ fun() ->
-                        kha_utils:sh(C, [{cd, Local}])
-                end || C <- P#project.build ] ],
+    Steps = [ {"git clone and checkout",
+               fun() ->
+                       ok = kha_git:checkout(Local, Branch),
+                       io_lib:format("git: Successfully checked out \"~s\" to \"~s\"~n", [Branch, Local])
+               end} |
+              [ {C,
+                 fun() ->
+                         kha_utils:sh(C, [{cd, Local}])
+                 end} || C <- P#project.build ] ],
 
-    BF = fun(C, B) ->
+    BF = fun({Cmd, F}, B) ->
                  try
-                     D = C(),
-                     B2 = B#build{output = [D | B#build.output]},
+                     B2 = B#build{output = [io_lib:format("$ ~s~n", [Cmd]) | B#build.output]},
                      kha_build:update(B2),
-                     B2
+                     D = F(),
+                     B3 = B#build{output = [D | B2#build.output]},
+                     kha_build:update(B3),
+                     B3
                  catch
                      throw:{exec_error, {_, ExitCode, Reason}} ->
-                         B3 = B#build{output = [Reason | B#build.output],
+                         Be = B#build{output = [Reason | B#build.output],
                                       exit = ExitCode,
                                       status = failed},
-                         throw({error, B3})
+                         throw({error, Be})
                  end
          end,
     Build2 = try
