@@ -23,7 +23,7 @@
       </div>
 
       <div class="span9">
-        <h3>Project "{{projects[projectId].name}}"</h3>
+        <h3>Project "{{projects[currentProject].name}}"</h3>
         <ul class="nav nav-tabs">
           <li ng:class="getTabClass('details')">
             <a ng-click="tab='details'" href="#">Details</a></li>
@@ -35,23 +35,24 @@
         <div class="details" ng:show="tab == 'details'">
           <ul>
             <li>
-              Local: <span>{{projects[projectId].local}}</span>
+              Local: <span>{{projects[currentProject].local}}</span>
             </li>
             <li>
-              Remote: <span>{{projects[projectId].remote}}</span>
+              Remote: <span>{{projects[currentProject].remote}}</span>
             </li>
             <li>
-              Build: <span>{{projects[projectId].build}}</span>
+              Build: <span>{{projects[currentProject].build}}</span>
             </li>
             <li>
-              Notifications: <span>{{projects[projectId].notifications}}</span>
+              Notifications: <span>{{projects[currentProject].notifications}}</span>
             </li>
           </ul>
         </div>
         <div class="builds" ng-controller="BuildCtrl" ng:show="tab == 'builds'">
           <h5>Total builds: {{getTotalBuilds()}}</h5>
           <table class="table table-condensed">
-            <tr ng-repeat="build in builds | orderBy:predicate:true" class="build-{{build.status}}">
+            <tr ng-repeat="build in builds | orderBy:predicate:true"
+                class="build-{{build.status}} build-row" ng-click="showBuildDetails(build)">
               <td>{{build.id}}</td>
               <td>{{build.status}}</td>
               <td>{{build.branch}}</td>
@@ -60,13 +61,16 @@
               <td>{{build.start}}</td>
               <td>{{build.stop}}</td>
               <td>
-                <button class="btn" ng-click="rerun(build)"><i class="icon-play"></i>Rerun</button>
-                <button class="btn" ng-click="delete(build)"><i class="icon-trash"></i>Delete</button>
+                <button class="btn" ng-click="rerun(build, $event)"><i class="icon-play"></i>Rerun</button>
+                <button class="btn" ng-click="delete(build, $event)"><i class="icon-trash"></i>Delete</button>
               </td>
             </tr>
           </table>
         </div>
         <div class="build-details" ng:show="tab == 'build-details'">
+          <pre>
+            {{printBuildDetails(currentBuild)}}
+          </pre>
         </div>
       </div>
     </div>

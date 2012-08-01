@@ -26,41 +26,54 @@ angular.module('Kha', ['ngResource']).
 
 function ProjectCtrl($scope, Project) {
     $scope.projects = Project.query();
-
+    $scope.currentBuild = {};
     $scope.setCurrentProject = function(id) {
-        $scope.projectId = id;
+        $scope.currentProject = id;
     }
     $scope.setCurrentProject(1);
     $scope.getProjectClass = function(id) {
-        return id === $scope.projectId ? 'active' : '';
+        return id === $scope.currentProject ? 'active' : '';
     }
 
     $scope.tab = 'builds';
     $scope.getTabClass = function(type) {
         return $scope.tab === type ? 'active' : '';
     }
+    $scope.selectTab = function(tab) {
+        $scope.tab = tab;
+    }
+
+    $scope.showBuildDetails = function(build) {
+        $scope.currentBuild = build;
+        $scope.selectTab('build-details')
+    }
+    $scope.printBuildDetails = function(b) {
+        return b.output;
+    }
 }
 ProjectCtrl.$inject = ['$scope', 'Project'];
 
-function BuildCtrl($scope, Build) {
+function BuildCtrl($scope, $window, Build) {
     $scope.predicate = 'id';
     $scope.builds = [];
-    $scope.$watch('projectId', function(newValue, oldValue) {
-        $scope.builds = Build.query({projectId: $scope.projectId, id: ''});
+    $scope.$watch('currentProject', function(newValue, oldValue) {
+        $scope.builds = Build.query({projectId: $scope.currentProject, id: ''});
     });
 
     $scope.getTotalBuilds = function () {
         return $scope.builds.length;
     };
 
-    $scope.rerun = function(build) {
+    $scope.rerun = function(build, $event) {
         console.log('rerun', arguments);
         Build.rerun(build, $scope);
+        $event.stopPropagation();
     }
-    $scope.delete = function(build) {
+    $scope.delete = function(build, $event) {
         console.log('delete', arguments);
         build.$delete();
+        $event.stopPropagation();
     }
 }
 
-BuildCtrl.$inject = ['$scope', 'Build'];
+BuildCtrl.$inject = ['$scope', '$window', 'Build'];
