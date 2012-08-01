@@ -44,16 +44,16 @@ v0.4 DONE
 Re-building, build results history
 
 v0.5
-Hooks, .travis.yml support
+Hooks, very basic .travis.yml support
 
 v0.6
 [ci skip] support, build timeouts, project git change polling
 
 v0.7
-Realtime data push
+Email and IRC notifications
 
 v0.8
-Notifications
+Realtime data push
 
 v0.9
 Remote builders
@@ -73,8 +73,10 @@ SVN/CVS support
 v1.4
 Build sandboxing using chroot
 
-Final architecture
+v1.0 architecture
 ==================
+
+Rough sketch of v1.0 architecture:
 
 1. Angular.js on client side
 2. SockJS for communication, hence allowing to connect to any remote server
