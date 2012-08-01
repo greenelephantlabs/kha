@@ -11,6 +11,8 @@
 
 -export([create/2,
          get/2,
+         delete/1,
+         delete/2,
          update/1]).
 
 create(ProjectId, Build) ->
@@ -35,6 +37,12 @@ get(ProjectId, all) ->
 get(ProjectId, BuildId) ->
     {ok, Response} = db:transaction(fun() -> do_get(ProjectId, BuildId) end),
     Response.
+
+delete(#build{} = Build) ->
+    db:remove_object(Build).
+
+delete(ProjectId, BuildId) ->
+    db:remove_record(build, {ProjectId, BuildId}).
 
 do_get(ProjectId, BuildId) ->
     db:get_record(build, {BuildId, ProjectId}).

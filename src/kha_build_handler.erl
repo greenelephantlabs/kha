@@ -34,6 +34,13 @@ do('GET', [PId], Req) ->
     {Response, 200, Req};
 
 %% Get build
+do('DELETE', [PId, BId], Req) ->
+    {ok, E} = kha_build:get(PId, BId),
+    kha_build:delete(E),
+    Response = [],%%kha_utils:build_to_term(E),
+    {Response, 200, Req};
+
+%% Get build
 do('GET', [PId, BId], Req) ->
     {ok, E} = kha_build:get(PId, BId),
     Response = kha_utils:build_to_term(E),

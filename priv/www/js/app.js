@@ -74,13 +74,13 @@ function BuildCtrl($scope, $window, $timeout, Build) {
     };
 
     $scope.rerun = function(build, $event) {
-        console.log('rerun', arguments);
         Build.rerun(build, $scope);
         $event.stopPropagation();
     }
     $scope.delete = function(build, $event) {
-        console.log('delete', arguments);
-        build.$delete();
+        build.$delete(function() {
+            $scope.builds = _.without($scope.builds, build);
+        });
         $event.stopPropagation();
     }
 
