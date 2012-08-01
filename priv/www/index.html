@@ -9,17 +9,24 @@
     <link type="text/css" rel="stylesheet" href="/css/kha.css">
   </head>
   <body>
-    <div class="row" ng-controller="ProjectCtrl">
+    <div class="container-fluid">
+    <div class="row-fluid" ng-controller="ProjectCtrl">
       <div class="span3">
-        <h2>Projects</h2>
-        <ul class="nav nav-tabs nav-stacked">
-          <li ng:class="getProjectClass(project)" ng-repeat="project in projects">
-            <a ng-click="setCurrentProject(project)">
-              <span>{{project.id}}</span> -
-              <span>{{project.name}}</span>
-            </a>
-          </li>
-        </ul>
+        <div id="logo">
+          <img src="/img/kha.png"/>
+          <h3>Kha - lightweight CI server</h3>
+        </div>        
+        <div id="projects">
+          <h2>Projects</h2>
+          <ul class="nav nav-tabs nav-stacked">
+            <li ng:class="getProjectClass(project)" ng-repeat="project in projects">
+              <a ng-click="setCurrentProject(project)">
+                <span>{{project.id}}</span> -
+                <span>{{project.name}}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <div class="span9">
@@ -78,6 +85,7 @@
           </ul>
         </div>
       </div>
+    </div>
     </div>
   </body>
 </html>

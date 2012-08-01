@@ -1,3 +1,11 @@
+#logo {
+  padding-bottom: 20px;
+}
+
+body {
+  margin-top: 15px;
+}
+
 .table tr td {
   vertical-align: middle;
 }
