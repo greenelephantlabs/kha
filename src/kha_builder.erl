@@ -186,7 +186,7 @@ do_process({ProjectId, BuildId}) ->
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
     Build = Build0#build{status = building},
     kha_build:update(Build),
-    kha_hooks:run(on_building, ProjectId, BuildId);
+    kha_hooks:run(on_building, ProjectId, BuildId),
     Local = kha_utils:convert(P#project.local, str),
     Remote = kha_utils:convert(P#project.remote, str),
     Branch = kha_utils:convert(Build#build.branch, str),
