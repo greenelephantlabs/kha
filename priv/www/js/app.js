@@ -34,6 +34,7 @@ function ProjectCtrl($scope, Project) {
     $scope.setCurrentProject = function(project) {
         $scope.currentProject = project;
         $scope.currentBuild = null;
+        $scope.selectTab('builds');
     }
     $scope.getProjectClass = function(project) {
         return project === $scope.currentProject ? 'active' : '';

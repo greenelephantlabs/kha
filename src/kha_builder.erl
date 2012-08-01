@@ -23,6 +23,8 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
+-export([build_timeout/3]).
+
 -define(SERVER, ?MODULE).
 
 -record(state, {busy = false :: 'false' | {pid(), term()},
@@ -130,7 +132,8 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_info({'DOWN', _, process, Pid, normal}, #state{busy = {Pid, _}} = State) ->
+handle_info({'DOWN', _, process, Pid, NormalOrTimeout}, #state{busy = {Pid, _}} = State) when NormalOrTimeout == normal;
+                                                                                              NormalOrTimeout == timeout ->
     kha_builder:process(),
     {noreply, State#state{busy = false}};
 
@@ -172,6 +175,12 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
+build_timeout(Pid, ProjectId, BuildId) ->
+    {ok, Build0} = kha_build:get(ProjectId, BuildId),
+    Build = Build0#build{status = timeout},
+    kha_build:update(Build),
+    exit(Pid, timeout).
+
 do_process({ProjectId, BuildId}) ->
     {ok, P} = kha_project:get(ProjectId),
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
@@ -181,6 +190,8 @@ do_process({ProjectId, BuildId}) ->
     Remote = kha_utils:convert(P#project.remote, str),
     Branch = kha_utils:convert(Build#build.branch, str),
 
+    {ok, Ref} = timer:apply_after(timer:minutes(1), ?MODULE, build_timeout, [self(), ProjectId, BuildId]),
+    
     case filelib:is_dir(Local) of
         true -> ok;
         false ->
@@ -212,6 +223,7 @@ do_process({ProjectId, BuildId}) ->
                  throw:{error, Bb} ->
                      Bb
              end,
+    catch timer:cancel(Ref),
     kha_build:update(Build2),
     ?LOG("End build: Project: ~b; Build: ~b", [ProjectId, BuildId]),
     kha_builder:process(),
