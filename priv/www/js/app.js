@@ -37,7 +37,6 @@ function ProjectCtrl($scope, Project) {
 
     $scope.tab = 'builds';
     $scope.getTabClass = function(type) {
-        console.log($scope.tab, type);
         return $scope.tab === type ? 'active' : '';
     }
 }
