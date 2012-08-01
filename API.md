@@ -52,10 +52,12 @@
 ### Variables
 
     {
-        id     :: integer(),
-        branch :: string()
-        [or]
-        commit :: string() %% current not use
+        project_id :: integer(),
+        title      :: string(),
+        branch     :: string(),
+        revision   :: string(),
+        author     :: string(),
+        tags       :: list(string())
     }
 
 or
