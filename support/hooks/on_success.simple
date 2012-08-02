@@ -1,3 +1,10 @@
 #!/bin/bash
+# rename this file to 'on_success' for enabled this
 
-echo $1 $2 $3 $4 $5 $6 > /tmp/test
+echo "ProjectId: $1" >> /tmp/kha_test_hook
+echo "BuildId: $2"   >> /tmp/kha_test_hook
+echo "Title: $3"     >> /tmp/kha_test_hook
+echo "Branch: $4"    >> /tmp/kha_test_hook
+echo "Revision: $5"  >> /tmp/kha_test_hook
+echo "Author: $6"    >> /tmp/kha_test_hook
+echo "Reason: $7"    >> /tmp/kha_test_hook
