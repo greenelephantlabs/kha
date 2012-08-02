@@ -24,18 +24,38 @@ angular.module('Kha', ['ngResource']).
         return b;
     });
 
-function ProjectCtrl($scope, Project) {
+function ProjectCtrl($scope, $location, Project) {
+    $scope.$location = $location;
+    $scope.$watch('$location.path()', function(newValue, oldValue) {
+        if (!newValue)
+            return;
+        var x = newValue.split('/');
+        if (x[1] == 'project') {
+            var pid = parseInt(x[2]);
+            if (pid !== parseInt(null)) {
+                var p = _.groupBy($scope.projects, 'id')[pid];
+                if (p && p[0]) {
+                    $scope.currentProject = p[0];
+                    console.log($scope.currentProject);
+                }
+            }
+        }
+    });
+
+    $scope.$watch('currentProject', function(newValue, oldValue) {
+        if (newValue === null)
+            return;
+        $scope.currentProject = newValue;
+        $scope.currentBuild = null;
+        $scope.selectTab('builds');
+    });
+
     $scope.projects = Project.query(function(projects) {
         if (projects)
-            $scope.setCurrentProject(projects[0]);
+            $scope.currentProject = projects[0];
     });
     $scope.currentProject = null;
     $scope.currentBuild = null;
-    $scope.setCurrentProject = function(project) {
-        $scope.currentProject = project;
-        $scope.currentBuild = null;
-        $scope.selectTab('builds');
-    }
     $scope.getProjectClass = function(project) {
         return project === $scope.currentProject ? 'active' : '';
     }
@@ -50,14 +70,11 @@ function ProjectCtrl($scope, Project) {
 
     $scope.showBuildDetails = function(build) {
         $scope.currentBuild = build;
-        $scope.selectTab('build-details')
+        $scope.selectTab('build')
+        $location.path('/project/'+$scope.currentProject.id+ '/build/'+build.id);
     }
-    // $scope.printBuildDetails = function(b) {
-    //     if (!b)
-    //     return b.output;
-    // }
 }
-ProjectCtrl.$inject = ['$scope', 'Project'];
+ProjectCtrl.$inject = ['$scope', '$location', 'Project'];
 
 function BuildCtrl($scope, $window, $timeout, Build) {
     $scope.predicate = 'id';
