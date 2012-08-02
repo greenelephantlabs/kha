@@ -23,9 +23,6 @@
 
          now_to_nice/1]).
 
-THIS FILE NOT SHOULD BE COMPILE! TESTS DEPLOY!!! :)
-
-
 -export([record_field/1,
          project_to_term/1,
          build_to_term/1,
