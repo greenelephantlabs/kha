@@ -2,7 +2,7 @@ REBAR=$(shell which rebar || echo ./rebar)
 
 default: fast
 
-all: $(REBAR)
+all:    $(REBAR)
 	$(REBAR) get-deps
 	$(REBAR) compile
 
