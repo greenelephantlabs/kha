@@ -14,10 +14,10 @@
 
 -define(HOOKS_LOCATION, <<"support/hooks/">>).
 
-hookfn(on_success) -> <<"on_success">>;
-hookfn(on_failed)  -> <<"on_failed">>;
-hookfn(on_building)   -> <<"on_building">>;
-hookfn(on_timeout) -> <<"on_timeout">>.
+hookfn(on_success)  -> <<"on_success">>;
+hookfn(on_failed)   -> <<"on_failed">>;
+hookfn(on_building) -> <<"on_building">>;
+hookfn(on_timeout)  -> <<"on_timeout">>.
 
 run(Which, ProjectId, BuildId) ->
     {ok, P} = kha_project:get(ProjectId),
@@ -35,10 +35,10 @@ run(Which, ProjectId, BuildId) ->
 do_run(Which, HookPath, P, B) ->
     case filelib:is_file(HookPath) of
         true ->
-            Opts = io_lib:fwrite("~b ~b \"~s\" \"~s\" \"~s\" \"~s\"",
+            Opts = io_lib:fwrite("~b ~b \"~s\" \"~s\" \"~s\" \"~s\" \"~s\"",
                                  [P#project.id, B#build.id, B#build.title,
-                                  B#build.branch, B#build.author,
-                                  P#project.remote]),
+                                  B#build.branch, B#build.revision,
+                                  B#build.author, P#project.remote]),
             Cmd = io_lib:fwrite("~s ~s", [HookPath, Opts]),
             try 
                 kha_utils:sh(Cmd)

@@ -7,3 +7,4 @@ ebin/*
 erl_crash.dump
 *~
 Mnesia*
+kha_hooks

@@ -13,6 +13,8 @@
 -export([to_int/1,
          list_convert/2,
          convert/2,
+         convert_opt/2,
+         convert_safe/2,
          fmt/2,
          b2a/1,
          a2b/1,
@@ -62,19 +64,20 @@ build_to_term(#build{id       = Id,
                      exit     = Exit,
                      output   = Output,
                      tags     = Tags}) ->
-    [{<<"id">>, Id},
-     {<<"project">>, Project},
-     {<<"title">>, kha_utils:convert(Title, bin)},
-     {<<"branch">>, kha_utils:convert(Branch, bin)},
-     {<<"revision">>, kha_utils:convert(Revision, bin)},
-     {<<"author">>, kha_utils:convert(Author, bin)},
-     {<<"start">>, kha_utils:now_to_nice(Start)},
-     {<<"stop">>, kha_utils:now_to_nice(Stop)},
-     {<<"status">>, kha_utils:convert(Status, bin)},
-     {<<"exit">>, Exit},
-     {<<"output">>, kha_utils:convert(lists:reverse(Output), bin)},
-     {<<"tags">>, kha_utils:list_convert(Tags, bin)}
-    ].
+    fltr(
+      [{<<"id">>,       Id},
+       {<<"project">>,  Project},
+       {<<"title">>,    kha_utils:convert_safe(Title, bin)},
+       {<<"branch">>,   kha_utils:convert_safe(Branch, bin)},
+       {<<"revision">>, kha_utils:convert_opt(Revision, bin)},
+       {<<"author">>,   kha_utils:convert_opt(Author, bin)},
+       {<<"start">>,    kha_utils:now_to_nice(Start)},
+       {<<"stop">>,     kha_utils:now_to_nice(Stop)},
+       {<<"status">>,   kha_utils:convert_safe(Status, bin)},
+       {<<"exit">>,     Exit},
+       {<<"output">>,   kha_utils:convert(lists:reverse(Output), bin)},
+       {<<"tags">>,     kha_utils:list_convert(Tags, bin)}
+      ]).
 
 to_int(X) when is_binary(X) -> to_int(binary_to_list(X));
 to_int(X) when is_list(X) -> list_to_integer(X);
@@ -105,6 +108,19 @@ now_to_nice(Now) ->
     {{Y,M,D}, {H,Min, S}} = calendar:now_to_local_time(Now),
     Out = io_lib:fwrite("~4.10.0B-~2.10.0B-~2.10.0B ~2.10.0B:~2.10.0B:~2.10.0B", [Y,M,D, H,Min,S]),
     convert(lists:flatten(Out), bin).
+
+fltr(L) ->
+    [ {K, V} || {K,V} <- L, V /= undefined ].
+
+convert_opt(undefined, _Type) ->
+    undefined;
+convert_opt(Val, Type) ->
+    convert(Val, Type).
+
+convert_safe(undefined, Type) ->
+    erlang:error({unable_convert, undefined, Type});
+convert_safe(Val, Type) ->
+    convert(Val, Type).
 
 convert(Val, int)
   when is_list(Val) ->

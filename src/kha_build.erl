@@ -10,9 +10,13 @@
 -include("kha.hrl").
 
 -export([create/2,
+         create_and_add_to_queue/6,
+
          get/2,
+
          delete/1,
          delete/2,
+
          update/1]).
 
 create(ProjectId, Build) ->
@@ -31,6 +35,16 @@ do_create(ProjectId, Build) ->
     ok = db:add_record(R),
     {ok, R}.
 
+create_and_add_to_queue(ProjectId, Title, Branch, Revision, Author, Tags) ->
+    New = #build{title    = Title,
+                 branch   = Branch,
+                 revision = Revision,
+                 author   = Author,
+                 tags     = Tags},
+    {ok, Build} = kha_build:create(ProjectId, New),
+    kha_builder:add_to_queue(Build),
+    {ok, Build}.
+
 get(ProjectId, all) ->
     db:get_match_object(#build{key={'_', ProjectId}, _='_'});
 
@@ -38,14 +52,15 @@ get(ProjectId, BuildId) ->
     {ok, Response} = db:transaction(fun() -> do_get(ProjectId, BuildId) end),
     Response.
 
+do_get(ProjectId, BuildId) ->
+    db:get_record(build, {BuildId, ProjectId}).
+
 delete(#build{} = Build) ->
     db:remove_object(Build).
 
 delete(ProjectId, BuildId) ->
     db:remove_record(build, {ProjectId, BuildId}).
 
-do_get(ProjectId, BuildId) ->
-    db:get_record(build, {BuildId, ProjectId}).
 
 update(Build) ->
     db:add_record(Build).

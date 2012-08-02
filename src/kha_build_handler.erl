@@ -75,25 +75,19 @@ create_build(ProjectId, Data) ->
     Revision = proplists:get_value(<<"revision">>, Data),
     Author   = proplists:get_value(<<"author">>, Data),
     Tags     = proplists:get_value(<<"tags">>, Data),
-    New = #build{title    = Title,
-                 branch   = Branch,
-                 revision = Revision,
-                 author   = Author,
-                 tags     = Tags},
-    {ok, Build} = kha_build:create(ProjectId, New),
-    kha_builder:add_to_queue(Build),
+    {ok, Build} = kha_build:create_and_add_to_queue(ProjectId, Title, Branch,
+                                                    Revision, Author, Tags),
     Response = kha_utils:build_to_term(Build),
     {Response, 200}.
 
 copy_build(ProjectId, BuildId, _Data) ->
     {ok, Old} = kha_build:get(ProjectId, BuildId),
-    New = #build{title    = Old#build.title,
-                 branch   = Old#build.branch,
-                 revision = Old#build.revision,
-                 author   = Old#build.author,
-                 tags     = Old#build.tags},
-    {ok, Build} = kha_build:create(ProjectId, New),
-    kha_builder:add_to_queue(Build),
+    {ok, Build} = kha_build:create_and_add_to_queue(ProjectId,
+                                                    Old#build.title,
+                                                    Old#build.branch,
+                                                    Old#build.revision,
+                                                    Old#build.author,
+                                                    Old#build.tags),
     Response = kha_utils:build_to_term(Build),
     {Response, 200}.
 

@@ -19,11 +19,18 @@ start() ->
 start(_Type, _Args) ->
     Dispatch = [
                 {'_', [
+                       %% PROJECT
                        {[<<"project">>], kha_project_handler, []},
                        {[<<"project">>, '_'], kha_build_handler, []},
+
+                       %% BUILD
                        {[<<"project">>, '_', <<"build">>], kha_build_handler, []},
                        {[<<"project">>, '_', <<"build">>, '_'], kha_build_handler, []},
-                       %% {[<<"builds">>, build], kha_build_handler, []},
+
+                       %% HOOKS
+                       {[<<"hooks">>, '_', '_'], kha_hooks_handler, []},
+
+                       %% DEFAULT
                        {'_', default_handler, []}
                       ]}
                ],

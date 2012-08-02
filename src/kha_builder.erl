@@ -191,6 +191,7 @@ do_process({ProjectId, BuildId}) ->
     Local = kha_utils:convert(P#project.local, str),
     Remote = kha_utils:convert(P#project.remote, str),
     Branch = kha_utils:convert(Build#build.branch, str),
+    Revision = kha_utils:convert(Build#build.revision, str),
 
     {ok, Ref} = timer:apply_after(timer:minutes(1), ?MODULE, build_timeout, [self(), ProjectId, BuildId]),
 
@@ -202,7 +203,11 @@ do_process({ProjectId, BuildId}) ->
 
     Steps = [ {"git clone and checkout",
                fun() ->
-                       ok = kha_git:checkout(Local, Branch),
+                       case Revision of
+                           undefined -> ok = kha_git:checkout(Local, Branch);
+                           X -> ok = kha_git:checkout(Local, X)
+                       end,
+
                        io_lib:format("git: Successfully checked out \"~s\" to \"~s\"~n", [Branch, Local])
                end} |
               [ {C,

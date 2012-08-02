@@ -50,19 +50,16 @@ create_fake() ->
 example_builds() ->
     [#build{title    = "Test 1",
             branch   = "origin/master",
-            revision = "revision",
             author   = "Paul Peter Flis",
             tags     = ["paul", "peter", "test_branch_1"]
            },
      #build{title    = "Test 2",
             branch   = "test_branch_1",
-            revision = "revision",
             author   = "Gleb Peregud",
             tags     = ["gleber", "peregud", "test_branch_1"]
            },
      #build{title    = "Test 3",
             branch   = "test_branch_2",
-            revision = "revision",
             author   = "Paul Peregud",
             tags     = ["paul", "peregud", "test_branch_2"]
            }
