@@ -12,7 +12,8 @@
 
 -export([run/3]).
 
--define(HOOKS_LOCATION, <<"support/hooks/">>).
+-define(GLOBAL_HOOKS_LOCATION, <<"support/hooks/">>).
+-define(PROJECT_HOOKS_LOCATION, <<"kha_hooks/">>).
 
 hookfn(on_success)  -> <<"on_success">>;
 hookfn(on_failed)   -> <<"on_failed">>;
@@ -24,12 +25,12 @@ run(Which, ProjectId, BuildId) ->
     {ok, B} = kha_build:get(ProjectId, BuildId),
     %%run global hook
     SelfPath = kha_utils:get_app_path(),
-    HookPath = filename:join([SelfPath, ?HOOKS_LOCATION, hookfn(Which)]),
+    HookPath = filename:join([SelfPath, ?GLOBAL_HOOKS_LOCATION, hookfn(Which)]),
     do_run(Which, HookPath, P, B),
 
     %%run project hook
     Local = kha_utils:convert(P#project.local, str),
-    LocalHookPath = filename:join([Local, ?HOOKS_LOCATION, hookfn(Which)]),
+    LocalHookPath = filename:join([Local, ?PROJECT_HOOKS_LOCATION, hookfn(Which)]),
     do_run(Which, LocalHookPath, P, B).    
 
 do_run(Which, HookPath, P, B) ->
