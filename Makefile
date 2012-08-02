@@ -42,6 +42,7 @@ REBAR_URL=http://cloud.github.com/downloads/basho/rebar/rebar
 distclean:
 	rm -f ./rebar
 
+# For update code
 up:
 	git fetch
 	git checkout origin/master
