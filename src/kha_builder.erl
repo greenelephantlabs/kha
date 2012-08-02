@@ -226,6 +226,7 @@ do_process({ProjectId, BuildId}) ->
                  catch
                      throw:{exec_error, {_, ExitCode, Reason}} ->
                          Be = B#build{output = [Reason | B#build.output],
+                                      stop = now(),
                                       exit = ExitCode,
                                       status = failed},
                          throw({error, Be})
