@@ -194,7 +194,7 @@ do_process({ProjectId, BuildId}) ->
     Revision = kha_utils:convert(Build#build.revision, str),
     BuildTimeout = proplists:get_value(build_timeout, P#project.params, 60),
 
-    {ok, Ref} = timer:apply_after(timer:secound(BuildTimeout), ?MODULE, build_timeout, [self(), ProjectId, BuildId]),
+    {ok, Ref} = timer:apply_after(timer:seconds(BuildTimeout), ?MODULE, build_timeout, [self(), ProjectId, BuildId]),
 
     case filelib:is_dir(Local) of
         true -> ok;
