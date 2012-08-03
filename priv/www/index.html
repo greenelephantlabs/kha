@@ -26,6 +26,7 @@
                 </a>
               </li>
             </ul>
+            <a ng-click="addProject()">Add project</a>
           </div>
         </div>
 
@@ -47,6 +48,9 @@
             </ul>
             <div class="details" ng:show="tab == 'details'" ng-controller="DetailsCtrl">
               <ul>
+                <li>
+                  Name: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.name"></input>
+                </li>
                 <li>
                   Local: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.local"></input>
                 </li>

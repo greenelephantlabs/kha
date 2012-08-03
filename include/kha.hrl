@@ -14,39 +14,39 @@
 -type b_string()   :: binary().
 
 -record(notification,
-        {type          :: atom(), %% kha_notification_[type].erl
-         params        :: proplists:proplist()
+        {type               :: atom(), %% kha_notification_[type].erl
+         params             :: proplists:proplist()
         }).
 
 -record(project,
-        {id            :: project_id(),
-         name          :: b_string(),
-         local         :: filename:filename(), %% git clone remote local
-         remote        :: b_string(),
-         build         :: list(command()),
-         params = []   :: proplists:proplist(),
-         notifications :: list(#notification{})
+        {id                 :: project_id(),
+         name               :: b_string(),
+         local              :: filename:filename(), %% git clone remote local
+         remote             :: b_string(),
+         build = []         :: list(command()),
+         params = []        :: proplists:proplist(),
+         notifications = [] :: list(#notification{})
         }).
 
 -record(build,
-        {key           :: {build_id(), project_id()},
-         id            :: build_id(),
-         project       :: project_id(),
-         title         :: b_string() | 'undefined',
-         branch        :: b_string(),
-         revision      :: b_string(),
-         author        :: b_string(),
-         start         :: time(),
-         stop          :: time(),
-         status        :: 'pending' | 'building' | 'succeed' | 'failed',
-         exit          :: integer(),
-         output        :: list(b_string()),
-         tags          :: list(tag())
+        {key                :: {build_id(), project_id()},
+         id                 :: build_id(),
+         project            :: project_id(),
+         title              :: b_string() | 'undefined',
+         branch             :: b_string(),
+         revision           :: b_string(),
+         author             :: b_string(),
+         start              :: time(),
+         stop               :: time(),
+         status             :: 'pending' | 'building' | 'succeed' | 'failed',
+         exit               :: integer(),
+         output             :: list(b_string()),
+         tags               :: list(tag())
         }).
 
 -record(id_seq,
-        {whose      :: atom(),
-         id = 10000 :: integer()
+        {whose              :: atom(),
+         id = 10000         :: integer()
         }).
 
 %%FIXME: PF: A temporary solution -> should by replace by alog or lager

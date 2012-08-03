@@ -37,6 +37,15 @@ do('GET', [PId], Req) ->
     Response = kha_utils:project_to_term(E),
     {Response, 200, Req};
 
+%% Add new project
+do('POST', [], Req) ->
+    {ok, Data0, Req2} = cowboy_http_req:body(Req),
+    Data = jsx:to_term(Data0),
+    E2 = kha_utils:update_project(#project{}, Data),
+    {ok, E3} = kha_project:create(E2),
+    Response = kha_utils:project_to_term(E3),
+    {Response, 200, Req2};
+
 %% Get project
 do('POST', [PId], Req) ->
     {ok, E} = kha_project:get(PId),

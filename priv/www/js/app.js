@@ -1,10 +1,13 @@
 angular.module('Kha', ['ngResource']).
     factory('Project', function($resource){
-        return $resource('/project/:id', {id: '@id'}, {
+        var r = $resource('/project/:id', {id: '@id'}, {
             query: {method:'GET',
                     params: {id: ''},
                     isArray:true}
         });
+        r.prototype.build = [];
+        r.prototype.notifications = [];
+        return r;
     }).
     factory('Build', function($resource){
         var b = $resource('/project/:projectId/build/:id', {projectId: '@project', id: '@id'}, {
@@ -41,12 +44,25 @@ function ProjectCtrl($scope, $location, Project) {
         }
     });
 
+    $scope.addProject = function() {
+        $scope.currentProject = new Project({});
+        console.log($scope.currentProject);
+        $scope.selectTab('details');
+        $scope.$broadcast('add_project', 1, 2, 3);
+    };
+
+    $scope.$on('new_project', function(e, project) {
+        $scope.projects.push(project);
+    });
+
     $scope.$watch('currentProject', function(newValue, oldValue) {
         if (newValue === null)
             return;
         $scope.currentProject = newValue;
         $scope.currentBuild = null;
-        $scope.selectTab('builds');
+        if ($scope.tab == 'build') {
+            $scope.selectTab('builds');
+        }
     });
 
     $scope.projects = Project.query(function(projects) {
@@ -78,12 +94,16 @@ ProjectCtrl.$inject = ['$scope', '$location', 'Project'];
 function DetailsCtrl($scope) {
     $scope.editing = false;
     var backup = null;
-    $scope.edit = function() {
+    function edit() {
         $scope.editing = true;
         backup = _.extend({}, $scope.currentProject);
         backup.build = _.toArray($scope.currentProject.build);
         backup.notifications = _.toArray($scope.currentProject.notifications);
     }
+    $scope.$on('add_project', function() {
+        edit();
+    });
+    $scope.edit = edit;
     $scope.cancel = function() {
         $scope.editing = false;
         _.extend($scope.currentProject, backup);
@@ -91,7 +111,12 @@ function DetailsCtrl($scope) {
     $scope.save = function() {
         $scope.editing = false;
         $scope.currentProject.build = _.filter($scope.currentProject.build, function(x) { return !_.isEmpty(x) });
-        $scope.currentProject.$save();
+        var old = 'id' in $scope.currentProject;
+        $scope.currentProject.$save(function() {
+            if (!old) {
+                $scope.$emit('new_project', $scope.currentProject);
+            }
+        });
     }
     $scope.getEditingClass = function() {
         return $scope.editing ? 'editing' : '';
@@ -102,10 +127,9 @@ function BuildCtrl($scope, $window, $timeout, Build) {
     $scope.predicate = 'id';
     $scope.builds = [];
 
-    $scope.$watch('currentProject', function(newValue, oldValue) {
-        if (newValue === null)
-            return;
-        $scope.builds = Build.query({projectId: $scope.currentProject.id, id: ''});
+    $scope.$watch('currentProject.id', function(newValue, oldValue) {
+        if (!newValue) return;
+        $scope.builds = Build.query({projectId: newValue, id: ''});
     });
 
     $scope.getTotalBuilds = function () {
@@ -124,6 +148,7 @@ function BuildCtrl($scope, $window, $timeout, Build) {
     }
 
     $timeout(function updateBuilds(){
+        if (!$scope.currentProject.id) return;
         Build.query({projectId: $scope.currentProject.id, id: ''}, function(builds) {
             $scope.builds = builds;
             $timeout(updateBuilds, 5000);
