@@ -43,11 +43,11 @@ Build queueing
 v0.4 DONE
 Re-building, build results history
 
-v0.5 DONE 1/2
-Hooks, very basic .travis.yml support
+v0.5 DONE
+Hooks, build timeouts
 
 v0.6
-[ci skip] support, build timeouts, project git change polling
+[ci skip] support, basic .travis.yml support, project git change polling
 
 v0.7
 Email and IRC notifications
