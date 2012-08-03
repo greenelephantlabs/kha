@@ -1,6 +1,6 @@
 angular.module('Kha', ['ngResource']).
     factory('Project', function($resource){
-        return $resource('/project/:id', {}, {
+        return $resource('/project/:id', {id: '@id'}, {
             query: {method:'GET',
                     params: {id: ''},
                     isArray:true}
@@ -78,14 +78,18 @@ ProjectCtrl.$inject = ['$scope', '$location', 'Project'];
 
 function DetailsCtrl($scope) {
     $scope.editing = false;
+    var backup = null;
     $scope.edit = function() {
         $scope.editing = true;
+        backup = _.extend({}, $scope.currentProject)
     }
     $scope.cancel = function() {
         $scope.editing = false;
+        _.extend($scope.currentProject, backup);
     }
     $scope.save = function() {
         $scope.editing = false;
+        $scope.currentProject.$save();
     }
     $scope.getEditingClass = function() {
         return $scope.editing ? 'editing' : '';
