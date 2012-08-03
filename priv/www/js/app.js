@@ -36,7 +36,6 @@ function ProjectCtrl($scope, $location, Project) {
                 var p = _.groupBy($scope.projects, 'id')[pid];
                 if (p && p[0]) {
                     $scope.currentProject = p[0];
-                    console.log($scope.currentProject);
                 }
             }
         }

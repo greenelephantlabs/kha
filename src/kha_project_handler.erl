@@ -35,7 +35,16 @@ do('GET', [], Req) ->
 do('GET', [PId], Req) ->
     {ok, E} = kha_project:get(PId),
     Response = kha_utils:project_to_term(E),
-    {Response, 200, Req}.
+    {Response, 200, Req};
+
+%% Get project
+do('POST', [PId], Req) ->
+    {ok, E} = kha_project:get(PId),
+    {ok, Data0, Req2} = cowboy_http_req:body(Req),
+    Data = jsx:to_term(Data0),
+    E2 = kha_utils:update_project(E, Data),
+    Response = kha_utils:project_to_term(E2),
+    {Response, 200, Req2}.
 
 terminate(_Req, _State) ->
     ok.

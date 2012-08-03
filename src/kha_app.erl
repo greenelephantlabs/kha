@@ -21,7 +21,7 @@ start(_Type, _Args) ->
                 {'_', [
                        %% PROJECT
                        {[<<"project">>], kha_project_handler, []},
-                       {[<<"project">>, '_'], kha_build_handler, []},
+                       {[<<"project">>, '_'], kha_project_handler, []},
 
                        %% BUILD
                        {[<<"project">>, '_', <<"build">>], kha_build_handler, []},

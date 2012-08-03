@@ -24,6 +24,7 @@
          now_to_nice/1]).
 
 -export([record_field/1,
+         update_project/2,
          project_to_term/1,
          build_to_term/1,
          headers/0,
@@ -40,16 +41,33 @@ record_field(build) ->
 record_field(id_seq) ->
     record_info(fields, id_seq).
 
+update_project(P, []) ->
+    P;
+update_project(P, [{<<"id">>, V}|R]) ->
+    update_project(P#project{id = kha_utils:convert(V, int)}, R);
+update_project(P, [{<<"name">>, V}|R]) ->
+    update_project(P#project{name = kha_utils:convert(V, bin)}, R);
+update_project(P, [{<<"local">>, V}|R]) ->
+    update_project(P#project{local = kha_utils:convert(V, bin)}, R);
+update_project(P, [{<<"remote">>, V}|R]) ->
+    update_project(P#project{remote = kha_utils:convert(V, bin)}, R);
+update_project(P, [{<<"build">>, V}|R]) ->
+    update_project(P#project{build = kha_utils:list_convert(V, bin)}, R);
+update_project(P, [{<<"notifications">>, _V}|R]) ->
+    update_project(P, R).
+
 project_to_term(#project{id            = Id,
                          name          = Name,
                          local         = Local,
                          remote        = Remote,
-                         build         = _Build,
+                         build         = Build,
                          notifications = _Notification}) ->
     [{<<"id">>, Id},
      {<<"name">>, kha_utils:convert(Name, bin)},
      {<<"local">>, kha_utils:convert(Local, bin)},
-     {<<"remote">>, kha_utils:convert(Remote, bin)}
+     {<<"remote">>, kha_utils:convert(Remote, bin)},
+     {<<"build">>, kha_utils:list_convert(Build, bin)},
+     {<<"notifications">>, []}
     ].
 
 build_to_term(#build{id       = Id,
@@ -239,4 +257,3 @@ sh_receive_loop(Port, Acc) ->
         {Port, {exit_status, E}} ->
             {error, {E, lists:flatten(lists:reverse(Acc))}}
     end.
-
