@@ -45,7 +45,7 @@ create_fake() ->
                   notifications = []},
          #project{name   = <<"Oortle">>,
                   local  = <<"/tmp/oortle_build">>,
-                  remote = <<"https://github.com/LivePress/oortle.git">>,
+                  remote = <<"git@github.com:LivePress/oortle.git">>,
                   build  = [<<"make all">>,
                             <<"cd oortle">>,
                             <<"make tests">>],
