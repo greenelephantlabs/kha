@@ -80,7 +80,9 @@ function DetailsCtrl($scope) {
     var backup = null;
     $scope.edit = function() {
         $scope.editing = true;
-        backup = _.extend({}, $scope.currentProject)
+        backup = _.extend({}, $scope.currentProject);
+        backup.build = _.toArray($scope.currentProject.build);
+        backup.notifications = _.toArray($scope.currentProject.notifications);
     }
     $scope.cancel = function() {
         $scope.editing = false;
