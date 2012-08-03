@@ -60,6 +60,8 @@
                                                                         ng-readonly="!editing"
                                                                         ng-model="step"></input></li>
                   </ol>
+                  <a ng-show="editing" ng-click="currentProject.build.push('')">Add
+                  build step</a>
                 </li>
                 <li>
                   Notifications: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.notifications"></input>
