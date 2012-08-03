@@ -10,7 +10,8 @@
 -include("kha.hrl").
 
 -export([create/1,
-         get/1]).
+         get/1,
+         update/1]).
 
 -export([create_fake/0]).
 
@@ -34,6 +35,8 @@ get(Id) ->
 do_get(Id) ->
     db:get_record(project, Id).
 
+update(Project) ->
+    db:add_record(Project).
 
 %% ONLY FOR DEBUG !!!
 create_fake() ->

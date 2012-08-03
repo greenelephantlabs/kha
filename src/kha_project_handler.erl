@@ -43,6 +43,7 @@ do('POST', [PId], Req) ->
     {ok, Data0, Req2} = cowboy_http_req:body(Req),
     Data = jsx:to_term(Data0),
     E2 = kha_utils:update_project(E, Data),
+    kha_project:update(E2),
     Response = kha_utils:project_to_term(E2),
     {Response, 200, Req2}.
 
