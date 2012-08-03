@@ -28,6 +28,7 @@ angular.module('Kha', ['ngResource']).
     });
 
 function ProjectCtrl($scope, $location, Project) {
+    $scope.predicate = 'id';
     $scope.$location = $location;
     $scope.$watch('$location.path()', function(newValue, oldValue) {
         if (!newValue)

@@ -19,7 +19,8 @@
           <div id="projects">
             <h2>Projects</h2>
             <ul class="nav nav-tabs nav-stacked">
-              <li ng:class="getProjectClass(project)" ng-repeat="project in projects">
+              <li ng:class="getProjectClass(project)"
+                  ng-repeat="project in projects | orderBy:predicate:false">
                 <a href="#/project/{{project.id}}/builds">
                   <span>{{project.id}}</span> -
                   <span>{{project.name}}</span>
