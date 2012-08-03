@@ -58,7 +58,7 @@
                   <ol>
                     <li ng-repeat="step in currentProject.build"><input ng:class="getEditingClass()"
                                                                         ng-readonly="!editing"
-                                                                        ng-model="step"></input></li>
+                                                                        ng-model="currentProject.build[$index]"></input></li>
                   </ol>
                   <a ng-show="editing" ng-click="currentProject.build.push('')">Add
                   build step</a>

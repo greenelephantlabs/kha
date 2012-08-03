@@ -88,6 +88,7 @@ function DetailsCtrl($scope) {
     }
     $scope.save = function() {
         $scope.editing = false;
+        $scope.currentProject.build = _.filter($scope.currentProject.build, function(x) { return !_.isEmpty(x) });
         $scope.currentProject.$save();
     }
     $scope.getEditingClass = function() {
