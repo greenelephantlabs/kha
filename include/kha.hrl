@@ -38,7 +38,7 @@
          author             :: b_string(),
          start              :: time(),
          stop               :: time(),
-         status             :: 'pending' | 'building' | 'succeed' | 'failed',
+         status             :: 'pending' | 'building' | 'success' | 'fail',
          exit               :: integer(),
          output             :: list(b_string()),
          tags               :: list(tag())

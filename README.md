@@ -43,7 +43,7 @@ Build queueing
 v0.4 DONE
 Re-building, build results history
 
-v0.5
+v0.5 DONE 1/2
 Hooks, very basic .travis.yml support
 
 v0.6
@@ -56,7 +56,7 @@ v0.8
 Realtime data push
 
 v0.9
-Remote builders
+Remote builders, user authentication
 
 v1.0
 Stable release
@@ -64,7 +64,7 @@ Stable release
 v1.1
 Support for multiple Erlang versions via kerl
 
-v1.2
+v1.2 DONE
 GitHub pings support
 
 v1.3

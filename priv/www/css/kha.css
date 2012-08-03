@@ -14,11 +14,11 @@ input {
   vertical-align: middle;
 }
 
-.build-pending {
+.build-building {
   background-color: #ffd;
 }
 
-.build-succeed {
+.build-success {
   background-color: #cfc;
 }
 
@@ -58,7 +58,7 @@ input {
 }
 
 .details input[disabled], .details input[readonly] {
-    background-color: #FFFFFF;
-    border: 0px;
-    cursor: default;
+  background-color: #FFFFFF;
+  border: 0px;
+  cursor: default;
 }

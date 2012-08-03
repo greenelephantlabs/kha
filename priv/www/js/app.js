@@ -47,7 +47,6 @@ function ProjectCtrl($scope, $location, Project) {
 
     $scope.addProject = function() {
         $scope.currentProject = new Project({});
-        console.log($scope.currentProject);
         $scope.selectTab('details');
         $scope.$broadcast('add_project', 1, 2, 3);
     };
@@ -127,6 +126,7 @@ function DetailsCtrl($scope) {
 function BuildCtrl($scope, $window, $timeout, Build) {
     $scope.predicate = 'id';
     $scope.builds = [];
+    $scope.branch = 'master';
 
     $scope.$watch('currentProject.id', function(newValue, oldValue) {
         if (!newValue) return;
@@ -136,6 +136,20 @@ function BuildCtrl($scope, $window, $timeout, Build) {
     $scope.getTotalBuilds = function () {
         return $scope.builds.length;
     };
+
+    $scope.run = function(branch) {
+        $scope.currentBuild = new Build({
+            project: $scope.currentProject.id,
+            title: 'manual build at '+branch,
+            branch: branch,
+            revision: '',
+            author: 'web user',
+            tags: ['manual']
+        });
+        $scope.currentBuild.$save(function(build) {
+            $scope.builds.push(build);
+        });
+    }
 
     $scope.rerun = function(build, $event) {
         Build.rerun(build, $scope);
@@ -147,6 +161,16 @@ function BuildCtrl($scope, $window, $timeout, Build) {
         });
         $event.stopPropagation();
     }
+
+    $scope.$watch('builds', function(builds, oldValue) {
+        if (!builds) return;
+        if (!$scope.currentBuild) return;
+
+        var b = _.groupBy(builds, 'id')[$scope.currentBuild.id];
+        if (b && b[0]) {
+            _.extend($scope.currentBuild, b[0]);
+        }
+    });
 
     $timeout(function updateBuilds(){
         if (!$scope.currentProject.id) return;

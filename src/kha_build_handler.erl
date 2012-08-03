@@ -74,7 +74,7 @@ create_build(ProjectId, Data) ->
     Branch   = proplists:get_value(<<"branch">>, Data),
     Revision = proplists:get_value(<<"revision">>, Data),
     Author   = proplists:get_value(<<"author">>, Data),
-    Tags     = proplists:get_value(<<"tags">>, Data),
+    Tags     = proplists:get_value(<<"tags">>, kha_utils:list_convert(Data, bin)),
     {ok, Build} = kha_build:create_and_add_to_queue(ProjectId, Title, Branch,
                                                     Revision, Author, Tags),
     Response = kha_utils:build_to_term(Build),

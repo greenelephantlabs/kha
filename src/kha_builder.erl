@@ -140,7 +140,7 @@ handle_info({'DOWN', _, process, Pid, NormalOrTimeout}, #state{busy = {Pid, _}} 
 handle_info({'DOWN', _, process, Pid, _Reason}, #state{busy = {Pid, Job}} = State) ->
     {ProjectId, BuildId} = Job,
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    kha_build:update(Build0#build{status = failed}),
+    kha_build:update(Build0#build{status = fail}),
     kha_builder:process(),
     {noreply, State#state{busy = false}};
 
@@ -194,27 +194,34 @@ do_process({ProjectId, BuildId}) ->
     Revision = kha_utils:convert(Build#build.revision, str),
     BuildTimeout = proplists:get_value(build_timeout, P#project.params, 60),
 
-    {ok, Ref} = timer:apply_after(timer:seconds(BuildTimeout), ?MODULE, build_timeout, [self(), ProjectId, BuildId]),
+    {ok, Timer} = timer:apply_after(timer:seconds(BuildTimeout), ?MODULE, build_timeout, [self(), ProjectId, BuildId]),
 
-    case filelib:is_dir(Local) of
-        true -> ok;
-        false ->
-            ok = kha_git:clone(Remote, Local)
-    end,
+    io:format("B: ~p~nR: ~p~n", [Branch, Revision]),
 
-    Steps = [ {"git clone and checkout",
-               fun() ->
-                       case Revision of
-                           undefined -> ok = kha_git:checkout(Local, Branch);
-                           X -> ok = kha_git:checkout(Local, X)
-                       end,
+    Ref = case Revision of
+              undefined -> Branch;
+              "" -> Branch;
+              _ -> Revision
+          end,
 
-                       io_lib:format("git: Successfully checked out \"~s\" to \"~s\"~n", [Branch, Local])
-               end} |
-              [ {C,
-                 fun() ->
-                         kha_utils:sh(C, [{cd, Local}])
-                 end} || C <- P#project.build ] ],
+    Steps = [{["git clone ", Remote, " ", Local],
+              fun() ->
+                      case filelib:is_dir(Local) of
+                          true -> ok, "# no need to checkout\n";
+                          false ->
+                              {ok, O} = kha_git:clone(Remote, Local),
+                              O
+                      end
+              end},
+             {["git checkout ", Ref],
+              fun() ->
+                      {ok, O} = kha_git:checkout(Local, Ref),
+                      O
+              end} |
+             [ {C,
+                fun() ->
+                        kha_utils:sh(C, [{cd, Local}])
+                end} || C <- P#project.build ] ],
 
     BF = fun({Cmd, F}, B) ->
                  try
@@ -229,7 +236,7 @@ do_process({ProjectId, BuildId}) ->
                          Be = B#build{output = [Reason | B#build.output],
                                       stop = now(),
                                       exit = ExitCode,
-                                      status = failed},
+                                      status = fail},
                          throw({error, Be})
                  end
          end,
@@ -242,11 +249,11 @@ do_process({ProjectId, BuildId}) ->
                  throw:{error, Bb} ->
                      Bb
              end,
-    catch timer:cancel(Ref),
+    catch timer:cancel(Timer),
     kha_build:update(Build2),
     case Build2#build.status of
         success -> kha_hooks:run(on_success,   ProjectId, BuildId);
-        failed  -> kha_hooks:run(on_failed, ProjectId, BuildId);
+        fail    -> kha_hooks:run(on_failed, ProjectId, BuildId);
         timeout -> kha_hooks:run(on_failed, ProjectId, BuildId)
     end,
     Build2.
