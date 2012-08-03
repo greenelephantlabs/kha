@@ -50,13 +50,13 @@ v0.6
 [ci skip] support, basic .travis.yml support, project git change polling
 
 v0.7
-Email and IRC notifications
+Build list paging, email and IRC notifications
 
 v0.8
-Realtime data push
+User authentication, remote builders, 
 
 v0.9
-Remote builders, user authentication
+Realtime data push
 
 v1.0
 Stable release
