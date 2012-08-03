@@ -62,3 +62,10 @@ input {
   border: 0px;
   cursor: default;
 }
+
+.builds td.btns {
+  width: 80px;
+}
+.builds .btn {
+  width: 80px;
+}

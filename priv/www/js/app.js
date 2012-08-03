@@ -21,7 +21,7 @@ angular.module('Kha', ['ngResource']).
             b.do_rerun({project: build.project,
                         copy: build.id},
                        function(newBuild) {
-                           $scope.builds.push(newBuild);
+                           $scope.builds[newBuild.id] = newBuild;
                        });
         };
         return b;
@@ -125,16 +125,36 @@ function DetailsCtrl($scope) {
 
 function BuildCtrl($scope, $window, $timeout, Build) {
     $scope.predicate = 'id';
-    $scope.builds = [];
+    $scope.builds = {};
     $scope.branch = 'master';
+    $scope.values = _.values;
+
+    function updateBuilds(builds) {
+        var blds = $scope.builds;
+        var bk = _.groupBy(builds, 'id');
+        _.each(blds, function(ob) {
+            if (!(ob.id in bk)) {
+                delete blds[ob.id];
+            }
+        });
+        _.each(builds, function(b) {
+            if (b.id in blds) {
+                _.extend(blds[b.id], b);
+            } else {
+                blds[b.id] = b;
+            }
+        });
+    }
 
     $scope.$watch('currentProject.id', function(newValue, oldValue) {
         if (!newValue) return;
-        $scope.builds = Build.query({projectId: newValue, id: ''});
+        Build.query({projectId: newValue, id: ''}, function(builds) {
+            updateBuilds(builds);
+        });
     });
 
     $scope.getTotalBuilds = function () {
-        return $scope.builds.length;
+        return _.size($scope.builds);
     };
 
     $scope.run = function(branch) {
@@ -147,7 +167,7 @@ function BuildCtrl($scope, $window, $timeout, Build) {
             tags: ['manual']
         });
         $scope.currentBuild.$save(function(build) {
-            $scope.builds.push(build);
+            $scope.builds[build.id] = build;
         });
     }
 
@@ -157,7 +177,7 @@ function BuildCtrl($scope, $window, $timeout, Build) {
     }
     $scope.delete = function(build, $event) {
         build.$delete(function() {
-            $scope.builds = _.without($scope.builds, build);
+            delete $scope.builds[build.id];
         });
         $event.stopPropagation();
     }
@@ -172,11 +192,11 @@ function BuildCtrl($scope, $window, $timeout, Build) {
         }
     });
 
-    $timeout(function updateBuilds(){
+    $timeout(function fetch(){
         if (!$scope.currentProject.id) return;
         Build.query({projectId: $scope.currentProject.id, id: ''}, function(builds) {
-            $scope.builds = builds;
-            $timeout(updateBuilds, 5000);
+            updateBuilds(builds);
+            $timeout(fetch, 5000);
         });
     }, 5000);
 }
