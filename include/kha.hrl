@@ -24,6 +24,7 @@
          local         :: filename:filename(), %% git clone remote local
          remote        :: b_string(),
          build         :: list(command()),
+         params = []   :: proplists:proplist(),
          notifications :: list(#notification{})
         }).
 
