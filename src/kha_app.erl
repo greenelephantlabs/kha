@@ -12,9 +12,9 @@
 %% ===================================================================
 
 start() ->
-    application:start(cowboy),
-    application:start(mimetypes),
-    application:start(kha).
+    ok = application:start(cowboy),
+    ok = application:start(mimetypes),
+    ok = application:start(kha).
 
 start(_Type, _Args) ->
     Dispatch = [

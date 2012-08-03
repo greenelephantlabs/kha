@@ -52,3 +52,9 @@ body {
   /* shadow */
   text-shadow: 0 0 0.5em #444;
 }
+
+.details input[disabled], .details input[readonly] {
+    background-color: #FFFFFF;
+    border: 0px;
+    cursor: default;
+}

@@ -76,6 +76,22 @@ function ProjectCtrl($scope, $location, Project) {
 }
 ProjectCtrl.$inject = ['$scope', '$location', 'Project'];
 
+function DetailsCtrl($scope) {
+    $scope.editing = false;
+    $scope.edit = function() {
+        $scope.editing = true;
+    }
+    $scope.cancel = function() {
+        $scope.editing = false;
+    }
+    $scope.save = function() {
+        $scope.editing = false;
+    }
+    $scope.getEditingClass = function() {
+        return $scope.editing ? 'editing' : '';
+    }
+}
+
 function BuildCtrl($scope, $window, $timeout, Build) {
     $scope.predicate = 'id';
     $scope.builds = [];

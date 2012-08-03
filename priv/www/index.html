@@ -45,21 +45,34 @@
                   ng:show="!!currentBuild">
                 <a ng-click="selectTab('build')" href="#/project/{{currentProject.id}}/build/{{currentBuild.id}}">Build details (#{{currentBuild.id}})</a></li>
             </ul>
-            <div class="details" ng:show="tab == 'details'">
+            <div class="details" ng:show="tab == 'details'" ng-controller="DetailsCtrl">
               <ul>
                 <li>
-                  Local: <span>{{currentProject.local}}</span>
+                  Local: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.local"></input>
                 </li>
                 <li>
-                  Remote: <span>{{currentProject.remote}}</span>
+                  Remote: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.remote"></input>
                 </li>
                 <li>
-                  Build: <span>{{currentProject.build}}</span>
+                  Build:
+                  <ol>
+                    <li ng-repeat="step in currentProject.build"><input ng:class="getEditingClass()"
+                                                                        ng-readonly="!editing"
+                                                                        ng-model="step"></input></li>
+                  </ol>
                 </li>
                 <li>
-                  Notifications: <span>{{currentProject.notifications}}</span>
+                  Notifications: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.notifications"></input>
                 </li>
               </ul>
+              <div ng:show="!!editing">
+                <button class="btn" ng-click="save()"><i class="icon-ok"></i>Save</button>
+                <button class="btn"
+                        ng-click="cancel()"><i class="icon-remove"></i>Cancel</button>
+              </div>
+              <div ng:show="!editing">
+                <button class="btn" ng-click="edit()"><i class="icon-edit"></i>Edit</button>
+              </div>
             </div>
             <div class="builds" ng-controller="BuildCtrl" ng:show="tab == 'builds'">
               <h5>Total builds: {{getTotalBuilds()}}</h5>
