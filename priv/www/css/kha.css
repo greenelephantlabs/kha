@@ -6,6 +6,10 @@ body {
   margin-top: 15px;
 }
 
+input {
+  border: 1px solid #CCC;
+}
+
 .table tr td {
   vertical-align: middle;
 }
