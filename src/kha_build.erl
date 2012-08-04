@@ -45,6 +45,25 @@ create_and_add_to_queue(ProjectId, Title, Branch, Revision, Author, Tags) ->
     kha_builder:add_to_queue(Build),
     {ok, Build}.
 
+
+get_limit(T,D,Id,C) ->
+    lists:flatten(get_limit(T,D,Id,C, [])).
+
+get_limit(_T,_D,'$end_of_table', _C, A) ->
+    A;
+get_limit(_T,_D, _, 0, A) ->
+    A;
+get_limit(T, D, Current, C, A) ->
+    R = mnesia:read(T, Current),
+    get_limit(T, D, mnesia:D(T, Current), C-length(R), [R|A]).
+
+get(ProjectId, {prev, Count}) ->
+    get(ProjectId, {prev, undefined, Count});
+get(ProjectId, {prev, BuildId, Count}) ->
+    db:transaction(fun() ->
+                           get_limit(build, prev, {ProjectId, BuildId}, Count)
+                   end);
+
 get(ProjectId, all) ->
     db:get_match_object(#build{key={ProjectId, '_'}, _='_'});
 
@@ -60,7 +79,6 @@ delete(#build{} = Build) ->
 
 delete(ProjectId, BuildId) ->
     db:remove_record(build, {ProjectId, BuildId}).
-
 
 update(Build) ->
     db:add_record(Build).
