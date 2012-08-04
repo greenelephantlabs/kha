@@ -233,7 +233,9 @@ do_process({ProjectId, BuildId}) ->
                      B3
                  catch
                      throw:{exec_error, {_, ExitCode, Reason}} ->
-                         Be = B#build{output = [Reason | B#build.output],
+                         Be = B#build{output = [Reason,
+                                                io_lib:format("$ ~s~n", [Cmd])
+                                                | B#build.output],
                                       stop = now(),
                                       exit = ExitCode,
                                       status = fail},
