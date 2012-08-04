@@ -25,7 +25,7 @@ create(ProjectId, Build) ->
 
 do_create(ProjectId, Build) ->
     BuildId = db:get_next_id({build, ProjectId}),
-    R = Build#build{key = {BuildId, ProjectId},
+    R = Build#build{key = {ProjectId, BuildId},
                     id = BuildId,
                     project = ProjectId,
                     start = now(),
@@ -46,14 +46,14 @@ create_and_add_to_queue(ProjectId, Title, Branch, Revision, Author, Tags) ->
     {ok, Build}.
 
 get(ProjectId, all) ->
-    db:get_match_object(#build{key={'_', ProjectId}, _='_'});
+    db:get_match_object(#build{key={ProjectId, '_'}, _='_'});
 
 get(ProjectId, BuildId) ->
     {ok, Response} = db:transaction(fun() -> do_get(ProjectId, BuildId) end),
     Response.
 
 do_get(ProjectId, BuildId) ->
-    db:get_record(build, {BuildId, ProjectId}).
+    db:get_record(build, {ProjectId, BuildId}).
 
 delete(#build{} = Build) ->
     db:remove_object(Build).

@@ -29,7 +29,7 @@
         }).
 
 -record(build,
-        {key                :: {build_id(), project_id()},
+        {key                :: {project_id(), build_id()},
          id                 :: build_id(),
          project            :: project_id(),
          title              :: b_string() | 'undefined',
