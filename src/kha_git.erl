@@ -11,10 +11,13 @@
 -export([
          clone/2,
          check_for_updates/3,
+         fetch/1,
          checkout/2
         ]).
 
--export([clone_cmd/2, checkout_cmd/1]).
+-export([clone_cmd/2,
+         fetch_cmd/1,
+         checkout_cmd/2]).
 
 -define(FMT(Msg, Args), lists:flatten(io_lib:format(Msg, Args))).
 
@@ -75,17 +78,32 @@ check_for_updates(RepoPath, Branch, CommitID) ->
             undefined
     end.
 
-%% @doc Fetches changes and tries to checkout to given commit.
+%% @doc Fetches recent changes from repo.
 %% @throws {unable_to_checkout, Reason}
--spec checkout(list(), perforator_ci_types:commit_id()) -> ok.
-checkout(RepoDir, CommitID) ->
+-spec fetch(list()) -> ok.
+fetch(RepoDir) ->
     try
-        Output = kha_utils:sh(checkout_cmd(CommitID), [{cd, RepoDir}]),
+        Output = kha_utils:sh(fetch_cmd(RepoDir), [{cd, RepoDir}]),
         {ok, Output}
     catch
         throw:{exec_error, {_, 128, Reason}} ->
             throw({unable_to_checkout, Reason})
     end.
 
-checkout_cmd(CommitID) ->
-    ?FMT("git fetch && git checkout ~s", [CommitID]).
+fetch_cmd(_RepoDir) ->
+    "git fetch".
+
+%% @doc Tries to checkout to given commit.
+%% @throws {unable_to_checkout, Reason}
+-spec checkout(list(), perforator_ci_types:commit_id()) -> ok.
+checkout(RepoDir, CommitID) ->
+    try
+        Output = kha_utils:sh(checkout_cmd(RepoDir, CommitID), [{cd, RepoDir}]),
+        {ok, Output}
+    catch
+        throw:{exec_error, {_, 128, Reason}} ->
+            throw({unable_to_checkout, Reason})
+    end.
+
+checkout_cmd(_RepoDir, CommitID) ->
+    ?FMT("git checkout ~s", [CommitID]).

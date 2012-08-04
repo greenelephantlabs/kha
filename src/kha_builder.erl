@@ -204,17 +204,20 @@ do_process({ProjectId, BuildId}) ->
               _ -> Revision
           end,
 
-    Steps0 = [ kha_git:checkout_cmd(Ref)
+    CloneStep = case filelib:is_dir(Local) of
+                    true ->
+                        {"# no need to checkout\n",
+                         fun() -> "" end};
+                    false ->
+                        {kha_git:clone_cmd(Remote, Local),
+                         fun() -> kha_utils:sh(kha_git:clone_cmd(Remote, Local)) end}
+                end,
+
+    Steps0 = [ kha_git:fetch_cmd(Local),
+               kha_git:checkout_cmd(Local, Ref)
                | P#project.build ],
 
-    Steps = [ case filelib:is_dir(Local) of
-                  true ->
-                      {"# no need to checkout\n",
-                       fun() -> "" end};
-                  false ->
-                      {kha_git:clone_cmd(Remote, Local),
-                       fun() -> kha_utils:sh(kha_git:clone_cmd(Remote, Local)) end}
-              end
+    Steps = [ CloneStep
               | [ {C,
                    fun() ->
                            kha_utils:sh(C, [{cd, Local}])
@@ -239,6 +242,7 @@ do_process({ProjectId, BuildId}) ->
                          throw({error, Be})
                  end
          end,
+
     Build2 = try
                  B2 = lists:foldl(BF, Build, Steps),
                  B2#build{status = success,
@@ -248,6 +252,7 @@ do_process({ProjectId, BuildId}) ->
                  throw:{error, Bb} ->
                      Bb
              end,
+
     catch timer:cancel(Timer),
     kha_build:update(Build2),
     case Build2#build.status of
