@@ -204,24 +204,21 @@ do_process({ProjectId, BuildId}) ->
               _ -> Revision
           end,
 
-    Steps = [{["git clone ", Remote, " ", Local],
-              fun() ->
-                      case filelib:is_dir(Local) of
-                          true -> ok, "# no need to checkout\n";
-                          false ->
-                              {ok, O} = kha_git:clone(Remote, Local),
-                              O
-                      end
-              end},
-             {["git checkout ", Ref],
-              fun() ->
-                      {ok, O} = kha_git:checkout(Local, Ref),
-                      O
-              end} |
-             [ {C,
-                fun() ->
-                        kha_utils:sh(C, [{cd, Local}])
-                end} || C <- P#project.build ] ],
+    Steps0 = [ kha_git:checkout_cmd(Ref)
+               | P#project.build ],
+
+    Steps = [ case filelib:is_dir(Local) of
+                  true ->
+                      {"# no need to checkout\n",
+                       fun() -> "" end};
+                  false ->
+                      {kha_git:clone_cmd(Remote, Local),
+                       fun() -> kha_utils:sh(kha_git:clone_cmd(Remote, Local)) end}
+              end
+              | [ {C,
+                   fun() ->
+                           kha_utils:sh(C, [{cd, Local}])
+                   end} || C <- Steps0 ] ],
 
     BF = fun({Cmd, F}, B) ->
                  try

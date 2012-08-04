@@ -14,6 +14,8 @@
          checkout/2
         ]).
 
+-export([clone_cmd/2, checkout_cmd/1]).
+
 -define(FMT(Msg, Args), lists:flatten(io_lib:format(Msg, Args))).
 
 %% ============================================================================
@@ -23,12 +25,15 @@
 clone(RepoURL, RepoPath) ->
     %% kha_utils:sh(?FMT("rm -rf \"~s\"", [RepoPath])), % dirty hack
     try
-        Output = kha_utils:sh(?FMT("git clone \"~s\" \"~s\"", [RepoURL, RepoPath])),
+        Output = kha_utils:sh(clone_cmd(RepoURL, RepoPath)),
         {ok, [Output]}
     catch
         {exec_error, {_, _, Reason}} ->
             throw({unable_to_clone, Reason})
     end.
+
+clone_cmd(RepoURL, RepoPath) ->
+    ?FMT("git clone \"~s\" \"~s\"", [RepoURL, RepoPath]).
 
 %% @doc Checks if for given repo's branch there exists a "newer" commit than
 %% given commit.
@@ -75,11 +80,12 @@ check_for_updates(RepoPath, Branch, CommitID) ->
 -spec checkout(list(), perforator_ci_types:commit_id()) -> ok.
 checkout(RepoDir, CommitID) ->
     try
-        Output1 = kha_utils:sh("git fetch", [{cd, RepoDir}]),
-        Output2 = kha_utils:sh(?FMT("git checkout ~s", [CommitID]),
-                               [{cd, RepoDir}]),
-        {ok, [Output1, Output2]}
+        Output = kha_utils:sh(checkout_cmd(CommitID), [{cd, RepoDir}]),
+        {ok, Output}
     catch
         throw:{exec_error, {_, 128, Reason}} ->
             throw({unable_to_checkout, Reason})
     end.
+
+checkout_cmd(CommitID) ->
+    ?FMT("git fetch && git checkout ~s", [CommitID]).
