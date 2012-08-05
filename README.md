@@ -50,7 +50,7 @@ v0.6
 [ci skip] support, basic .travis.yml support, project git change polling
 
 v0.7
-Build list paging, email and IRC notifications
+Build list paging [DONE], email and IRC notifications
 
 v0.8
 User authentication, remote builders, 
