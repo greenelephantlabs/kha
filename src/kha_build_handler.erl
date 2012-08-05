@@ -33,7 +33,14 @@ do('GET', [PId], Req0) ->
     Opts = case proplists:get_value(<<"limit">>, QS) of
                <<>> -> all;
                undefined -> all;
-               X -> {prev, kha_utils:convert(X, int)}
+               X ->
+                   D = {prev, kha_utils:convert(X, int)},
+                   case proplists:get_value(<<"last">>, QS) of
+                       <<>> -> D;
+                       undefined -> D;
+                       Last ->
+                           {prev, kha_utils:convert(Last, int), kha_utils:convert(X, int)}
+                   end
            end,
     {ok, E} = kha_build:get(PId, Opts),
     Response = [ kha_utils:build_to_term(X) || X <- E ],
@@ -97,7 +104,7 @@ copy_build(ProjectId, BuildId, _Data) ->
     Response = kha_utils:build_to_term(Build),
     {Response, 200}.
 
-    
+
 terminate(_Req, _State) ->
     ok.
 

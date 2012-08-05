@@ -133,14 +133,17 @@ function BuildCtrl($scope, $window, $timeout, Build) {
     $scope.branch = 'master';
     $scope.values = _.values;
 
-    function updateBuilds(builds) {
+    function updateBuilds(builds, append) {
+        append = append || false;
         var blds = $scope.builds;
         var bk = _.groupBy(builds, 'id');
-        _.each(blds, function(ob) {
-            if (!(ob.id in bk)) {
-                delete blds[ob.id];
-            }
-        });
+        if (!append) {
+            _.each(blds, function(ob) {
+                if (!(ob.id in bk)) {
+                    delete blds[ob.id];
+                }
+            });
+        }
         _.each(builds, function(b) {
             if (b.id in blds) {
                 _.extend(blds[b.id], b);
@@ -184,6 +187,15 @@ function BuildCtrl($scope, $window, $timeout, Build) {
             delete $scope.builds[build.id];
         });
         $event.stopPropagation();
+    }
+
+    $scope.loadMore = function() {
+        var last = _.min(_.map(_.keys($scope.builds), function(x) {
+            return parseInt(x);
+        }));
+        Build.query({projectId: $scope.currentProject.id, id: '', limit: 10, last: last}, function(builds) {
+            updateBuilds(builds, true);
+        });
     }
 
     $scope.$watch('builds', function(builds, oldValue) {
