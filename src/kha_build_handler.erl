@@ -28,8 +28,14 @@ handle(Req, State) ->
     {ok, Req5, State}.
 
 %% Get all builds
-do('GET', [PId], Req) ->
-    {ok, E} = kha_build:get(PId, all),
+do('GET', [PId], Req0) ->
+    {QS, Req} = cowboy_http_req:qs_vals(Req0),
+    Opts = case proplists:get_value(<<"limit">>, QS) of
+               <<>> -> all;
+               undefined -> all;
+               X -> {prev, kha_utils:convert(X, int)}
+           end,
+    {ok, E} = kha_build:get(PId, Opts),
     Response = [ kha_utils:build_to_term(X) || X <- E ],
     {Response, 200, Req};
 

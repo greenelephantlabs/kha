@@ -10,9 +10,13 @@ angular.module('Kha', ['ngResource']).
         return r;
     }).
     factory('Build', function($resource){
-        var b = $resource('/project/:projectId/build/:id', {projectId: '@project', id: '@id'}, {
+        var b = $resource('/project/:projectId/build/:id?limit=:limit&last=:last',
+                          {projectId: '@project',
+                           id: '@id',
+                           limit: '@limit',
+                           last: '@last'}, {
             query: {method:'GET',
-                    params: {},
+                    params: {limit: 0},
                     isArray:true},
             do_rerun: {method: 'POST',
                        params: {id: ''}}
@@ -148,7 +152,7 @@ function BuildCtrl($scope, $window, $timeout, Build) {
 
     $scope.$watch('currentProject.id', function(newValue, oldValue) {
         if (!newValue) return;
-        Build.query({projectId: newValue, id: ''}, function(builds) {
+        Build.query({projectId: newValue, id: '', limit: 3}, function(builds) {
             updateBuilds(builds);
         });
     });
@@ -194,7 +198,8 @@ function BuildCtrl($scope, $window, $timeout, Build) {
 
     $timeout(function fetch(){
         if (!$scope.currentProject.id) return;
-        Build.query({projectId: $scope.currentProject.id, id: ''}, function(builds) {
+        if (!$scope.builds) return;
+        Build.query({projectId: $scope.currentProject.id, id: '', limit: _.size($scope.builds)}, function(builds) {
             updateBuilds(builds);
             $timeout(fetch, 5000);
         });
