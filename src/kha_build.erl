@@ -53,12 +53,20 @@ get_limit(_T,_D,'$end_of_table', _C, A) ->
     A;
 get_limit(_T,_D, _, 0, A) ->
     A;
-get_limit(T, D, Current, C, A) ->
+get_limit(T, D, {PId, _} = Current, C, A) ->
     R = mnesia:read(T, Current),
-    get_limit(T, D, mnesia:D(T, Current), C-length(R), [R|A]).
+    case mnesia:D(T, Current) of
+        {ReturnPId, _} = Return
+          when ReturnPId == PId ->
+            get_limit(T, D, Return, C-length(R), [R|A]);
+        {_, _} ->
+            [R|A];
+        '$end_of_table' ->
+            [R|A]
+    end.
 
 get(ProjectId, {prev, Count}) ->
-    get(ProjectId, {prev, undefined, Count});
+    get(ProjectId, {prev, 0, Count});
 get(ProjectId, {prev, BuildId, Count}) ->
     db:transaction(fun() ->
                            get_limit(build, prev, {ProjectId, BuildId}, Count)
