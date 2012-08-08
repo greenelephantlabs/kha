@@ -155,14 +155,10 @@ function BuildCtrl($scope, $window, $timeout, Build) {
 
     $scope.$watch('currentProject.id', function(newValue, oldValue) {
         if (!newValue) return;
-        Build.query({projectId: newValue, id: '', limit: 3}, function(builds) {
+        Build.query({projectId: newValue, id: '', limit: BuildCtrl.page_size}, function(builds) {
             updateBuilds(builds);
         });
     });
-
-    $scope.getTotalBuilds = function () {
-        return _.size($scope.builds);
-    };
 
     $scope.run = function(branch) {
         $scope.currentBuild = new Build({
@@ -193,7 +189,7 @@ function BuildCtrl($scope, $window, $timeout, Build) {
         var last = _.min(_.map(_.keys($scope.builds), function(x) {
             return parseInt(x);
         }));
-        Build.query({projectId: $scope.currentProject.id, id: '', limit: 10, last: last}, function(builds) {
+        Build.query({projectId: $scope.currentProject.id, id: '', limit: BuildCtrl.page_size, last: last}, function(builds) {
             updateBuilds(builds, true);
         });
     }
@@ -212,10 +208,12 @@ function BuildCtrl($scope, $window, $timeout, Build) {
         if (!$scope.currentProject.id) return;
         if (!$scope.builds) return;
         Build.query({projectId: $scope.currentProject.id, id: '', limit: _.size($scope.builds)}, function(builds) {
-            updateBuilds(builds);
+            updateBuilds(builds, true);
             $timeout(fetch, 5000);
         });
     }, 5000);
 }
+
+BuildCtrl.page_size = 10;
 
 BuildCtrl.$inject = ['$scope', '$window', '$timeout', 'Build'];

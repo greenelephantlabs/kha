@@ -84,7 +84,6 @@
             </div>
             <div class="builds" ng-controller="BuildCtrl" ng:show="tab == 'builds'">
               <input ng-model="branch"></input><button class="btn" ng-click="run(branch)"><i class="icon-play"></i>Build!</button></br>
-              <h5>Total builds: {{getTotalBuilds()}}</h5>
               <table class="table table-condensed">
                 <tr ng-repeat="build in values(builds) | orderBy:predicate:true"
                     class="build-{{build.status}} build-row"

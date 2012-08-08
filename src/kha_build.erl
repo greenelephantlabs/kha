@@ -47,26 +47,23 @@ create_and_add_to_queue(ProjectId, Title, Branch, Revision, Author, Tags) ->
 
 
 get_limit(T,D,Id,C) ->
-    lists:flatten(get_limit(T,D,Id,C, [])).
+    lists:flatten(get_limit(T,D,mnesia:D(T,Id),C, [])). %% we need to skip first entry
 
 get_limit(_T,_D,'$end_of_table', _C, A) ->
     A;
-get_limit(_T,_D, _, 0, A) ->
+get_limit(_T,_D, _, C, A) when C =< 0 ->
     A;
 get_limit(T, D, {PId, _} = Current, C, A) ->
     R = mnesia:read(T, Current),
     case mnesia:D(T, Current) of
-        {ReturnPId, _} = Return
-          when ReturnPId == PId ->
+        {PId, _} = Return ->
             get_limit(T, D, Return, C-length(R), [R|A]);
-        {_, _} ->
-            [R|A];
-        '$end_of_table' ->
+        _ ->
             [R|A]
     end.
 
 get(ProjectId, {prev, Count}) ->
-    get(ProjectId, {prev, 0, Count});
+    get(ProjectId, {prev, undefined, Count});
 get(ProjectId, {prev, BuildId, Count}) ->
     db:transaction(fun() ->
                            get_limit(build, prev, {ProjectId, BuildId}, Count)
