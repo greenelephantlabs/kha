@@ -63,13 +63,19 @@ do('GET', [PId, BId], Req) ->
 do('POST', [PId], Req) ->
     {ok, Data0, Req2} = cowboy_http_req:body(Req),
     Data = jsx:to_term(Data0),
-    case proplists:get_value(<<"copy">>, Data) of
-        undefined ->
-            {R, C} = create_build(PId, Data),
-            {R, C, Req2};
-        BId ->
-            {R, C} = copy_build(PId, BId, Data),
-            {R,C, Req2}
+    Message = proplists:get_value(<<"title">>, Data, ""),
+    case string:str(kha_utils:convert(Message, str), "[ci skip]") of 
+        0 ->
+            case proplists:get_value(<<"copy">>, Data) of
+                undefined ->
+                    {R, C} = create_build(PId, Data),
+                    {R, C, Req2};
+                BId ->
+                    {R, C} = copy_build(PId, BId, Data),
+                    {R,C, Req2}
+            end;
+        _ ->
+            {[{}], 204, Req2}
     end.
 
 %% Rerun existing build
