@@ -47,10 +47,10 @@ v0.5 DONE
 Hooks, build timeouts
 
 v0.6
-[ci skip] support, basic .travis.yml support, project git change polling
+[ci skip] support DONE, basic .travis.yml support, project git change polling
 
 v0.7
-Build list paging [DONE], email and IRC notifications
+Build list paging DONE, email and IRC notifications
 
 v0.8
 User authentication, remote builders, 
@@ -65,7 +65,7 @@ v1.1
 Support for multiple Erlang versions via kerl
 
 v1.2 DONE
-GitHub pings support
+GitHub webhook support DONE
 
 v1.3
 SVN/CVS support

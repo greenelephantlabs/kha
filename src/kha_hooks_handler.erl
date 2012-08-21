@@ -40,17 +40,22 @@ do('POST', github, ProjectId, Req) ->
     Message = proplists:get_value(<<"message">>, Info),
     CommitId = proplists:get_value(<<"id">>, Info),
     Branch = proplists:get_value(<<"ref">>, Data),
-    
-    {ok, Build} = kha_build:create_and_add_to_queue(ProjectId, Message,
-                                                    Branch, CommitId,
-                                                    AuthorName,
-                                                    [AuthorName, <<"github">>]),
-    Response = kha_utils:build_to_term(Build),
-    {Response, 200, Req3};
+
+    case string:str(kha_utils:convert(Message, str), "[ci skip]") of
+        0 ->
+            {ok, Build} = kha_build:create_and_add_to_queue(ProjectId, Message,
+                                                            Branch, CommitId,
+                                                            AuthorName,
+                                                            [AuthorName, <<"github">>]),
+            Response = kha_utils:build_to_term(Build),
+            {Response, 200, Req3};
+        _ ->
+            {[{}], 204, Req3}
+    end;
 
 do(_, _, _, Req) ->
     {<<"Not found">>, 404, Req}.
-    
+
 terminate(_Req, _State) ->
     ok.
 
