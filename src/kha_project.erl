@@ -49,9 +49,7 @@ create_fake() ->
          #project{name   = <<"Oortle">>,
                   local  = <<"/tmp/oortle_build">>,
                   remote = <<"git@github.com:LivePress/oortle.git">>,
-                  build  = [<<"make all">>,
-                            <<"cd oortle">>,
-                            <<"make tests">>],
+                  build  = [<<"./oortle/compile-and-run-tests.sh">>],
                   params = [{build_timeout, 600}], %% 10 min
                   notifications = []}
          ],

@@ -106,4 +106,4 @@ checkout(RepoDir, CommitID) ->
     end.
 
 checkout_cmd(_RepoDir, CommitID) ->
-    ?FMT("git checkout ~s", [CommitID]).
+    ?FMT("git checkout -f ~s", [CommitID]).
