@@ -9,11 +9,30 @@
 
 -include("kha.hrl").
 
+-behaviour(gen_server).
+
+-export([start/1]).
+
 -export([create/1,
          get/1,
          update/1]).
 
+%% gen_server callbacks
+-export([init/1, handle_call/3, handle_cast/2,
+         handle_info/2, terminate/2, code_change/3]).
+
 -export([create_fake/0]).
+
+%% =============================================================================
+%% Server API
+%% =============================================================================
+
+start(Id) ->
+    gen_server:start_link(?MODULE, [Id], []).
+
+%% =============================================================================
+%% DB API
+%% =============================================================================
 
 create(Project) ->
     {ok, Response} = db:transaction(fun() -> do_create(Project) end),
@@ -38,7 +57,62 @@ do_get(Id) ->
 update(Project) ->
     db:add_record(Project).
 
-%% ONLY FOR DEBUG !!!
+%% =============================================================================
+%% gen_server code
+%% =============================================================================
+
+-define(POLL_TIME, 5000).
+
+-record(state, {id,
+                polling = undefined
+               }).
+
+init([Id]) ->
+    {ok, Self = #project{server = OldServer,
+                         params = Params}} = kha_project:get(Id),
+    case OldServer of
+        undefined -> ok;
+        _ ->
+            false = erlang:is_process_alive(OldServer)
+    end,
+    Self2 = Self#project{server = self()},
+    update(Self2),
+    Timer = 
+        case proplists:get_value(polling, Params, false) of
+            true ->
+                erlang:start_timer(?POLL_TIME, self(), poll);
+            false ->
+                undefined
+        end,
+    {ok, #state{id = Id, polling = Timer}}.
+
+handle_cast(Event, State) ->
+    {stop, {unknown_cast, Event}, State}.
+
+handle_call(Event, From, State) ->
+    {stop, {unknown_call, Event, From}, State}.
+
+handle_info({timeout, Timer, poll}, #state{id = Id,
+                                           polling = Timer} = State) ->
+    ?LOG("starting poll", []),
+    {ok, Self = #project{remote = Remote}} = kha_project:get(Id),
+    {ok, Branches} = kha_git:remote_branches(Remote),
+    ?LOG("remote branches: ~s~n", [Branches]),
+    {noreply, State#state{polling = erlang:start_timer(?POLL_TIME, self(), poll)}};
+
+handle_info(Info, State) ->
+    {stop, {unknown_info, Info}, State}.
+
+terminate(_Reason, #state{}) ->
+    ok.
+
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
+
+%% =============================================================================
+%% DEBUG
+%% =============================================================================
+
 create_fake() ->
     R = [#project{name   = <<"kha test project">>,
                   local  = <<"/tmp/test_build">>,

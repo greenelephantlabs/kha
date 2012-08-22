@@ -12,7 +12,9 @@
          clone/2,
          check_for_updates/3,
          fetch/1,
-         checkout/2
+         checkout/2,
+
+         remote_branches/1
         ]).
 
 -export([clone_cmd/2,
@@ -87,7 +89,7 @@ fetch(RepoDir) ->
         {ok, Output}
     catch
         throw:{exec_error, {_, 128, Reason}} ->
-            throw({unable_to_checkout, Reason})
+            throw({unable_to_fetch, Reason})
     end.
 
 fetch_cmd(_RepoDir) ->
@@ -107,3 +109,18 @@ checkout(RepoDir, CommitID) ->
 
 checkout_cmd(_RepoDir, CommitID) ->
     ?FMT("git checkout -f ~s", [CommitID]).
+
+
+
+-spec remote_branches(list()) -> ok.
+remote_branches(Repo) ->
+    try
+        Output = kha_utils:sh(remote_branches_cmd(Repo), []),
+        {ok, Output}
+    catch
+        throw:{exec_error, {_, 128, Reason}} ->
+            throw({unable_to_fetch_remote_branches, Reason})
+    end.
+
+remote_branches_cmd(Repo) ->
+    ?FMT("git ls-remote ~s", [Repo]).

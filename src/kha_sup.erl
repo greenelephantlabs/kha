@@ -23,7 +23,19 @@ start_link() ->
 %% Supervisor callbacks
 %% ===================================================================
 
+init([project_sup]) ->
+    ProjectSpec = {kha_project, {kha_project, start, []},
+                   permanent, brutal_kill, worker, [kha_project]},
+    {ok, {{simple_one_for_one, 5, 1}, [ProjectSpec]}};
+
 init([]) ->
     Builder = ?CHILD(kha_builder, worker),
-    {ok, { {one_for_one, 5, 10}, [Builder]} }.
-
+    PollerSup = {kha_project_sup,
+                 {supervisor, start_link, [{local, kha_project_sup},
+                                           ?MODULE, [project_sup]]},
+                 permanent,
+                 infinity,
+                 supervisor,
+                 []
+                },
+    {ok, { {one_for_one, 5, 10}, [Builder, PollerSup]} }.
