@@ -61,7 +61,7 @@ update(Project) ->
 %% gen_server code
 %% =============================================================================
 
--define(POLL_TIME, 5000).
+-define(POLL_TIME, 60000).
 
 -record(state, {id,
                 polling = undefined
@@ -97,7 +97,7 @@ handle_info({timeout, Timer, poll}, #state{id = Id,
     ?LOG("starting poll", []),
     {ok, Self = #project{remote = Remote}} = kha_project:get(Id),
     {ok, Branches} = kha_git:remote_branches(Remote),
-    ?LOG("remote branches: ~s~n", [Branches]),
+    ?LOG("remote branches: ~p~n", [Branches]),
     {noreply, State#state{polling = erlang:start_timer(?POLL_TIME, self(), poll)}};
 
 handle_info(Info, State) ->

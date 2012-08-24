@@ -116,7 +116,17 @@ checkout_cmd(_RepoDir, CommitID) ->
 remote_branches(Repo) ->
     try
         Output = kha_utils:sh(remote_branches_cmd(Repo), []),
-        {ok, Output}
+        Branches = lists:map(fun(L) ->
+                                     [Commit, Ref] = string:tokens(L, "\t "),
+                                     {Type, Name} = case string:tokens(Ref, "/") of
+                                                        ["refs", T | N] ->
+                                                            {T, string:join(N, "/")};
+                                                        ["HEAD"] ->
+                                                            {"HEAD", "HEAD"}
+                                                    end,
+                                     {Commit, kha_utils:convert(string:strip(Type, right, $s), atom), Name}
+                             end, string:tokens(Output, [13,10])),
+        {ok, Branches}
     catch
         throw:{exec_error, {_, 128, Reason}} ->
             throw({unable_to_fetch_remote_branches, Reason})
