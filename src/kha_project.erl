@@ -108,7 +108,7 @@ handle_info({timeout, Timer, poll}, #state{id = Id,
                   ?LOG("revision ~s was build ~b times", [Cid, length(_L)]),
                   ok
           end
-      end || {Name, head, Cid} <- Refs ],
+      end || {Name, Type, Cid} <- Refs, Type /= 'HEAD' ],
 
     {noreply, State#state{polling = erlang:start_timer(?POLL_TIME, self(), poll)}};
 
