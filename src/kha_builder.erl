@@ -177,10 +177,10 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 
 build_timeout(Pid, ProjectId, BuildId) ->
+    exit(Pid, timeout),
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
     Build = Build0#build{status = timeout},
-    kha_build:update(Build),
-    exit(Pid, timeout).
+    kha_build:update(Build).
 
 do_process({ProjectId, BuildId}) ->
     {ok, P} = kha_project:get(ProjectId),
@@ -207,14 +207,14 @@ do_process({ProjectId, BuildId}) ->
     CloneStep = case filelib:is_dir(Local) of
                     true ->
                         {"# no need to checkout\n",
-                         fun() -> "" end};
+                         fun() -> {ok, ""} end};
                     false ->
-                        {kha_git:clone_cmd(Remote, Local),
-                         fun() -> kha_utils:sh(kha_git:clone_cmd(Remote, Local)) end}
+                        {git:clone_cmd(Remote, Local, []),
+                         fun() -> kha_utils:sh(git:clone_cmd(Remote, Local, [])) end}
                 end,
 
-    Steps0 = [ kha_git:fetch_cmd(Local),
-               kha_git:checkout_cmd(Local, Ref)
+    Steps0 = [ git:fetch_cmd(Local),
+               git:checkout_cmd(Local, Ref, [])
                | P#project.build ],
 
     Steps = [ CloneStep
@@ -224,15 +224,14 @@ do_process({ProjectId, BuildId}) ->
                    end} || C <- Steps0 ] ],
 
     BF = fun({Cmd, F}, B) ->
-                 try
-                     B2 = B#build{output = [io_lib:format("$ ~s~n", [Cmd]) | B#build.output]},
-                     kha_build:update(B2),
-                     D = F(),
-                     B3 = B#build{output = [D | B2#build.output]},
-                     kha_build:update(B3),
-                     B3
-                 catch
-                     throw:{exec_error, {_, ExitCode, Reason}} ->
+                 B2 = B#build{output = [io_lib:format("$ ~s~n", [Cmd]) | B#build.output]},
+                 kha_build:update(B2),
+                 case F() of
+                     {ok, D} ->
+                         B3 = B#build{output = [D | B2#build.output]},
+                         kha_build:update(B3),
+                         B3;
+                     {error, {ExitCode, Reason}} ->
                          Be = B#build{output = [Reason,
                                                 io_lib:format("$ ~s~n", [Cmd])
                                                 | B#build.output],
