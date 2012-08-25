@@ -32,6 +32,7 @@ init([project_sup]) ->
 
 init([]) ->
     Builder = ?CHILD(kha_builder, worker),
+    ProjectManager = ?CHILD(kha_project_manager, worker),
     PollerSup = {kha_project_sup,
                  {supervisor, start_link, [{local, kha_project_sup},
                                            ?MODULE, [project_sup]]},
@@ -40,4 +41,4 @@ init([]) ->
                  supervisor,
                  []
                 },
-    {ok, { {one_for_one, 5, 10}, [Builder, PollerSup]} }.
+    {ok, { {one_for_one, 5, 10}, [Builder, PollerSup, ProjectManager]} }.

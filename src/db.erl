@@ -29,6 +29,7 @@
          get_record/2,
          get_record_by_index/3,
          select/2,
+         get_all/1,
          get_match_object/1,
          get_last/2,
 
@@ -146,6 +147,14 @@ select(From, MS) ->
     case mnesia:transaction(fun() -> mnesia:select(From, MS) end) of
         {atomic, R} ->
             {ok, R}
+    end.
+
+get_all(Table) ->
+    case mnesia:transaction(fun() -> lists:flatten([ mnesia:read(Table, Id) || Id <- mnesia:all_keys(Table) ]) end) of
+        {atomic, R} ->
+            {ok, R};
+        {aborted, Reason} ->
+            {error, Reason}
     end.
 
 get_match_object(Object) ->

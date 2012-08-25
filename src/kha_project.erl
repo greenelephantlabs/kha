@@ -36,6 +36,7 @@ start(Id) ->
 
 create(Project) ->
     {ok, Response} = db:transaction(fun() -> do_create(Project) end),
+    ok = kha_project_manager:new(Project),
     Response.
 
 do_create(Project) ->
@@ -95,7 +96,7 @@ handle_call(Event, From, State) ->
 handle_info({timeout, Timer, poll}, #state{id = Id,
                                            polling = Timer} = State) ->
     ?LOG("starting poll", []),
-    {ok, Self = #project{remote = Remote}} = kha_project:get(Id),
+    {ok, #project{remote = Remote}} = kha_project:get(Id),
     Refs = git:refs(Remote),
     ?LOG("remote branches: ~p~n", [Refs]),
     [ begin
