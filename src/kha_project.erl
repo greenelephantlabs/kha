@@ -77,7 +77,7 @@ init([Id]) ->
     end,
     Self2 = Self#project{server = self()},
     update(Self2),
-    Timer = 
+    Timer =
         case proplists:get_value(polling, Params, false) of
             true ->
                 erlang:start_timer(?POLL_TIME, self(), poll);
@@ -96,8 +96,20 @@ handle_info({timeout, Timer, poll}, #state{id = Id,
                                            polling = Timer} = State) ->
     ?LOG("starting poll", []),
     {ok, Self = #project{remote = Remote}} = kha_project:get(Id),
-    {ok, Branches} = kha_git:remote_branches(Remote),
-    ?LOG("remote branches: ~p~n", [Branches]),
+    Refs = git:refs(Remote),
+    ?LOG("remote branches: ~p~n", [Refs]),
+    [ begin
+          case kha_build:get_by_revision(Cid) of
+              {ok, []} ->
+                  {ok, _Build} = kha_build:create_and_add_to_queue(Id, "Polling", Name,
+                                                                   Cid, "polling", []),
+                  ?LOG("revision ~s added to queue as ~p", [Cid, _Build#build.key]);
+              {ok, _L} ->
+                  ?LOG("revision ~s was build ~b times", [Cid, length(_L)]),
+                  ok
+          end
+      end || {Name, head, Cid} <- Refs ],
+
     {noreply, State#state{polling = erlang:start_timer(?POLL_TIME, self(), poll)}};
 
 handle_info(Info, State) ->
@@ -118,7 +130,8 @@ create_fake() ->
                   local  = <<"/tmp/test_build">>,
                   remote = <<"https://github.com/greenelephantlabs/kha.git">>,
                   build  = [<<"rebar get-deps">>, <<"make">>],
-                  params = [{build_timeout, 60}],
+                  params = [{build_timeout, 60},
+                            {polling, true}],
                   notifications = []},
          #project{name   = <<"Oortle">>,
                   local  = <<"/tmp/oortle_build">>,
@@ -126,13 +139,13 @@ create_fake() ->
                   build  = [<<"./oortle/compile-and-run-tests.sh">>],
                   params = [{build_timeout, 600}], %% 10 min
                   notifications = []}
-         ],
+        ],
     [ begin
           {ok, Project} = kha_project:create(X),
           PId = Project#project.id,
           ?LOG("Create fake project - ID: ~b", [PId])
       end || X <- R ].
-    %% [ kha_build:create(PId, X) || X <- example_builds() ].
+%% [ kha_build:create(PId, X) || X <- example_builds() ].
 
 %% example_builds() ->
 %%     [#build{title    = "Test 1",

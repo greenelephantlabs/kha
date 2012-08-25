@@ -4,7 +4,7 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0]).
+-export([start_link/0, start_project_server/1]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -19,10 +19,12 @@
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
+start_project_server(Id) ->
+    supervisor:start_child(kha_project_sup, [Id]).
+
 %% ===================================================================
 %% Supervisor callbacks
 %% ===================================================================
-
 init([project_sup]) ->
     ProjectSpec = {kha_project, {kha_project, start, []},
                    permanent, brutal_kill, worker, [kha_project]},

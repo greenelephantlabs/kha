@@ -13,6 +13,7 @@
          create_and_add_to_queue/6,
 
          get/2,
+         get_by_revision/1,
 
          delete/1,
          delete/2,
@@ -61,6 +62,9 @@ get_limit(T, D, {PId, _} = Current, C, A) ->
         _ ->
             [R|A]
     end.
+
+get_by_revision(Revision) ->
+    db:get_record_by_index(build, Revision, #build.revision).
 
 get(ProjectId, {prev, Count}) ->
     get(ProjectId, {prev, undefined, Count});

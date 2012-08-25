@@ -15,6 +15,7 @@
 
 -export([create_table/1,
          create_table/2,
+         create_table/3,
 
          add_record/1,
          add_records/1,
@@ -26,6 +27,7 @@
          check_exist/2,
 
          get_record/2,
+         get_record_by_index/3,
          select/2,
          get_match_object/1,
          get_last/2,
@@ -65,17 +67,18 @@ init_sequences() ->
 
 init_schema() ->
     create_table(project),
-    create_table(build, ordered_set),
+    create_table(build, ordered_set, [{index, [#build.revision]}]),
     create_table(id_seq).
 
 create_table(Name) ->
     create_table(Name, set).
 create_table(Name, Type) ->
+    create_table(Name, Type, []).
+create_table(Name, Type, Opts) ->
     ?LOG("Create '~p' table", [Name]),
     ok =  case mnesia:create_table(Name, [{disc_copies, [node()]},
                                           {type, Type},
-                                          {attributes,
-                                           kha_utils:record_field(Name)}]) of
+                                          {attributes, kha_utils:record_field(Name)}] ++ Opts) of
               {atomic, ok} -> ok;
               {aborted, {already_exists, _}} -> ok
           end.
@@ -123,10 +126,20 @@ add_records(RL) ->
 
 get_record(From, Id) ->
     case mnesia:transaction(fun() -> mnesia:read(From, Id) end) of
+        {aborted, Error} ->
+            {error, Error};
         {atomic, []} ->
             {error, not_found};
         {atomic, [R]} ->
             {ok, R}
+    end.
+
+get_record_by_index(From, Val, Index) ->
+    case mnesia:transaction(fun() -> mnesia:index_read(From, Val, Index) end) of
+        {atomic, R} ->
+            {ok, R};
+        {aborted, Error} ->
+            {error, Error}
     end.
 
 select(From, MS) ->
