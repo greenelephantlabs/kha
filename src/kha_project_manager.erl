@@ -60,6 +60,7 @@ new(#project{} = Project) ->
 init([]) ->
     {ok, Projects} = db:get_all(project),
     [ kha_sup:start_project_server(P#project.id) || P <- Projects ],
+    mnesia:subscribe({table, project, detailed}),
     {ok, #state{}}.
 
 %%--------------------------------------------------------------------
@@ -106,6 +107,14 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+
+handle_info({mnesia_table_event, {write, project, #project{} = Project, [], _ActivityId}}, #state{} = State) ->
+    ?LOG("New project added: ~p~n", [Project]),
+    ok = kha_project_manager:new(Project),
+    {noreply, State};
+
+handle_info({mnesia_table_event, _}, #state{} = State) ->
+    {noreply, State};
 
 handle_info(_Info, State) ->
     {stop, {unknown_info, _Info}, State}.

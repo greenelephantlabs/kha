@@ -27,7 +27,7 @@ start_project_server(Id) ->
 %% ===================================================================
 init([project_sup]) ->
     ProjectSpec = {kha_project, {kha_project, start, []},
-                   permanent, brutal_kill, worker, [kha_project]},
+                   transient, brutal_kill, worker, [kha_project]},
     {ok, {{simple_one_for_one, 5, 1}, [ProjectSpec]}};
 
 init([]) ->

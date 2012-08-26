@@ -36,7 +36,6 @@ start(Id) ->
 
 create(Project) ->
     {ok, Response} = db:transaction(fun() -> do_create(Project) end),
-    ok = kha_project_manager:new(Project),
     Response.
 
 do_create(Project) ->
@@ -71,6 +70,7 @@ update(Project) ->
 init([Id]) ->
     {ok, Self = #project{server = OldServer,
                          params = Params}} = kha_project:get(Id),
+    mnesia:subscribe({table, project, detailed}),
     case OldServer of
         undefined -> ok;
         _ ->
@@ -92,6 +92,17 @@ handle_cast(Event, State) ->
 
 handle_call(Event, From, State) ->
     {stop, {unknown_call, Event, From}, State}.
+
+handle_info({mnesia_table_event, {write, project, #project{id = Id} = New, Old, _ActivityId}}, #state{id = Id} = State) ->
+    ?LOG("New project record: ~p~n", [New]),
+    {noreply, State};
+handle_info({mnesia_table_event, {delete, project, {project, Id}, Old, _ActivityId}}, #state{id = Id} = State) ->
+    {stop, normal, State};
+handle_info({mnesia_table_event, {delete, project, #project{id = Id}, Old, _ActivityId}}, #state{id = Id} = State) ->
+    {stop, normal, State};
+
+handle_info({mnesia_table_event, _}, #state{} = State) ->
+    {noreply, State};
 
 handle_info({timeout, Timer, poll}, #state{id = Id,
                                            polling = Timer} = State) ->
