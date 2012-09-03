@@ -9,11 +9,30 @@
 
 -include("kha.hrl").
 
+-behaviour(gen_server).
+
+-export([start/1]).
+
 -export([create/1,
          get/1,
          update/1]).
 
+%% gen_server callbacks
+-export([init/1, handle_call/3, handle_cast/2,
+         handle_info/2, terminate/2, code_change/3]).
+
 -export([create_fake/0]).
+
+%% =============================================================================
+%% Server API
+%% =============================================================================
+
+start(Id) ->
+    gen_server:start_link(?MODULE, [Id], []).
+
+%% =============================================================================
+%% DB API
+%% =============================================================================
 
 create(Project) ->
     {ok, Response} = db:transaction(fun() -> do_create(Project) end),
@@ -38,13 +57,93 @@ do_get(Id) ->
 update(Project) ->
     db:add_record(Project).
 
-%% ONLY FOR DEBUG !!!
+%% =============================================================================
+%% gen_server code
+%% =============================================================================
+
+-define(POLL_TIME, 60000).
+
+-record(state, {id,
+                polling = undefined
+               }).
+
+init([Id]) ->
+    {ok, Self = #project{server = OldServer,
+                         params = Params}} = kha_project:get(Id),
+    mnesia:subscribe({table, project, detailed}),
+    case OldServer of
+        undefined -> ok;
+        _ ->
+            false = erlang:is_process_alive(OldServer)
+    end,
+    Self2 = Self#project{server = self()},
+    update(Self2),
+    Timer =
+        case proplists:get_value(polling, Params, false) of
+            true ->
+                erlang:start_timer(?POLL_TIME, self(), poll);
+            false ->
+                undefined
+        end,
+    {ok, #state{id = Id, polling = Timer}}.
+
+handle_cast(Event, State) ->
+    {stop, {unknown_cast, Event}, State}.
+
+handle_call(Event, From, State) ->
+    {stop, {unknown_call, Event, From}, State}.
+
+handle_info({mnesia_table_event, {write, project, #project{id = Id} = New, Old, _ActivityId}}, #state{id = Id} = State) ->
+    ?LOG("New project record: ~p~n", [New]),
+    {noreply, State};
+handle_info({mnesia_table_event, {delete, project, {project, Id}, Old, _ActivityId}}, #state{id = Id} = State) ->
+    {stop, normal, State};
+handle_info({mnesia_table_event, {delete, project, #project{id = Id}, Old, _ActivityId}}, #state{id = Id} = State) ->
+    {stop, normal, State};
+
+handle_info({mnesia_table_event, _}, #state{} = State) ->
+    {noreply, State};
+
+handle_info({timeout, Timer, poll}, #state{id = Id,
+                                           polling = Timer} = State) ->
+    ?LOG("starting poll", []),
+    {ok, #project{remote = Remote}} = kha_project:get(Id),
+    Refs = git:refs(Remote),
+    ?LOG("remote branches: ~p~n", [Refs]),
+    [ begin
+          case kha_build:get_by_revision(Cid) of
+              {ok, []} ->
+                  {ok, _Build} = kha_build:create_and_add_to_queue(Id, "Polling", Name,
+                                                                   Cid, "polling", []),
+                  ?LOG("revision ~s added to queue as ~p", [Cid, _Build#build.key]);
+              {ok, _L} ->
+                  ?LOG("revision ~s was build ~b times", [Cid, length(_L)]),
+                  ok
+          end
+      end || {Name, Type, Cid} <- Refs, Type /= 'HEAD' ],
+
+    {noreply, State#state{polling = erlang:start_timer(?POLL_TIME, self(), poll)}};
+
+handle_info(Info, State) ->
+    {stop, {unknown_info, Info}, State}.
+
+terminate(_Reason, #state{}) ->
+    ok.
+
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
+
+%% =============================================================================
+%% DEBUG
+%% =============================================================================
+
 create_fake() ->
     R = [#project{name   = <<"kha test project">>,
                   local  = <<"/tmp/test_build">>,
                   remote = <<"https://github.com/greenelephantlabs/kha.git">>,
                   build  = [<<"rebar get-deps">>, <<"make">>],
-                  params = [{build_timeout, 60}],
+                  params = [{build_timeout, 60},
+                            {polling, true}],
                   notifications = []},
          #project{name   = <<"Oortle">>,
                   local  = <<"/tmp/oortle_build">>,
@@ -52,13 +151,13 @@ create_fake() ->
                   build  = [<<"./oortle/compile-and-run-tests.sh">>],
                   params = [{build_timeout, 600}], %% 10 min
                   notifications = []}
-         ],
+        ],
     [ begin
           {ok, Project} = kha_project:create(X),
           PId = Project#project.id,
           ?LOG("Create fake project - ID: ~b", [PId])
       end || X <- R ].
-    %% [ kha_build:create(PId, X) || X <- example_builds() ].
+%% [ kha_build:create(PId, X) || X <- example_builds() ].
 
 %% example_builds() ->
 %%     [#build{title    = "Test 1",

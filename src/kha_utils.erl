@@ -23,6 +23,8 @@
 
          now_to_nice/1]).
 
+-export([sh/1,sh/2,sh/3, mktemp_dir/0]).
+
 -export([record_field/1,
          update_project/2,
          project_to_term/1,
@@ -30,9 +32,6 @@
          headers/0,
          get_app_path/0,
          get_app_path/1]).
-
--export([sh/1,
-         sh/2]).
 
 record_field(project) ->
     record_info(fields, project);
@@ -228,32 +227,13 @@ get_app_path(App) ->
     FilePath2 = filename:dirname(filename:absname(FilePath)),
     filename:join([FilePath2, "../"]).
 
-%% @doc Exec given command.
-%% @throws {exec_error, {Command, ErrCode, Output}}.
--spec sh(list(), list()) -> list().
-sh(Command, Opts) ->
-    ?LOG("CMD: ~s", [Command]),
-    Command2 = lists:flatten(io_lib:fwrite("~s", [Command])),
-    Port = open_port({spawn, Command2}, Opts ++ [
-                                                 exit_status, {line, 255}, stderr_to_stdout
-                                                ]),
+sh(Cmd) ->
+    sh(Cmd, []).
+sh(Cmd, Opts) ->
+    sh:sh(Cmd, Opts ++ [{use_stdout, false}, return_on_error]).
+sh(Cmd, Args, Opts) ->
+    sh:sh(Cmd, Args, Opts ++ [{use_stdout, false}, return_on_error]).
 
-    case sh_receive_loop(Port, []) of
-        {ok, Data} -> Data;
-        {error, {ErrCode, Output}} ->
-            throw({exec_error, {Command, ErrCode, Output}})
-    end.
 
-sh(Command) ->
-    sh(Command, []).
-
-sh_receive_loop(Port, Acc) ->
-    receive
-        {Port, {data, {eol, Line}}} -> sh_receive_loop(Port, [Line ++ "\n"|Acc]);
-        {Port, {data, {noeol, Line}}} ->
-            sh_receive_loop(Port, [Line|Acc]);
-        {Port, {exit_status, 0}} ->
-            {ok, lists:flatten(lists:reverse(Acc))};
-        {Port, {exit_status, E}} ->
-            {error, {E, lists:flatten(lists:reverse(Acc))}}
-    end.
+mktemp_dir() ->
+    sh("mktemp -d kha_build.XXXXX").

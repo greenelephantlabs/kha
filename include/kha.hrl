@@ -20,6 +20,7 @@
 
 -record(project,
         {id                 :: project_id(),
+         server             :: pid(),
          name               :: b_string(),
          local              :: filename:filename(), %% git clone remote local
          remote             :: b_string(),
@@ -50,9 +51,4 @@
         }).
 
 %%FIXME: PF: A temporary solution -> should by replace by alog or lager
--define(LOG(X,Y), (fun() ->
-                           Z = io_lib:fwrite(X, Y),
-                           io:fwrite("\t[~p]LOG[~p]: ~s~n",
-                                     [calendar:local_time(),
-                                      ?MODULE, Z])
-                   end)()).
+-define(LOG(X,Y), (fun() -> io:fwrite("[~p] LOG [~p:~b]: ~s~n", [calendar:local_time(), ?MODULE, ?LINE, io_lib:fwrite(X, Y)]) end)()).

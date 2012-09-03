@@ -41,10 +41,9 @@ do_run(Which, HookPath, P, B) ->
                                   B#build.branch, B#build.revision,
                                   B#build.author, P#project.remote]),
             Cmd = io_lib:fwrite("~s ~s", [HookPath, Opts]),
-            try 
-                kha_utils:sh(Cmd)
-            catch
-                throw:{exec_error, {_, ExitCode, Reason}} ->
+            case kha_utils:sh(Cmd) of
+                {ok, D} -> {ok, D};
+                {error, {ExitCode, Reason}} ->
                     ?LOG("Hook for ~p exit with code: ~b; Output: ~p",
                          [Which, ExitCode, Reason])
             end;
