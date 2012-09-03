@@ -52,10 +52,12 @@ basic .travis.yml support,
 DONE project git change polling
 
 v0.7
-Build list paging DONE, email and IRC notifications
+user authentication
+DONE Build list paging
+email notifications
 
 v0.8
-User authentication, remote builders, 
+branch list page, remote builders, IRC notifications
 
 v0.9
 Realtime data push
