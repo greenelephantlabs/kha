@@ -230,9 +230,9 @@ get_app_path(App) ->
 sh(Cmd) ->
     sh(Cmd, []).
 sh(Cmd, Opts) ->
-    sh:sh(Cmd, Opts ++ [{use_stdout, false}, return_on_error]).
+    sh:sh(convert(Cmd, str), Opts ++ [{use_stdout, false}, return_on_error]).
 sh(Cmd, Args, Opts) ->
-    sh:sh(Cmd, Args, Opts ++ [{use_stdout, false}, return_on_error]).
+    sh:sh(convert(Cmd, str), Args, Opts ++ [{use_stdout, false}, return_on_error]).
 
 
 mktemp_dir() ->
