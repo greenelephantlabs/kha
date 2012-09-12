@@ -15,7 +15,7 @@ run(Project, Build) ->
     Title = io_lib:format("Project: ~b; Build: ~b - ~p", [PId, BId, Status]),
     [ begin
           ModuleName = type_to_module(Type),
-          do_run(ModuleName, Title, "test", Params)
+          do_run(ModuleName, Title, Output, Params)
       end || #notification{type = Type, params = Params} <- Notif ].
 
 do_run(ModuleName, Title, Content, Params) ->
