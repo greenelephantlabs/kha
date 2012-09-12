@@ -2,7 +2,7 @@
 
 -include("kha.hrl").
 
--export([run/2]).
+-export([run/2, type_to_module/1]).
 
 
 run(Project, Build) ->
@@ -23,4 +23,4 @@ do_run(ModuleName, Title, Content, Params) ->
 
 type_to_module(Type) ->
     Name = io_lib:format("kha_notification_~p", [Type]),
-    list_to_atom(Name).
+    list_to_atom(lists:flatten(Name)).
