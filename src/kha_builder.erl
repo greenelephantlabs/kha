@@ -259,4 +259,5 @@ do_process({ProjectId, BuildId}) ->
         fail    -> kha_hooks:run(on_failed, ProjectId, BuildId);
         timeout -> kha_hooks:run(on_failed, ProjectId, BuildId)
     end,
+    kha_notification:run(P, Build2),
     Build2.
