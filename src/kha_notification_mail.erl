@@ -32,7 +32,7 @@ do_send(Email, Title, Content, ConfigPath) ->
     MailData = mail_template(Email, ?FROM, Title, Content),
     file:write_file("/tmp/kha_temp", MailData),
     Cmd0 = "cat /tmp/kha_temp | ssmtp -C ~s ~s",
-    Cmd = io_lib:format(Cmd0, [MailData, ConfigPath, Email]),
+    Cmd = io_lib:format(Cmd0, [ConfigPath, Email]),
     io:fwrite("DATA: ~p~n", [Cmd]),
     kha_utils:sh(Cmd).
 
