@@ -17,6 +17,14 @@ start() ->
     ok = application:start(kha).
 
 start(_Type, _Args) ->
+    case application:get_env(kha, host) of
+        X when X =:= {ok, "example.host"}; X =:= undefined ->
+            io:fwrite("!!!!~n\tEnv HOST is not defined - see src/kha.app.src~n!!!!!", []),
+            timer:sleep(2000),
+            init:stop(1);
+        _X -> ok
+    end,
+        
     Dispatch = [
                 {'_', [
                        %% PROJECT

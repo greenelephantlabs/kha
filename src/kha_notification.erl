@@ -12,17 +12,20 @@ run(Project, Build) ->
     BId = Build#build.id,
     Status = Build#build.status,
     Output = Build#build.output,
-
+    {ok, Host} = application:get_env(kha, host),
     More = io_lib:format("Start: ~s~n"
                          "Stop: ~s~n"
                          "Author: ~s~n"
                          "Branch: ~s~n"
                          "Revision: ~s~n"
-                         "Exit code: ~b~n~n",
+                         "Exit code: ~b~n~n"
+                         "Url: http://~s/#/project/~b/build/~b",
                          [kha_utils:now_to_nice(Build#build.start),
                           kha_utils:now_to_nice(Build#build.stop),
                           Build#build.author, Build#build.branch,
-                          Build#build.revision, Build#build.exit]),
+                          Build#build.revision, Build#build.exit,
+                          %% Create url
+                          Host, PId, BId]),
     
     Title = io_lib:format("[~p] Project: ~b (~s); Build: ~b",
                           [Status, PId, TitleProject, BId]),
