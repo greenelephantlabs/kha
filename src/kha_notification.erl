@@ -18,8 +18,8 @@ run(Project, Build) ->
                          "Author: ~s~n"
                          "Branch: ~s~n"
                          "Revision: ~s~n"
-                         "Exit code: ~b~n~n"
-                         "Url: http://~s/#/project/~b/build/~b",
+                         "Exit code: ~b~n"
+                         "Url: http://~s/#/project/~b/build/~b~n~n",
                          [kha_utils:now_to_nice(Build#build.start),
                           kha_utils:now_to_nice(Build#build.stop),
                           Build#build.author, Build#build.branch,
