@@ -1,0 +1,14 @@
+{application, kha,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  cowboy,
+                  mimetypes
+                 ]},
+  {mod, { kha_app, []}},
+  {env, [{host, "example.host"}]}
+ ]}.
