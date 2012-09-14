@@ -13,12 +13,12 @@
 -type command()    :: string().
 -type b_string()   :: binary().
 -type key()        :: binary().
--type pvalue()     :: binary() | number() | list(binary()) | list(number()).
--type params()()      :: [{key(), pvalue()}].
+-type pvalue()     :: binary() | number() | [binary()] | [number()].
+-type params()     :: [{key(), pvalue()}].
 
 -record(notification,
         {type               :: atom(), %% kha_notification_[type].erl
-         params             :: params()()
+         params             :: params()
         }).
 
 -record(project,
@@ -28,7 +28,7 @@
          local              :: filename:filename(), %% git clone remote local
          remote             :: b_string(),
          build = []         :: list(command()),
-         params = []        :: params()(),
+         params = []        :: params(),
          notifications = [] :: list(#notification{})
         }).
 
