@@ -55,19 +55,29 @@ update_project(P, [{<<"build">>, V}|R]) ->
 update_project(P, [{<<"notifications">>, _V}|R]) ->
     update_project(P, R).
 
+binarize(L) when is_list(L) ->
+    [ {convert(K, bin), V} || {K, V} <- L ].
+
 project_to_term(#project{id            = Id,
                          name          = Name,
                          local         = Local,
                          remote        = Remote,
                          build         = Build,
-                         notifications = _Notification}) ->
+                         params        = Params,
+                         notifications = Notification}) ->
     [{<<"id">>, Id},
      {<<"name">>, kha_utils:convert(Name, bin)},
      {<<"local">>, kha_utils:convert(Local, bin)},
      {<<"remote">>, kha_utils:convert(Remote, bin)},
      {<<"build">>, kha_utils:list_convert(Build, bin)},
-     {<<"notifications">>, []}
+     {<<"params">>, binarize(Params)},
+     {<<"notifications">>, [ notification_to_term(N) || N <- Notification ]}
     ].
+
+notification_to_term(#notification{type = Type,
+                                   params = Params}) ->
+    [{<<"type">>, convert(Type, bin)},
+     {<<"params">>, binarize(Params)}].
 
 build_to_term(#build{id       = Id,
                      project  = Project,

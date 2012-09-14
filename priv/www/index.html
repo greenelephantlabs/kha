@@ -66,11 +66,45 @@
                                                                         ng-readonly="!editing"
                                                                         ng-model="currentProject.build[$index]"></input></li>
                   </ol>
-                  <a ng-show="editing" ng-click="currentProject.build.push('')">Add
-                  build step</a>
+                  <a ng-show="editing" ng-click="currentProject.build.push('')">Add build step</a>
                 </li>
                 <li>
-                  Notifications: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.notifications"></input>
+                  Params:
+                  <ol>
+                    <li ng-repeat="(k, v) in currentProject.params">
+                      <input ng:class="getEditingClass()"
+                             ng-readonly="!editing"
+                             ng-model="k"></input>
+                      <input ng:class="getEditingClass()"
+                             ng-readonly="!editing"
+                             ng-model="currentProject.params[k]"></input></li>
+                  </ol>
+                  <a ng-show="editing" ng-click="currentProject.params[''] = ''">Add param</a>
+                </li>
+                <li>
+                  Notifications: 
+                  <ul>
+                    <li ng-repeat="n in currentProject.notifications">
+                      <ul>
+                        <li>
+                          Type: <input ng:class="getEditingClass()"
+                                       ng-readonly="!editing"
+                                       ng-model="n.type"></input>
+                        </li>
+                        <li>
+                          Params:
+                          <ol>
+                            <li ng-repeat="(k, v) in n.params">
+                              <input ng:class="getEditingClass()"
+                                     ng-readonly="!editing"
+                                     ng-model="k"></input>
+                              <input ng:class="getEditingClass()"
+                                     ng-readonly="!editing"
+                                     ng-model="n.params[k]"></input></li>
+                          </ol>
+                        </li>
+                    </li>
+                  </ul>
                 </li>
               </ul>
               <div ng:show="!!editing">
