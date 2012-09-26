@@ -52,6 +52,8 @@ update_project(P, [{<<"remote">>, V}|R]) ->
     update_project(P#project{remote = kha_utils:convert(V, bin)}, R);
 update_project(P, [{<<"build">>, V}|R]) ->
     update_project(P#project{build = kha_utils:list_convert(V, bin)}, R);
+update_project(P, [{<<"params">>, V}|R]) ->
+    update_project(P#project{params = kha_utils:list_convert(V, bin)}, R);
 update_project(P, [{<<"notifications">>, _V}|R]) ->
     update_project(P, R).
 
