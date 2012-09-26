@@ -47,20 +47,23 @@ v0.5 DONE
 Hooks, build timeouts
 
 v0.6
-DONE [ci skip] support,
-basic .travis.yml support,
-DONE project git change polling
+* DONE [ci skip] support,
+* basic .travis.yml support,
+* DONE project git change polling
 
 v0.7
-user authentication
-DONE Build list paging
-email notifications
+* user authentication
+* DONE Build list paging
+* DONE email notifications
 
 v0.8
-branch list page, remote builders, IRC notifications
+* branch list page, 
+* remote builders, 
+* IRC notifications
 
 v0.9
-Realtime data push
+* line-by-line build log updates
+* Realtime data push
 
 v1.0
 Stable release
