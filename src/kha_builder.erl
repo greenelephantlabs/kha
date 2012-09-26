@@ -214,7 +214,7 @@ do_process({ProjectId, BuildId}) ->
                 end,
 
     Steps0 = [ git:fetch_cmd(Local),
-               git:checkout_cmd(Local, Ref, [])
+               git:checkout_cmd(Local, Ref, [force])
                | P#project.build ],
 
     Steps = [ CloneStep
