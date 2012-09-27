@@ -93,12 +93,12 @@ handle_cast(Event, State) ->
 handle_call(Event, From, State) ->
     {stop, {unknown_call, Event, From}, State}.
 
-handle_info({mnesia_table_event, {write, project, #project{id = Id} = New, Old, _ActivityId}}, #state{id = Id} = State) ->
+handle_info({mnesia_table_event, {write, project, #project{id = Id} = New, _Old, _ActivityId}}, #state{id = Id} = State) ->
     ?LOG("New project record: ~p~n", [New]),
     {noreply, State};
-handle_info({mnesia_table_event, {delete, project, {project, Id}, Old, _ActivityId}}, #state{id = Id} = State) ->
+handle_info({mnesia_table_event, {delete, project, {project, Id}, _Old, _ActivityId}}, #state{id = Id} = State) ->
     {stop, normal, State};
-handle_info({mnesia_table_event, {delete, project, #project{id = Id}, Old, _ActivityId}}, #state{id = Id} = State) ->
+handle_info({mnesia_table_event, {delete, project, #project{id = Id}, _Old, _ActivityId}}, #state{id = Id} = State) ->
     {stop, normal, State};
 
 handle_info({mnesia_table_event, _}, #state{} = State) ->
