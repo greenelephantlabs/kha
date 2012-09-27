@@ -55,6 +55,7 @@ do_get(Id) ->
     db:get_record(project, Id).
 
 update(Project) ->
+    validate(Project),
     db:add_record(Project).
 
 %% =============================================================================
@@ -134,6 +135,15 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %% =============================================================================
+%% INTERNALS
+%% =============================================================================
+
+validate(P = #project{}) ->
+    PaB = lists:all(fun({K, _V}) -> is_binary(K) end, P#project.params),
+    {params_are_binaries, true} = {params_are_binaries, PaB},
+    true.
+
+%% =============================================================================
 %% DEBUG
 %% =============================================================================
 
@@ -142,14 +152,14 @@ create_fake() ->
                   local  = <<"/tmp/test_build">>,
                   remote = <<"https://github.com/greenelephantlabs/kha.git">>,
                   build  = [<<"rebar get-deps">>, <<"make">>],
-                  params = [{build_timeout, 60},
-                            {polling, true}],
+                  params = [{<<"build_timeout">>, 60},
+                            {<<"polling">>, true}],
                   notifications = []},
          #project{name   = <<"Oortle">>,
                   local  = <<"/tmp/oortle_build">>,
                   remote = <<"git@github.com:LivePress/oortle.git">>,
                   build  = [<<"./oortle/compile-and-run-tests.sh">>],
-                  params = [{build_timeout, 600}], %% 10 min
+                  params = [{<<"build_timeout">>, 600}], %% 10 min
                   notifications = []}
         ],
     [ begin

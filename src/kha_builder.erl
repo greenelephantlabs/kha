@@ -190,14 +190,9 @@ do_process({ProjectId, BuildId}) ->
     kha_hooks:run(on_building, ProjectId, BuildId),
     Local = kha_utils:convert(P#project.local, str),
     Remote = kha_utils:convert(P#project.remote, str),
-    Branch = kha_utils:convert(Build#build.branch, str),
-    Revision = kha_utils:convert(Build#build.revision, str),
-    BuildTimeout = proplists:get_value(build_timeout, P#project.params, 60),
+    BuildTimeout = proplists:get_value(<<"build_timeout">>, P#project.params, 60),
 
-    {ok, Timer} = timer:apply_after(timer:seconds(BuildTimeout), ?MODULE, build_timeout, [self(), ProjectId, BuildId]),
-
-    io:format("B: ~p~nR: ~p~n", [Branch, Revision]),
-
+    {ok, Timer} = set_timeout(BuildTimeout, {?MODULE, build_timeout, [self(), ProjectId, BuildId]}),
 
     UserSteps = get_user_steps(P, Build),
     CloneStep = create_clone_step(Local, Remote),
@@ -214,7 +209,7 @@ do_process({ProjectId, BuildId}) ->
                      Bb
              end,
 
-    catch timer:cancel(Timer),
+    cancel_timeout(Timer),
     kha_build:update(Build2),
     case Build2#build.status of
         success -> kha_hooks:run(on_success,   ProjectId, BuildId);
@@ -268,3 +263,9 @@ process_step({Cmd, F}, B) ->
                          status = fail},
             throw({error, Be})
     end.
+
+set_timeout(Time, {M, F, A}) ->
+    timer:apply_after(timer:seconds(Time), M, F, A).
+
+cancel_timeout(Timer) ->
+    timer:cancel(Timer).
