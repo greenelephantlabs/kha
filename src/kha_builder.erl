@@ -198,52 +198,14 @@ do_process({ProjectId, BuildId}) ->
 
     io:format("B: ~p~nR: ~p~n", [Branch, Revision]),
 
-    Ref = case Revision of
-              undefined -> Branch;
-              "" -> Branch;
-              _ -> Revision
-          end,
 
-    CloneStep = case filelib:is_dir(Local) of
-                    true ->
-                        {"# no need to checkout\n",
-                         fun() -> {ok, ""} end};
-                    false ->
-                        {git:clone_cmd(Remote, Local, []),
-                         fun() -> kha_utils:sh(git:clone_cmd(Remote, Local, [])) end}
-                end,
+    UserSteps = get_user_steps(P, Build),
+    CloneStep = create_clone_step(Local, Remote),
 
-    Steps0 = [ git:fetch_cmd(Local),
-               git:checkout_cmd(Local, Ref, [force])
-               | P#project.build ],
-
-    Steps = [ CloneStep
-              | [ {C,
-                   fun() ->
-                           kha_utils:sh(C, [{cd, Local}])
-                   end} || C <- Steps0 ] ],
-
-    BF = fun({Cmd, F}, B) ->
-                 B2 = B#build{output = [io_lib:format("$ ~s~n", [Cmd]) | B#build.output]},
-                 kha_build:update(B2),
-                 case F() of
-                     {ok, D} ->
-                         B3 = B#build{output = [D | B2#build.output]},
-                         kha_build:update(B3),
-                         B3;
-                     {error, {ExitCode, Reason}} ->
-                         Be = B#build{output = [Reason,
-                                                io_lib:format("$ ~s~n", [Cmd])
-                                                | B#build.output],
-                                      stop = now(),
-                                      exit = ExitCode,
-                                      status = fail},
-                         throw({error, Be})
-                 end
-         end,
+    Steps = [ CloneStep | UserSteps ],
 
     Build2 = try
-                 B2 = lists:foldl(BF, Build, Steps),
+                 B2 = lists:foldl(fun process_step/2, Build, Steps),
                  B2#build{status = success,
                           stop = now(),
                           exit = 0}
@@ -261,3 +223,48 @@ do_process({ProjectId, BuildId}) ->
     end,
     kha_notification:run(P, Build2),
     Build2.
+
+create_clone_step(Local, Remote) ->
+    case filelib:is_dir(Local) of
+        true ->
+            {"# no need to checkout\n",
+             fun() -> {ok, ""} end};
+        false ->
+            {git:clone_cmd(Remote, Local, []),
+             fun() -> kha_utils:sh(git:clone_cmd(Remote, Local, [])) end}
+    end.    
+
+get_user_steps(P, Build) ->
+    Local = kha_utils:convert(P#project.local, str),
+    Branch = kha_utils:convert(Build#build.branch, str),
+    Revision = kha_utils:convert(Build#build.revision, str),
+    Ref = case Revision of
+              undefined -> Branch;
+              "" -> Branch;
+              _ -> Revision
+          end,
+
+    Steps0 = [ git:fetch_cmd(Local),
+               git:checkout_cmd(Local, Ref, [force])
+               | P#project.build ],
+
+    UserSteps = [ {C, fun() -> kha_utils:sh(C, [{cd, Local}]) end} || C <- Steps0 ],
+    UserSteps.
+
+process_step({Cmd, F}, B) ->
+    B2 = B#build{output = [io_lib:format("$ ~s~n", [Cmd]) | B#build.output]},
+    kha_build:update(B2),
+    case F() of
+        {ok, D} ->
+            B3 = B#build{output = [D | B2#build.output]},
+            kha_build:update(B3),
+            B3;
+        {error, {ExitCode, Reason}} ->
+            Be = B#build{output = [Reason,
+                                   io_lib:format("$ ~s~n", [Cmd])
+                                   | B#build.output],
+                         stop = now(),
+                         exit = ExitCode,
+                         status = fail},
+            throw({error, Be})
+    end.
