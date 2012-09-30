@@ -12,7 +12,7 @@
         notifications :: list(#notification())
     }]
 
-## GET /project/<id>
+## GET /project/ProjectId
 
 ### Response
 
@@ -24,12 +24,12 @@
         notifications :: list(#notification())
     }
 
-## GET /project/<id>/build
+## GET /project/ProjectId/build
 
 ### Response
     [build] %% See below
 
-## GET /project/<id>/build/<id>
+## GET /project/ProjectId/build/BuildId
 
 ### Response
 
@@ -47,7 +47,7 @@
         tags          :: list(tag())
     }
 
-## POST /project/<id>/build
+## POST /project/ProjectId/build
 
 ### Variables
 
@@ -68,4 +68,4 @@ or
 
 ### Response
 
-Same as `GET /project/<id>/build/<id>`
+Same as `GET /project/ProjectId/build/BuildId`
