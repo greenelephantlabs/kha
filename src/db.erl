@@ -68,6 +68,10 @@ init_sequences() ->
     add_record(#id_seq{whose = project}).
 
 init_schema() ->
+    create_table(session),
+    create_table(user),
+    create_table(acl),
+
     create_table(project),
     create_table(build, ordered_set, [{index, [#build.revision]}]),
     create_table(id_seq).
