@@ -8,6 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(kha_project_manager).
 
+-include_lib("kha/include/common.hrl").
 -include("kha.hrl").
 
 -behaviour(gen_server).

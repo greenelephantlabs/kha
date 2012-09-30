@@ -8,6 +8,7 @@
 
 -module(kha_utils).
 
+-include_lib("kha/include/common.hrl").
 -include("kha.hrl").
 
 -export([list_convert/2,

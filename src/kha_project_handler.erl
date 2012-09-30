@@ -11,6 +11,7 @@
          handle/2,
          terminate/2]).
 
+-include_lib("kha/include/common.hrl").
 -include("kha.hrl").
 
 init({_Any, http}, Req, []) ->

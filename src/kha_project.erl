@@ -7,6 +7,7 @@
 
 -module(kha_project).
 
+-include_lib("kha/include/common.hrl").
 -include("kha.hrl").
 
 -behaviour(gen_server).

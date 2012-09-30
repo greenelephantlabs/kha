@@ -7,6 +7,7 @@
 
 -module(kha_build).
 
+-include_lib("kha/include/common.hrl").
 -include("kha.hrl").
 
 -export([create/2,
