@@ -3,16 +3,23 @@
 -include_lib("kha/include/common.hrl").
 -include_lib("kha/include/auth.hrl").
 
--export([check_user/3, check_user/4, define/4]).
+-export([check/1, check/3, check_user/3, check_user/4, define/4]).
+
+lst(L) when is_list(L) ->
+    lists:flatten(L);
+lst(X) ->
+    lists:flatten([X]).
 
 check(Accessor, Resource, Operation) ->
-    check([{Accessor, Resource, Operation}]).
+    check([{A, R, O} || A <- lst(Accessor) ++ [default],
+                        R <- lst(Resource) ++ [default],
+                        O <- lst(Operation) ]).
 
 check(Ops) when is_list(Ops) ->
     case db:get_many(acl, Ops) of
-        [] ->
+        {ok, []} ->
             allow;
-        [#acl{response = Resp}|_] ->
+        {ok, [#acl{response = Resp}|_]} ->
             Resp
     end.
 
@@ -27,7 +34,10 @@ check_user(User, Thing, Operation, Fun) ->
             {error, Error}
     end.
 
+accessor(default = X) -> X;
+accessor(logged = X) -> X;
 accessor({user, Email} = X) when is_binary(Email) -> X.
+resource(default = X) -> X;
 resource({project, ProjectId} = X) when is_integer(ProjectId) -> X.
 operation(read = X) -> X;
 operation(write = X) -> X.

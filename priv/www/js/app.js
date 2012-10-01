@@ -205,8 +205,7 @@ function BuildCtrl($scope, $window, $timeout, Build) {
     });
 
     $timeout(function fetch(){
-        if (!$scope.currentProject.id) return;
-        if (!$scope.builds) return;
+        if (!$scope.currentProject || !$scope.currentProject.id || !$scope.builds) return;
         Build.query({projectId: $scope.currentProject.id, id: '', limit: _.size($scope.builds)}, function(builds) {
             updateBuilds(builds, true);
             $timeout(fetch, 5000);

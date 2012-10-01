@@ -9,7 +9,7 @@
          logout/1,
 
          get/1,
-         save/1, load/0,
+         save/1, load/0, as_acl/0,
 
          to_plist/1]).
 
@@ -81,6 +81,14 @@ save(Session) ->
 
 load() ->
     erlang:get(session).
+
+as_acl() ->
+    case session:load() of
+        undefined -> [not_logged];
+        #session{email = Email} ->
+            [{user, Email},
+             logged]
+    end.
 
 to_plist(#session{id    = Id,
                   email = Name}) ->
