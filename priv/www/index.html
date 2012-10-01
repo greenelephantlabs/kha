@@ -150,7 +150,8 @@
       </div>
     </div>
 
-    <div id="login-container" ng-controller="LoginController" >
+    <div id="login-container" ng-controller="LoginController"
+         ng:class="{'urgent': urgent}">
       <div ng-class="{'hide': !session}">
         Logged in: <span>{{session.name}}</span>
         <button class="btn" ng-click="logout()"><i class="icon-off"></i>Logout</button>

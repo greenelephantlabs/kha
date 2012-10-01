@@ -43,6 +43,16 @@ input {
   padding: 0 7px 7px 7px;
 }
 
+#login-container.urgent {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding-left: 30%;
+  padding-top: 30%;
+  background-color: #fdd;
+}
+
 #github {
   background-color: #a00;
   overflow: hidden;
