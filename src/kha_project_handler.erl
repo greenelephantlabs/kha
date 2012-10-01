@@ -62,5 +62,5 @@ terminate(_Req, _State) ->
 
 cut_url(<<"/project">>) ->
     [];
-cut_url(<<"/project", PId/binary>>) ->
+cut_url(<<"/project/", PId/binary>>) ->
     [kha_utils:convert(PId, int)].
