@@ -1,4 +1,4 @@
-angular.module('Kha', ['ngResource']).
+angular.module('Kha', ['http-auth-interceptor', 'ngResource']).
     factory('Project', function($resource){
         var r = $resource('/project/:id', {id: '@id'}, {
             query: {method:'GET',
