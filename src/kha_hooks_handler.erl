@@ -19,17 +19,17 @@ init({_Any, http}, Req, []) ->
 
 
 handle(Req, State) ->
-    {Method, Req2} = cowboy_http_req:method(Req),
-    {Url, Req3} = cowboy_http_req:path(Req2),
+    {Method, Req2} = cowboy_req:method(Req),
+    {Url, Req3} = cowboy_req:path(Req2),
     {Type, ProjectId} = cut_url(Url),
     {ResponseData, Code, Req4} = do(Method, Type, ProjectId, Req3),
-    {ok, Req5} = cowboy_http_req:reply(Code, kha_utils:headers(),
+    {ok, Req5} = cowboy_req:reply(Code, kha_utils:headers(),
                                        jsx:to_json(ResponseData), Req4),
     {ok, Req5, State}.
 
 %% Rerun build by copying
 do('POST', github, ProjectId, Req) ->
-    {QSList, Req3} = cowboy_http_req:body_qs(Req),
+    {QSList, Req3} = cowboy_req:body_qs(Req),
     Data0 = proplists:get_value(<<"payload">>, QSList),
     Data = jsx:to_term(Data0),
     Info = proplists:get_value(<<"head_commit">>, Data),
