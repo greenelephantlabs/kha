@@ -82,3 +82,8 @@ input {
 .builds .btn {
   width: 80px;
 }
+
+
+.hide {
+  display: none;
+}

@@ -150,11 +150,16 @@
       </div>
     </div>
 
-    <div id="login-container">
-      <form name="login" class="navbar-form pull-left" ng-controller="LoginController">
+    <div id="login-container" ng-controller="LoginController" >
+      <div ng-class="{'hide': !session}">
+        Logged in: <span>{{session.name}}</span>
+        <button class="btn" ng-click="logout()"><i class="icon-off"></i>Logout</button>
+      </div>
+      <form name="loginForm" class="navbar-form pull-left"
+            ng-class="{'hide': session}" ng:submit="login()">
         <input type="text" class="span2" ng-model="email" placeholder="Email" required></input>
         <input type="password" class="span2" ng-model="password" placeholder="Password" required></input>
-        <button class="btn" ng-click="submit($event)" ng-disabled="!login.$valid"><i class="icon-user"></i>Login</button>
+        <button class="btn" ng-disabled="!loginForm.$valid"><i class="icon-user"></i>Login</button>
       </form>
     </div>
 
