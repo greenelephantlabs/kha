@@ -21,7 +21,7 @@ init({_Any, http}, Req, []) ->
 handle(Req, State) ->
     {Method, Req2} = cowboy_req:method(Req),
     {Url, Req3} = cowboy_req:path(Req2),
-    {Type, ProjectId} = cut_url(Url),
+    {Type, ProjectId} = cut_url(tl(binary:split(Url, <<"/">>, [global]))),
     {ResponseData, Code, Req4} = do(Method, Type, ProjectId, Req3),
     {ok, Req5} = cowboy_req:reply(Code, kha_utils:headers(),
                                        jsx:to_json(ResponseData), Req4),
