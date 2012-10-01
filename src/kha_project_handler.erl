@@ -29,13 +29,13 @@ handle(Req, State) ->
 %% Get all projects
 do('GET', [], Req) ->
     {ok, E} = kha_project:get(all),
-    Response = [ kha_utils:project_to_term(X) || X <- E ],
+    Response = [ kha_utils:project_to_plist(X) || X <- E ],
     {Response, 200, Req};
 
 %% Get project
 do('GET', [PId], Req) ->
     {ok, E} = kha_project:get(PId),
-    Response = kha_utils:project_to_term(E),
+    Response = kha_utils:project_to_plist(E),
     {Response, 200, Req};
 
 %% Add new project
@@ -44,7 +44,7 @@ do('POST', [], Req) ->
     Data = jsx:to_term(Data0),
     E2 = kha_utils:update_project(#project{}, Data),
     {ok, E3} = kha_project:create(E2),
-    Response = kha_utils:project_to_term(E3),
+    Response = kha_utils:project_to_plist(E3),
     {Response, 200, Req2};
 
 %% Get project
@@ -54,7 +54,7 @@ do('POST', [PId], Req) ->
     Data = jsx:to_term(Data0),
     E2 = kha_utils:update_project(E, Data),
     kha_project:update(E2),
-    Response = kha_utils:project_to_term(E2),
+    Response = kha_utils:project_to_plist(E2),
     {Response, 200, Req2}.
 
 terminate(_Req, _State) ->

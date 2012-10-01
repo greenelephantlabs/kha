@@ -44,20 +44,20 @@ do('GET', [PId], Req0) ->
                    end
            end,
     {ok, E} = kha_build:get(PId, Opts),
-    Response = [ kha_utils:build_to_term(X) || X <- E ],
+    Response = [ kha_utils:build_to_plist(X) || X <- E ],
     {Response, 200, Req};
 
 %% Get build
 do('DELETE', [PId, BId], Req) ->
     {ok, E} = kha_build:get(PId, BId),
     kha_build:delete(E),
-    Response = [],%%kha_utils:build_to_term(E),
+    Response = [],%%kha_utils:build_to_plist(E),
     {Response, 200, Req};
 
 %% Get build
 do('GET', [PId, BId], Req) ->
     {ok, E} = kha_build:get(PId, BId),
-    Response = kha_utils:build_to_term(E),
+    Response = kha_utils:build_to_plist(E),
     {Response, 200, Req};
 
 %% Rerun build by copying
@@ -85,7 +85,7 @@ do('POST', [PId], Req) ->
 %%     Old = Old0#build{start = now()},
 %%     kha_build:update(Old),
 %%     kha_builder:add_to_queue(PId, BId),
-%%     R = kha_utils:build_to_term(Old),
+%%     R = kha_utils:build_to_plist(Old),
 %%     {R, 200, Req}.
 
 %% Create new build
@@ -97,7 +97,7 @@ create_build(ProjectId, Data) ->
     Tags     = proplists:get_value(<<"tags">>, kha_utils:list_convert(Data, bin)),
     {ok, Build} = kha_build:create_and_add_to_queue(ProjectId, Title, Branch,
                                                     Revision, Author, Tags),
-    Response = kha_utils:build_to_term(Build),
+    Response = kha_utils:build_to_plist(Build),
     {Response, 200}.
 
 copy_build(ProjectId, BuildId, _Data) ->
@@ -108,7 +108,7 @@ copy_build(ProjectId, BuildId, _Data) ->
                                                     Old#build.revision,
                                                     Old#build.author,
                                                     Old#build.tags),
-    Response = kha_utils:build_to_term(Build),
+    Response = kha_utils:build_to_plist(Build),
     {Response, 200}.
 
 

@@ -10,8 +10,7 @@
 
 -include("kha.hrl").
 
--export([to_int/1,
-         list_convert/2,
+-export([list_convert/2,
          convert/2,
          convert_opt/2,
          convert_safe/2,
@@ -27,8 +26,8 @@
 
 -export([record_field/1,
          update_project/2,
-         project_to_term/1,
-         build_to_term/1,
+         project_to_plist/1,
+         build_to_plist/1,
          headers/0,
          get_app_path/0,
          get_app_path/1]).
@@ -60,39 +59,39 @@ update_project(P, [{<<"notifications">>, _V}|R]) ->
 binarize(L) when is_list(L) ->
     [ {convert(K, bin), V} || {K, V} <- L ].
 
-project_to_term(#project{id            = Id,
-                         name          = Name,
-                         local         = Local,
-                         remote        = Remote,
-                         build         = Build,
-                         params        = Params,
-                         notifications = Notification}) ->
+project_to_plist(#project{id           = Id,
+                          name          = Name,
+                          local         = Local,
+                          remote        = Remote,
+                          build         = Build,
+                          params        = Params,
+                          notifications = Notification}) ->
     [{<<"id">>, Id},
      {<<"name">>, kha_utils:convert(Name, bin)},
      {<<"local">>, kha_utils:convert(Local, bin)},
      {<<"remote">>, kha_utils:convert(Remote, bin)},
      {<<"build">>, kha_utils:list_convert(Build, bin)},
      {<<"params">>, binarize(Params)},
-     {<<"notifications">>, [ notification_to_term(N) || N <- Notification ]}
+     {<<"notifications">>, [ notification_to_plist(N) || N <- Notification ]}
     ].
 
-notification_to_term(#notification{type = Type,
-                                   params = Params}) ->
+notification_to_plist(#notification{type = Type,
+                                    params = Params}) ->
     [{<<"type">>, convert(Type, bin)},
      {<<"params">>, binarize(Params)}].
 
-build_to_term(#build{id       = Id,
-                     project  = Project,
-                     title    = Title,
-                     branch   = Branch,
-                     revision = Revision,
-                     author   = Author,
-                     start    = Start,
-                     stop     = Stop,
-                     status   = Status,
-                     exit     = Exit,
-                     output   = Output,
-                     tags     = Tags}) ->
+build_to_plist(#build{id      = Id,
+                      project  = Project,
+                      title    = Title,
+                      branch   = Branch,
+                      revision = Revision,
+                      author   = Author,
+                      start    = Start,
+                      stop     = Stop,
+                      status   = Status,
+                      exit     = Exit,
+                      output   = Output,
+                      tags     = Tags}) ->
     fltr(
       [{<<"id">>,       Id},
        {<<"project">>,  Project},
@@ -107,12 +106,6 @@ build_to_term(#build{id       = Id,
        {<<"output">>,   kha_utils:convert(lists:reverse(Output), bin)},
        {<<"tags">>,     kha_utils:list_convert(Tags, bin)}
       ]).
-
-to_int(X) when is_binary(X) -> to_int(binary_to_list(X));
-to_int(X) when is_list(X) -> list_to_integer(X);
-to_int(X) when is_integer(X) -> X;
-to_int(X) when X==undefined -> undefined;
-to_int(X) when is_atom(X) -> to_int(atom_to_list(X)).
 
 fmt(S, A) ->
     convert(io_lib:format(S, A), bin).

@@ -47,7 +47,7 @@ do('POST', github, ProjectId, Req) ->
                                                             Branch, CommitId,
                                                             AuthorName,
                                                             [AuthorName, <<"github">>]),
-            Response = kha_utils:build_to_term(Build),
+            Response = kha_utils:build_to_plist(Build),
             {Response, 200, Req3};
         _ ->
             {[{}], 204, Req3}
