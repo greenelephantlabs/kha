@@ -10,5 +10,5 @@
                   mimetypes
                  ]},
   {mod, { kha_app, []}},
-  {env, [{host, "example.host"}]}
+  {env, []}
  ]}.

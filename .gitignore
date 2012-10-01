@@ -9,3 +9,4 @@ erl_crash.dump
 Mnesia*
 kha_hooks
 src/kha.app.src
+/support/*.config

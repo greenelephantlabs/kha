@@ -12,20 +12,34 @@
 %% ===================================================================
 
 start() ->
-    ok = application:start(ranch),
-    ok = application:start(cowboy),
-    ok = application:start(mimetypes),
-    ok = application:start(kha).
+    db:init(),
+    ok = application:start(ranch, permanent),
+    ok = application:start(cowboy, permanent),
+    ok = application:start(mimetypes, permanent),
+    ok = application:start(kha, permanent).
 
-start(_Type, _Args) ->
+start(_Type, _Args) ->       
+    case validate_env(kha) of
+        ok ->
+            configure_cowboy(),
+            kha_sup:start_link();
+        {error, Error} ->
+            {error, Error}
+    end.
+
+stop(_State) ->
+    ok.
+
+validate_env(kha) ->
     case application:get_env(kha, host) of
-        X when X =:= {ok, "example.host"}; X =:= undefined ->
-            io:fwrite("!!!!~n\tEnv HOST is not defined - see src/kha.app.src~n!!!!!", []),
-            timer:sleep(2000),
-            init:stop(1);
-        _X -> ok
-    end,
-        
+        X when X =:= undefined ->
+            io:fwrite("Error! Application env 'host' is not defined.~n", []),
+            {error, env_variable__host__is_undefined};
+        _X -> 
+            ok
+    end.
+
+configure_cowboy() ->    
     Dispatch = [
                 {'_', [
                        %% PROJECT
@@ -43,8 +57,4 @@ start(_Type, _Args) ->
                        {'_', default_handler, []}
                       ]}
                ],
-    cowboy:start_http(kha_http_listener, 10, [{port, 8093}], [{dispatch, Dispatch}]),
-    kha_sup:start_link().
-
-stop(_State) ->
-    ok.
+    cowboy:start_http(kha_http_listener, 10, [{port, 8093}], [{dispatch, Dispatch}]).
