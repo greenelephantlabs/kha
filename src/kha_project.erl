@@ -141,7 +141,21 @@ code_change(_OldVsn, State, _Extra) ->
 validate(P = #project{}) ->
     PaB = lists:all(fun({K, _V}) -> is_binary(K) end, P#project.params),
     {params_are_binaries, true} = {params_are_binaries, PaB},
+    NaV = lists:all(fun(#notification{type = Type, params = Params}) -> 
+                            is_atom(Type) andalso is_params(Params) 
+                    end, P#project.notifications),
+    {notifications_are_valid, true} = {notifications_are_valid, NaV},
     true.
+
+is_pvalue(N) when is_number(N) ->
+    true;
+is_pvalue(B) when is_binary(B) ->
+    true;
+is_pvalue(L) when is_list(L) ->
+    lists:all(fun(X) -> is_binary(X) orelse is_number(X) end, L).
+
+is_params(L) when is_list(L) ->
+    lists:all(fun({K, V}) -> is_atom(K) andalso is_pvalue(V) end, L).
 
 %% =============================================================================
 %% DEBUG
