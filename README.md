@@ -48,16 +48,16 @@ Hooks, build timeouts
 
 v0.6
 * DONE [ci skip] support,
-* basic .travis.yml support,
 * DONE project git change polling
+* user authentication
 
 v0.7
-* user authentication
+* branch list page, 
 * DONE Build list paging
 * DONE email notifications
 
 v0.8
-* branch list page, 
+* basic .travis.yml support,
 * remote builders, 
 * IRC notifications
 
