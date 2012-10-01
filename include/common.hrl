@@ -1,6 +1,6 @@
 -type project_id() :: integer().
 -type build_id()   :: integer().
--type username()   :: binary().
+-type email()      :: binary().
 -type time()       :: {integer(), integer(), integer()}.
 -type tag()        :: string().
 -type command()    :: string().

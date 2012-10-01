@@ -13,7 +13,7 @@ handle(Req0, State) ->
     {Method0, Req2} = cowboy_req:method(Req),
     Method = list_to_existing_atom(binary_to_list(Method0)),
     {Url, Req3} = cowboy_req:path(Req2),
-    Url2 = binary:split(Url, <<"/">>),
+    [<<>> | Url2] = binary:split(Url, <<"/">>, [global]),
     {ResponseData, Code, Req4} = do(Method, Url2, Req3),
     {ok, Req5} = cowboy_req:reply(Code, kha_utils:headers(),
                                   jsx:to_json(ResponseData), Req4),
@@ -22,6 +22,14 @@ handle(Req0, State) ->
 terminate(_Req, _State) ->
     ok.
 
+do('POST', [<<"user">>, <<"login">>], Req) ->
+    case session:login(Req) of
+        {ok, Session, Req2} ->
+            SessiondData = session:to_plist(Session),
+            {[{result, true}, {session, SessiondData}], 200, Req2};
+        {error, Req2} ->
+            {[{result, false}], 406, Req2}
+    end;
 
 do('GET', [<<"user">>, <<"session">>], Req) ->
     Session = session:load(),

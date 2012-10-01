@@ -27,7 +27,7 @@ check_user(User, Thing, Operation, Fun) ->
             {error, Error}
     end.
 
-accessor({user, Username} = X) when is_binary(Username) -> X.
+accessor({user, Email} = X) when is_binary(Email) -> X.
 resource({project, ProjectId} = X) when is_integer(ProjectId) -> X.
 operation(read = X) -> X;
 operation(write = X) -> X.

@@ -5,7 +5,7 @@
 
 -export([init/1,
 
-         login/3,
+         login/1, login/3,
          logout/1,
 
          get/1,
@@ -21,24 +21,36 @@ init(Req) -> %% stores session record in process dictionary, to be called at the
             case get(Req) of
                 {ok, _Session, Req2} ->
                     Req2;
-                {error, Req2} ->
+                {undefined, Req2} ->
                     Req2
             end;
         #session{} = _Session ->
             Req
     end.
 
-login(Username, Password, Req) ->
-    case db:get_record(user, Username) of
-        {ok, #user{password = Password}} ->
-            SId = hex:to(crypto:rand_bytes(16)),
-            Session = #session{id = SId,
-                               username = Username,
-                               start = now()},
-            db:add_record(Session),
-            save(Session),
-            Req2 = Req:set_resp_cookie(<<"session">>, SId, [{max_age, 604800}]), %% one week
-            {ok, Session, Req2};
+login(Req) ->
+    {ok, Data0, Req2} = cowboy_req:body(Req),
+    Data = jsx:to_term(Data0),
+    login(proplists:get_value(<<"email">>, Data),
+          proplists:get_value(<<"password">>, Data),
+          Req2).
+
+login(Email, Password, Req) ->
+    case kha_user:fetch(Email) of
+        {ok, #user{password = Hash}} ->
+            case erlpass:match(Password, Hash) of
+                true ->
+                    SId = hex:to(crypto:rand_bytes(16)),
+                    Session = #session{id = SId,
+                                       email = Email,
+                                       start = now()},
+                    db:add_record(Session),
+                    save(Session),
+                    Req2 = cowboy_req:set_resp_cookie(<<"session">>, SId, [{max_age, 604800}], Req), %% one week
+                    {ok, Session, Req2};
+                false ->
+                    {error, Req}
+            end;
         {error, _} ->
             {error, Req}
     end.
@@ -46,11 +58,11 @@ login(Username, Password, Req) ->
 logout(Req) ->
     {ok, Session} = session:get(Req),
     db:remove_object(Session),
-    Req2 = Req:set_resp_cookie(<<"session">>, <<"">>),
+    Req2 = cowboy_req:set_resp_cookie(<<"session">>, <<"">>, Req),
     {ok, Req2}.
 
 get(Req) ->
-    case Req:cookie(<<"session">>) of
+    case cowboy_req:cookie(<<"session">>, Req) of
         {undefined, Req2} ->
             {undefined, Req2};
         {S, Req2} ->
@@ -69,8 +81,8 @@ save(Session) ->
 load() ->
     erlang:get(session).
 
-to_plist(#session{id       = Id,
-                  username = Name}) ->
+to_plist(#session{id    = Id,
+                  email = Name}) ->
     [{<<"id">>, Id},
      {<<"name">>, kha_utils:convert(Name, bin)}
     ].
