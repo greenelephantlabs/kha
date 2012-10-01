@@ -1,6 +1,6 @@
 REBAR=$(shell which rebar || echo ./rebar)
 
-default: fast
+default: normal
 
 all:    $(REBAR)
 	$(REBAR) get-deps
