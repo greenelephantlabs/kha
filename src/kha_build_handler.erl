@@ -17,9 +17,8 @@
 init({_Any, http}, Req, []) ->
     {ok, Req, undefined}.
 
-
-
-handle(Req, State) ->
+handle(Req0, State) ->
+    Req = session:init(Req0),
     {Method0, Req2} = cowboy_req:method(Req),
     Method = list_to_existing_atom(binary_to_list(Method0)),
     {Url, Req3} = cowboy_req:path(Req2),

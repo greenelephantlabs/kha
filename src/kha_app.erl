@@ -43,6 +43,8 @@ configure_cowboy() ->
     Dispatch = [
                 {'_', [
                        %% PROJECT
+                       {[<<"user">>, '_'], kha_user_handler, []},
+
                        {[<<"project">>], kha_project_handler, []},
                        {[<<"project">>, '_'], kha_project_handler, []},
 
