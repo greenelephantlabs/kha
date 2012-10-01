@@ -19,13 +19,14 @@ init(Req) -> %% stores session record in process dictionary, to be called at the
     case load() of
         undefined ->
             case get(Req) of
-                {ok, _Session, Req2} ->
-                    Req2;
+                {ok, Session, Req2} ->
+                    save(Session),
+                    cowboy_req:set_resp_header(<<"X-Kha-LoggedIn">>, <<"true">>, Req2); %%GP: for debug
                 {undefined, Req2} ->
                     Req2
             end;
         #session{} = _Session ->
-            Req
+            cowboy_req:set_resp_header(<<"X-Kha-LoggedIn">>, <<"true">>, Req) %%GP: for debug
     end.
 
 login(Req) ->
@@ -40,13 +41,13 @@ login(Email, Password, Req) ->
         {ok, #user{password = Hash}} ->
             case erlpass:match(Password, Hash) of
                 true ->
-                    SId = hex:to(crypto:rand_bytes(16)),
+                    SId = kha_utils:convert(hex:to(crypto:rand_bytes(16)), bin),
                     Session = #session{id = SId,
                                        email = Email,
                                        start = now()},
                     db:add_record(Session),
+                    Req2 = cookie(SId, Req),
                     save(Session),
-                    Req2 = cowboy_req:set_resp_cookie(<<"session">>, SId, [{max_age, 604800}], Req), %% one week
                     {ok, Session, Req2};
                 false ->
                     {error, Req}
@@ -56,18 +57,18 @@ login(Email, Password, Req) ->
     end.
 
 logout(Req) ->
-    {ok, Session} = session:get(Req),
+    {ok, Session, Req2} = session:get(Req),
     db:remove_object(Session),
-    Req2 = cowboy_req:set_resp_cookie(<<"session">>, <<"">>, Req),
-    {ok, Req2}.
+    put(session, undefined),
+    Req3 = cookie(<<"">>, Req2),
+    {ok, Req3}.
 
 get(Req) ->
     case cowboy_req:cookie(<<"session">>, Req) of
         {undefined, Req2} ->
             {undefined, Req2};
         {S, Req2} ->
-            #session{id = S} = load(), %% validate the session
-            case db:get_record(cookie, kha_utils:convert(S, bin)) of
+            case db:get_record(session, kha_utils:convert(S, bin)) of
                 {ok, Session} ->
                     {ok, Session, Req2};
                 {error, _} ->
@@ -86,3 +87,6 @@ to_plist(#session{id    = Id,
     [{<<"id">>, Id},
      {<<"name">>, kha_utils:convert(Name, bin)}
     ].
+
+cookie(Value, Req) ->
+    cowboy_req:set_resp_cookie(<<"session">>, Value, [{max_age, 604800}, {path, <<"/">>}], Req). %% one week

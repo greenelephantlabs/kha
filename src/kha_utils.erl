@@ -34,6 +34,7 @@
          get_app_path/0,
          get_app_path/1]).
 
+record_field(acl) ->     record_info(fields, acl);
 record_field(session) -> record_info(fields, session);
 record_field(user) ->    record_info(fields, user);
 record_field(project) -> record_info(fields, project);

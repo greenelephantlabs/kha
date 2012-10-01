@@ -22,6 +22,10 @@ handle(Req0, State) ->
 terminate(_Req, _State) ->
     ok.
 
+do('POST', [<<"user">>, <<"logout">>], Req) ->
+    {ok, Req2} = session:logout(Req),
+    {[], 204, Req2};
+
 do('POST', [<<"user">>, <<"login">>], Req) ->
     case session:login(Req) of
         {ok, Session, Req2} ->
@@ -31,7 +35,12 @@ do('POST', [<<"user">>, <<"login">>], Req) ->
             {[{result, false}], 406, Req2}
     end;
 
+
 do('GET', [<<"user">>, <<"session">>], Req) ->
-    Session = session:load(),
-    Response = session:to_plist(Session),
-    {Response, 200, Req}.
+    case session:load() of
+        undefined ->
+            {[{result, false}], 204, Req};
+        Session ->
+            SessiondData = session:to_plist(Session),
+            {[{result, true}, {session, SessiondData}], 200, Req}
+    end.
