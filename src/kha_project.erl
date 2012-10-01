@@ -21,7 +21,7 @@
 -export([init/1, handle_call/3, handle_cast/2,
          handle_info/2, terminate/2, code_change/3]).
 
--export([create_fake/0]).
+-export([create_fake/0, upgrade/0]).
 
 %% =============================================================================
 %% Server API
@@ -80,7 +80,7 @@ init([Id]) ->
     Self2 = Self#project{server = self()},
     update(Self2),
     Timer =
-        case proplists:get_value(polling, Params, false) of
+        case proplists:get_value(<<"polling">>, Params, false) of
             true ->
                 erlang:start_timer(?POLL_TIME, self(), poll);
             false ->
@@ -186,3 +186,11 @@ create_fake() ->
 %%             tags     = ["paul", "peregud", "test_branch_2"]
 %%            }
 %%     ].
+
+upgrade() ->
+    {ok, Ps} = db:get_all(project),
+    [ kha_project:update(binarize(P)) || P <- Ps ].
+
+binarize(#project{params = Params} = P) ->
+    Params2 = [ {kha_utils:convert(K, bin), V} || {K, V} <- Params ],
+    P#project{params = Params2}.
