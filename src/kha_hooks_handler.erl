@@ -29,7 +29,7 @@ handle(Req, State) ->
 
 %% Rerun build by copying
 do('POST', github, ProjectId, Req) ->
-    {QSList, Req3} = cowboy_req:body_qs(Req),
+    {ok, QSList, Req3} = cowboy_req:body_qs(Req),
     Data0 = proplists:get_value(<<"payload">>, QSList),
     Data = jsx:to_term(Data0),
     Info = proplists:get_value(<<"head_commit">>, Data),
