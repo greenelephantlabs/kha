@@ -1,17 +1,17 @@
-root=kha@silversoft.pl
+root=kha@example.com
 
 # The place where the mail goes. The actual machine name is required no 
 # MX records are consulted. Commonly mailhosts are named mail.domain.com
-mailhub=smtp.gmail.com:465
+mailhub=mail.example.com
 
 # Where will the mail seem to come from?
-rewriteDomain=gmail.com
+rewriteDomain=example.com
 
 # The full hostname
-hostname=callisto.lan
+hostname=example.com
 
-AuthUser=kha@silversoft.pl
-AuthPass=eKh?1029ijn
+AuthUser=kha@example.com
+AuthPass=hunter2
 UseTLS=YES
 
 # Are users allowed to set their own From: address?
