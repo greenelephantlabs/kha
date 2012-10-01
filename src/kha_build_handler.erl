@@ -19,17 +19,18 @@ init({_Any, http}, Req, []) ->
 
 
 handle(Req, State) ->
-    {Method, Req2} = cowboy_http_req:method(Req),
-    {Url, Req3} = cowboy_http_req:path(Req2),
+    {Method0, Req2} = cowboy_req:method(Req),
+    Method = list_to_existing_atom(binary_to_list(Method0)),
+    {Url, Req3} = cowboy_req:path(Req2),
     Ids = cut_url(Url),
     {ResponseData, Code, Req4} = do(Method, Ids, Req3),
-    {ok, Req5} = cowboy_http_req:reply(Code, kha_utils:headers(),
+    {ok, Req5} = cowboy_req:reply(Code, kha_utils:headers(),
                                        jsx:to_json(ResponseData), Req4),
     {ok, Req5, State}.
 
 %% Get all builds
 do('GET', [PId], Req0) ->
-    {QS, Req} = cowboy_http_req:qs_vals(Req0),
+    {QS, Req} = cowboy_req:qs_vals(Req0),
     Opts = case proplists:get_value(<<"limit">>, QS) of
                <<>> -> all;
                undefined -> all;
@@ -61,7 +62,7 @@ do('GET', [PId, BId], Req) ->
 
 %% Rerun build by copying
 do('POST', [PId], Req) ->
-    {ok, Data0, Req2} = cowboy_http_req:body(Req),
+    {ok, Data0, Req2} = cowboy_req:body(Req),
     Data = jsx:to_term(Data0),
     Message = proplists:get_value(<<"title">>, Data, ""),
     case string:str(kha_utils:convert(Message, str), "[ci skip]") of 
@@ -114,8 +115,13 @@ copy_build(ProjectId, BuildId, _Data) ->
 terminate(_Req, _State) ->
     ok.
 
-cut_url([<<"project">>, Id, <<"build">>]) ->
+cut_url(<<"/", Bin/binary>>) ->
+    cut_url(Bin);
+cut_url(Bin) ->
+    cut_url0(binary:split(Bin, <<"/">>, [global, trim])).
+
+cut_url0([<<"project">>, Id, <<"build">>]) ->
     [kha_utils:convert(Id, int)];
-cut_url([<<"project">>, PId, <<"build">>, BId]) ->
+cut_url0([<<"project">>, PId, <<"build">>, BId]) ->
     [kha_utils:convert(PId, int),
      kha_utils:convert(BId, int)].

@@ -12,6 +12,7 @@
 %% ===================================================================
 
 start() ->
+    ok = application:start(ranch),
     ok = application:start(cowboy),
     ok = application:start(mimetypes),
     ok = application:start(kha).
@@ -42,10 +43,7 @@ start(_Type, _Args) ->
                        {'_', default_handler, []}
                       ]}
                ],
-    cowboy:start_listener(spock_http_listener, 10,
-                          cowboy_tcp_transport, [{port, 8093}],
-                          cowboy_http_protocol, [{dispatch, Dispatch}]
-                         ),
+    cowboy:start_http(kha_http_listener, 10, [{port, 8093}], [{dispatch, Dispatch}]),
     kha_sup:start_link().
 
 stop(_State) ->

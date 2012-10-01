@@ -17,11 +17,12 @@ init({_Any, http}, Req, []) ->
     {ok, Req, undefined}.
 
 handle(Req, State) ->
-    {Method, Req2} = cowboy_http_req:method(Req),
-    {Url, Req3} = cowboy_http_req:path(Req2),
+    {Method0, Req2} = cowboy_req:method(Req),
+    Method = list_to_existing_atom(binary_to_list(Method0)),
+    {Url, Req3} = cowboy_req:path(Req2),
     Ids = cut_url(Url),
     {ResponseData, Code, Req4} = do(Method, Ids, Req3),
-    {ok, Req5} = cowboy_http_req:reply(Code, kha_utils:headers(),
+    {ok, Req5} = cowboy_req:reply(Code, kha_utils:headers(),
                                        jsx:to_json(ResponseData), Req4),
     {ok, Req5, State}.
 
@@ -39,7 +40,7 @@ do('GET', [PId], Req) ->
 
 %% Add new project
 do('POST', [], Req) ->
-    {ok, Data0, Req2} = cowboy_http_req:body(Req),
+    {ok, Data0, Req2} = cowboy_req:body(Req),
     Data = jsx:to_term(Data0),
     E2 = kha_utils:update_project(#project{}, Data),
     {ok, E3} = kha_project:create(E2),
@@ -49,7 +50,7 @@ do('POST', [], Req) ->
 %% Get project
 do('POST', [PId], Req) ->
     {ok, E} = kha_project:get(PId),
-    {ok, Data0, Req2} = cowboy_http_req:body(Req),
+    {ok, Data0, Req2} = cowboy_req:body(Req),
     Data = jsx:to_term(Data0),
     E2 = kha_utils:update_project(E, Data),
     kha_project:update(E2),
@@ -59,7 +60,7 @@ do('POST', [PId], Req) ->
 terminate(_Req, _State) ->
     ok.
 
-cut_url([<<"project">>]) ->
+cut_url(<<"/project">>) ->
     [];
-cut_url([<<"project">>, PId]) ->
+cut_url(<<"/project", PId/binary>>) ->
     [kha_utils:convert(PId, int)].
