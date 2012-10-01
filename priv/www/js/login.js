@@ -23,7 +23,12 @@ angular.module('Kha').controller({
       };
     });
     $scope.$on('event:auth-loginRequired', function() {
-      $scope.urgent = true; //GP: it does not handle the case when user is logged in, but does not have rights to perform an action
+      if ($scope.session) {
+        alert("It seems that you don't have permissions to perform this operation!");
+        // this does not drop the operation! and it is still queued in the authService
+      } else {
+        $scope.urgent = true;
+      }
     });
     $scope.$on('event:auth-loginConfirmed', function() {
       $scope.urgent = false;
