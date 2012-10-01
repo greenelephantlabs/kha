@@ -110,7 +110,7 @@ handle_cast(_Msg, State) ->
 
 handle_info({mnesia_table_event, {write, project, #project{} = Project, [], _ActivityId}}, #state{} = State) ->
     ?LOG("New project added: ~p~n", [Project]),
-    ok = kha_project_manager:new(Project),
+    spawn(fun() -> kha_project_manager:new(Project) end),
     {noreply, State};
 
 handle_info({mnesia_table_event, _}, #state{} = State) ->
