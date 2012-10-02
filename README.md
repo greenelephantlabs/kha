@@ -63,7 +63,8 @@ v0.8
 
 v0.9
 * line-by-line build log updates
-* Realtime data push
+* realtime data push
+* use user/project convention
 
 v1.0
 Stable release
