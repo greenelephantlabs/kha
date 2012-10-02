@@ -36,7 +36,8 @@ handle(Req0, State) ->
 %% Get all projects
 do('GET', [], Req) ->
     check(Req, default, read),
-    {ok, E} = kha_project:get(all),
+    {ok, E0} = kha_project:get(all),
+    E = [ X || #project{id = PId} = X <- E0, acl:check(session:as_acl(), {project, PId}, read) == allow ],
     Response = [ kha_utils:project_to_plist(X) || X <- E ],
     {Response, 200, Req};
 
