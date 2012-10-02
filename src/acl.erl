@@ -5,6 +5,8 @@
 
 -export([check/1, check/3, check_user/3, check_user/4, define/4]).
 
+-export([web/1, web_check/3]).
+
 lst(L) when is_list(L) ->
     lists:flatten(L);
 lst(X) ->
@@ -53,3 +55,19 @@ define(Accessor, Resource, Operation, Response) ->
              operation = Operation,
              response = response(Response)},
     db:add_record(Acl).
+
+web_check(Req, Resource, Operation) ->
+    case acl:check(session:as_acl(), Resource, Operation) of
+        allow ->
+            ok;
+        deny ->
+            throw({"", 401, Req})
+    end.
+
+web(Fun) ->
+    try
+        Fun()
+    catch
+        throw:{R, C, Rq} ->
+            {R, C, Rq}
+    end.

@@ -23,12 +23,9 @@ handle(Req0, State) ->
     Method = list_to_existing_atom(binary_to_list(Method0)),
     {Url, Req3} = cowboy_req:path(Req2),
     Ids = cut_url(Url),
-    {ResponseData, Code, Req4} = try
-                                     do(Method, Ids, Req3)
-                                 catch
-                                     throw:{R, C, Rq} ->
-                                         {R, C, Rq}
-                                 end,
+    {ResponseData, Code, Req4} = acl:web(fun() -> 
+                                                 do(Method, Ids, Req3)
+                                         end),
     {ok, Req5} = cowboy_req:reply(Code, kha_utils:headers(),
                                   jsx:to_json(ResponseData), Req4),
     {ok, Req5, State}.
@@ -43,7 +40,7 @@ do('GET', [], Req) ->
 
 %% Get project
 do('GET', [PId], Req) ->
-    check(Req, PId, read),
+    check(Req, {project, PId}, read),
     {ok, E} = kha_project:get(PId),
     Response = kha_utils:project_to_plist(E),
     {Response, 200, Req};
@@ -60,7 +57,7 @@ do('POST', [], Req) ->
 
 %% Update project
 do('POST', [PId], Req) ->
-    check(Req, PId, [read, write]),
+    check(Req, {project, PId}, [read, write]),
     {ok, E} = kha_project:get(PId),
     {ok, Data0, Req2} = cowboy_req:body(Req),
     Data = jsx:to_term(Data0),
@@ -77,15 +74,5 @@ cut_url(<<"/project">>) ->
 cut_url(<<"/project/", PId/binary>>) ->
     [kha_utils:convert(PId, int)].
 
-check(Req, default, Operation) ->
-    check0(Req, default, Operation);
 check(Req, PId, Operation) ->
-    check0(Req, {project, PId}, Operation).
-
-check0(Req, PId, Operation) ->
-    case acl:check(session:as_acl(), PId, Operation) of
-        allow ->
-            ok;
-        deny ->
-            throw({"", 401, Req})
-    end.
+    acl:web_check(Req, PId, Operation).
