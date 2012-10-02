@@ -1,8 +1,8 @@
 <!doctype html>
 <html ng-app="Kha">
   <head>
-    <script src="/lib/angular-1.0.2.js"></script>
-    <script src="/lib/angular-resource-1.0.2.js"></script>
+    <script src="/lib/angular-1.1.0.js"></script>
+    <script src="/lib/angular-resource-1.1.0.js"></script>
     <script src="/lib/underscore-min.js"></script>
     <script src="/lib/http-auth-interceptor.js"></script>
     <script src="js/app.js"></script>
@@ -65,7 +65,7 @@
                   <ol>
                     <li ng-repeat="step in currentProject.build"><input ng:class="getEditingClass()"
                                                                         ng-readonly="!editing"
-                                                                        ng-model="currentProject.build[$index]"/></li>
+                                                                        ng-model="step"/></li>
                   </ol>
                   <a ng-show="editing" ng-click="currentProject.build.push('')">Add build step</a>
                 </li>
