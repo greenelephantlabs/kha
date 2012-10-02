@@ -16,7 +16,11 @@
 
 -export([create/1,
          get/1,
-         update/1]).
+         update/1,
+
+         to_plist/1, from_plist/1,
+
+         create_from_plist/1, update_from_plist/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2,
@@ -182,25 +186,6 @@ create_fake() ->
           PId = Project#project.id,
           ?LOG("Create fake project - ID: ~b", [PId])
       end || X <- R ].
-%% [ kha_build:create(PId, X) || X <- example_builds() ].
-
-%% example_builds() ->
-%%     [#build{title    = "Test 1",
-%%             branch   = "origin/master",
-%%             author   = "Paul Peter Flis",
-%%             tags     = ["paul", "peter", "test_branch_1"]
-%%            },
-%%      #build{title    = "Test 2",
-%%             branch   = "test_branch_1",
-%%             author   = "Gleb Peregud",
-%%             tags     = ["gleber", "peregud", "test_branch_1"]
-%%            },
-%%      #build{title    = "Test 3",
-%%             branch   = "test_branch_2",
-%%             author   = "Paul Peregud",
-%%             tags     = ["paul", "peregud", "test_branch_2"]
-%%            }
-%%     ].
 
 upgrade() ->
     {ok, Ps} = db:get_all(project),
@@ -209,3 +194,66 @@ upgrade() ->
 binarize(#project{params = Params} = P) ->
     Params2 = [ {kha_utils:convert(K, bin), V} || {K, V} <- Params ],
     P#project{params = Params2}.
+
+from_plist(P) when is_list(P) ->
+    from_plist0(#project{}, P).
+
+set_private(#project{id = Id}, Private) ->
+    acl:define(default, {project, Id}, write, case Private of
+                                                  true -> deny;
+                                                  false -> allow
+                                              end).
+
+
+create_from_plist(L) ->
+    P = from_plist(L),
+    Private = proplists:get_value(<<"private">>, L),
+    set_private(P, Private),
+    kha_project:create(P).
+
+update_from_plist(P, L) ->
+    P2 = from_plist0(P, L),
+    Private = proplists:get_value(<<"private">>, L),
+    set_private(P, Private),
+    kha_project:update(P2),
+    P2.
+
+from_plist0(P, []) ->
+    P;
+from_plist0(P, [{<<"private">>, _}|R]) ->
+    from_plist0(P, R);
+from_plist0(P, [{<<"id">>, V}|R]) ->
+    from_plist0(P#project{id = kha_utils:convert(V, int)}, R);
+from_plist0(P, [{<<"name">>, V}|R]) ->
+    from_plist0(P#project{name = kha_utils:convert(V, bin)}, R);
+from_plist0(P, [{<<"local">>, V}|R]) ->
+    from_plist0(P#project{local = kha_utils:convert(V, bin)}, R);
+from_plist0(P, [{<<"remote">>, V}|R]) ->
+    from_plist0(P#project{remote = kha_utils:convert(V, bin)}, R);
+from_plist0(P, [{<<"build">>, V}|R]) ->
+    from_plist0(P#project{build = kha_utils:list_convert(V, bin)}, R);
+from_plist0(P, [{<<"params">>, V}|R]) ->
+    from_plist0(P#project{params = kha_utils:list_convert(V, bin)}, R);
+from_plist0(P, [{<<"notifications">>, _V}|R]) ->
+    from_plist0(P, R).
+
+to_plist(#project{id            = Id,
+                  name          = Name,
+                  local         = Local,
+                  remote        = Remote,
+                  build         = Build,
+                  params        = Params,
+                  notifications = Notification}) ->
+    annotate([{<<"id">>, Id},
+              {<<"name">>, kha_utils:convert(Name, bin)},
+              {<<"local">>, kha_utils:convert(Local, bin)},
+              {<<"remote">>, kha_utils:convert(Remote, bin)},
+              {<<"build">>, kha_utils:list_convert(Build, bin)},
+              {<<"params">>, kha_utils:binarize(Params)},
+              {<<"notifications">>, [ kha_utils:notification_to_plist(N) || N <- Notification ]}
+             ]).
+
+annotate(P) when is_list(P) ->
+    PId = proplists:get_value(<<"id">>, P),
+    Private = acl:read(default, {project, PId}, write) == deny,
+    lists:keystore(<<"private">>, 1, P, {<<"private">>, Private}).

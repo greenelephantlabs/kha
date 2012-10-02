@@ -35,14 +35,14 @@ do('GET', [], Req) ->
     check(Req, default, read),
     {ok, E0} = kha_project:get(all),
     E = [ X || #project{id = PId} = X <- E0, acl:check(session:as_acl(), {project, PId}, read) == allow ],
-    Response = [ kha_utils:project_to_plist(X) || X <- E ],
+    Response = [ kha_project:to_plist(X) || X <- E ],
     {Response, 200, Req};
 
 %% Get project
 do('GET', [PId], Req) ->
     check(Req, {project, PId}, read),
     {ok, E} = kha_project:get(PId),
-    Response = kha_utils:project_to_plist(E),
+    Response = kha_project:to_plist(E),
     {Response, 200, Req};
 
 %% Add new project
@@ -50,20 +50,18 @@ do('POST', [], Req) ->
     check(Req, default, write),
     {ok, Data0, Req2} = cowboy_req:body(Req),
     Data = jsx:to_term(Data0),
-    E2 = kha_utils:update_project(#project{}, Data),
-    {ok, E3} = kha_project:create(E2),
-    Response = kha_utils:project_to_plist(E3),
+    {ok, E2} = kha_project:create_from_plist(Data),
+    Response = kha_project:to_plist(E2),
     {Response, 200, Req2};
 
 %% Update project
 do('POST', [PId], Req) ->
     check(Req, {project, PId}, [read, write]),
-    {ok, E} = kha_project:get(PId),
+    {ok, P} = kha_project:get(PId),
     {ok, Data0, Req2} = cowboy_req:body(Req),
     Data = jsx:to_term(Data0),
-    E2 = kha_utils:update_project(E, Data),
-    kha_project:update(E2),
-    Response = kha_utils:project_to_plist(E2),
+    P2 = kha_project:update_from_plist(P, Data),
+    Response = kha_project:to_plist(P2),
     {Response, 200, Req2}.
 
 terminate(_Req, _State) ->
