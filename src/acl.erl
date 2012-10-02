@@ -3,14 +3,28 @@
 -include_lib("kha/include/common.hrl").
 -include_lib("kha/include/auth.hrl").
 
--export([check/1, check/3, check_user/3, check_user/4, define/4]).
+-export([read/3,
+
+         check/1, check/3, check_user/3, check_user/4,
+
+         define/4]).
 
 -export([web/1, web_check/3]).
+
+-define(DEFAULT, allow).
 
 lst(L) when is_list(L) ->
     lists:flatten(L);
 lst(X) ->
     lists:flatten([X]).
+
+read(Accessor, Resource, Operation) ->
+    case db:get_record(acl, {Accessor, Resource, Operation}) of
+        {ok, #acl{response = Resp}} ->
+            Resp;
+        _ ->
+            ?DEFAULT
+    end.
 
 check(Accessor, Resource, Operation) ->
     check([{A, R, O} || A <- lst(Accessor) ++ [default],
@@ -20,7 +34,7 @@ check(Accessor, Resource, Operation) ->
 check(Ops) when is_list(Ops) ->
     case db:get_many(acl, Ops) of
         {ok, []} ->
-            allow;
+            ?DEFAULT;
         {ok, [#acl{response = Resp}|_]} ->
             Resp
     end.
