@@ -52,20 +52,20 @@
             <div class="details" ng:show="tab == 'details'" ng-controller="DetailsCtrl">
               <ul>
                 <li>
-                  Name: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.name"></input>
+                  Name: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.name"/>
                 </li>
                 <li>
-                  Local: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.local"></input>
+                  Local: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.local"/>
                 </li>
                 <li>
-                  Remote: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.remote"></input>
+                  Remote: <input ng:class="getEditingClass()" ng-readonly="!editing" ng-model="currentProject.remote"/>
                 </li>
                 <li>
                   Build:
                   <ol>
                     <li ng-repeat="step in currentProject.build"><input ng:class="getEditingClass()"
                                                                         ng-readonly="!editing"
-                                                                        ng-model="currentProject.build[$index]"></input></li>
+                                                                        ng-model="currentProject.build[$index]"/></li>
                   </ol>
                   <a ng-show="editing" ng-click="currentProject.build.push('')">Add build step</a>
                 </li>
@@ -75,23 +75,23 @@
                     <li ng-repeat="(k, v) in currentProject.params">
                       <input ng:class="getEditingClass()"
                              ng-readonly="!editing"
-                             ng-model="k"></input>
+                             ng-model="k"/>
                       <input ng:class="getEditingClass()"
                              ng-readonly="!editing"
-                             ng-model="currentProject.params[k]"></input>
+                             ng-model="currentProject.params[k]"/>
                     </li>
                   </ol>
                   <a ng-show="editing" ng-click="currentProject.params[''] = ''">Add param</a>
                 </li>
                 <li>
-                  Notifications: 
+                  Notifications:
                   <ul>
                     <li ng-repeat="n in currentProject.notifications">
                       <ul>
                         <li>
                           Type: <input ng:class="getEditingClass()"
                                        ng-readonly="!editing"
-                                       ng-model="n.type"></input>
+                                       ng-model="n.type"/>
                         </li>
                         <li>
                           Params:
@@ -99,17 +99,20 @@
                             <li ng-repeat="(k, v) in n.params">
                               <input ng:class="getEditingClass()"
                                      ng-readonly="!editing"
-                                     ng-model="k"></input>
+                                     ng-model="k"/>
                               <input ng:class="getEditingClass()"
                                      ng-readonly="!editing"
-                                     ng-model="n.params[k]"></input></li>
+                                     ng-model="n.params[k]"/></li>
                           </ol>
                         </li>
+                      </ul>
                     </li>
                   </ul>
                 </li>
                 <li>
-                  Private: <input type="checkbox" ng:model="currentProject.private">
+                  Private: <input type="checkbox"
+                                  ng-readonly="!editing"
+                                  ng:model="currentProject.private">
                 </li>
               </ul>
               <div ng:show="!!editing">
@@ -122,7 +125,7 @@
               </div>
             </div>
             <div class="builds" ng-controller="BuildCtrl" ng:show="tab == 'builds'">
-              <input ng-model="branch"></input><button class="btn" ng-click="run(branch)"><i class="icon-play"></i>Build!</button></br>
+              <input ng-model="branch"/><button class="btn" ng-click="run(branch)"><i class="icon-play"></i>Build!</button><br/>
               <table class="table table-condensed">
                 <tr ng-repeat="build in values(builds) | orderBy:predicate:true"
                     class="build-{{build.status}} build-row"
@@ -162,8 +165,8 @@
       </div>
       <form name="loginForm" class="navbar-form pull-left"
             ng-class="{'hide': session}" ng:submit="login()">
-        <input type="text" class="span2" ng-model="email" placeholder="Email" required></input>
-        <input type="password" class="span2" ng-model="password" placeholder="Password" required></input>
+        <input type="text" class="span2" ng-model="email" placeholder="Email" required/>
+        <input type="password" class="span2" ng-model="password" placeholder="Password" required/>
         <button class="btn" ng-disabled="!loginForm.$valid"><i class="icon-user"></i>Login</button>
       </form>
     </div>
