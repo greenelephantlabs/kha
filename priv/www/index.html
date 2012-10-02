@@ -78,7 +78,8 @@
                              ng-model="k"></input>
                       <input ng:class="getEditingClass()"
                              ng-readonly="!editing"
-                             ng-model="currentProject.params[k]"></input></li>
+                             ng-model="currentProject.params[k]"></input>
+                    </li>
                   </ol>
                   <a ng-show="editing" ng-click="currentProject.params[''] = ''">Add param</a>
                 </li>
@@ -106,6 +107,9 @@
                         </li>
                     </li>
                   </ul>
+                </li>
+                <li>
+                  Private: <input type="checkbox" ng:model="currentProject.private">
                 </li>
               </ul>
               <div ng:show="!!editing">
