@@ -170,10 +170,10 @@ create_fake() ->
                   params = [{<<"build_timeout">>, 60},
                             {<<"polling">>, true}],
                   notifications = []},
-         #project{name   = <<"Oortle">>,
-                  local  = <<"/tmp/oortle_build">>,
-                  remote = <<"git@github.com:LivePress/oortle.git">>,
-                  build  = [<<"./oortle/compile-and-run-tests.sh">>],
+         #project{name   = <<"Erlsemver">>,
+                  local  = <<"/tmp/semver_build">>,
+                  remote = <<"https://github.com/gleber/erlsemver.git">>,
+                  build  = [<<"make all tests">>],
                   params = [{<<"build_timeout">>, 600}], %% 10 min
                   notifications = []}
         ],
