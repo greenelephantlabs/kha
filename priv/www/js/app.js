@@ -15,12 +15,12 @@ angular.module('Kha', ['http-auth-interceptor', 'ngResource']).
                            id: '@id',
                            limit: '@limit',
                            last: '@last'}, {
-            query: {method:'GET',
-                    params: {limit: 0},
-                    isArray:true},
-            do_rerun: {method: 'POST',
-                       params: {id: ''}}
-        });
+                               query: {method:'GET',
+                                       params: {limit: 0},
+                                       isArray:true},
+                               do_rerun: {method: 'POST',
+                                          params: {id: ''}}
+                           });
         b.rerun = function(build, $scope) {
             b.do_rerun({project: build.project,
                         copy: build.id},
