@@ -7,7 +7,7 @@
 
          check/1, check/3, check_user/3, check_user/4,
 
-         define/4]).
+         define/4, remove/3]).
 
 -export([web/1, web_check/3]).
 
@@ -61,6 +61,20 @@ operation(write = X) -> X.
 response(allow = X) -> X;
 response(deny = X) -> X.
 
+remove(Accessor, Resource, Operation) ->
+    db:transaction(fun() ->
+                           [ remove0(A, R, O) || A <- lst(Accessor),
+                                                 R <- lst(Resource),
+                                                 O <- lst(Operation) ]
+                   end).
+
+remove0(Accessor, Resource, Operation) ->
+    Key = key(Accessor, Resource, Operation),
+    db:remove_record(acl, Key).
+
+key(A, R, O) ->
+    {accessor(A), resource(R), operation(O)}.
+
 define(Accessor, Resource, Operation, Response) ->
     db:transaction(fun() ->
                            [ define0(A, R, O, Response) || A <- lst(Accessor),
@@ -69,7 +83,7 @@ define(Accessor, Resource, Operation, Response) ->
                    end).
 
 define0(Accessor, Resource, Operation, Response) ->
-    Key = {accessor(Accessor), resource(Resource), operation(Operation)},
+    Key = key(Accessor, Resource, Operation),
     Acl =
         #acl{key = Key,
              accessor = Accessor,
