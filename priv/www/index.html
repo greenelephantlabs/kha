@@ -160,12 +160,12 @@
 
     <div id="login-container" ng-controller="LoginController"
          ng:class="{'urgent': urgent}">
-      <div ng-class="{'hide': !session}">
-        Logged in: <span>{{session.name}}</span>
+      <div ng-class="{'hide': !auth.getSession()}">
+        Logged in: <span>{{auth.getSession().name}}</span>
         <button class="btn" ng-click="logout()"><i class="icon-off"></i>Logout</button>
       </div>
       <form name="loginForm" class="navbar-form pull-left"
-            ng-class="{'hide': session}" ng:submit="login()">
+            ng-class="{'hide': !!auth.getSession()}" ng:submit="login()">
         <input type="text" class="span2" ng-model="email" placeholder="Email" required/>
         <input type="password" class="span2" ng-model="password" placeholder="Password" required/>
         <button class="btn" ng-disabled="!loginForm.$valid"><i class="icon-user"></i>Login</button>
