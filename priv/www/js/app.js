@@ -141,7 +141,7 @@ function DetailsCtrl($scope) {
     }
 }
 
-function BuildCtrl($scope, $window, $timeout, Build) {
+function BuildCtrl($scope, $window, $timeout, Build, authService) {
     $scope.predicate = 'id';
     $scope.builds = {};
     $scope.branch = 'master';
@@ -180,7 +180,7 @@ function BuildCtrl($scope, $window, $timeout, Build) {
             title: 'manual build at '+branch,
             branch: branch,
             revision: '',
-            author: 'web user',
+            author: authService.getSession() ? authService.getSession().name : 'anonymous coward',
             tags: ['manual']
         });
         $scope.currentBuild.$save(function(build) {
@@ -229,4 +229,4 @@ function BuildCtrl($scope, $window, $timeout, Build) {
 
 BuildCtrl.page_size = 10;
 
-BuildCtrl.$inject = ['$scope', '$window', '$timeout', 'Build'];
+BuildCtrl.$inject = ['$scope', '$window', '$timeout', 'Build', 'authService'];
