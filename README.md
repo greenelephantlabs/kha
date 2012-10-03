@@ -32,24 +32,24 @@ Road map
 ========
 
 v0.1 DONE
-Single project, build once, show build results
+* Single project, build once, show build results
 
 v0.2 DONE
-Multiple projects, multiple builds, proper JS model
+* Multiple projects, multiple builds, proper JS model
 
 v0.3 DONE
-Build queueing
+* Build queueing
 
 v0.4 DONE
-Re-building, build results history
+* Re-building, build results history
 
 v0.5 DONE
-Hooks, build timeouts
+* Hooks, build timeouts
 
 v0.6
 * DONE [ci skip] support,
 * DONE project git change polling
-* user authentication
+* DONE user authentication
 
 v0.7
 * branch list page, 
@@ -67,25 +67,25 @@ v0.9
 * use user/project convention
 
 v1.0
-Stable release
+* Stable release
 
 v1.1
-Support for multiple Erlang versions via kerl
+* Support for multiple Erlang versions via kerl
 
 v1.2 DONE
-GitHub webhook support DONE
+* GitHub webhook support
 
 v1.3
-SVN/CVS support
+* SVN/CVS support
 
 v1.4
-Build sandboxing using chroot
+* Build sandboxing using chroot
 
 v1.5
-Replace distributed Erlang with some MQ protocol
+* Replace distributed Erlang with some MQ protocol
 
 v2.0
-Vagrant-based sandboxing
+* Vagrant-based sandboxing
 
 
 v1.0 architecture
