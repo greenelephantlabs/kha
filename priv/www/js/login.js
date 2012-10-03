@@ -15,7 +15,7 @@ angular.module('Kha').controller({
         $scope.logout = function() {
             $http.post('/user/logout', {}).success(function() {
                 $scope.session = null;
-
+                authService.logout();
             });
         };
         $http.get('/user/session').success(function(data) {

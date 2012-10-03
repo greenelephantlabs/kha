@@ -70,9 +70,12 @@ function ProjectCtrl($scope, $location, Project) {
     });
 
     $scope.fetchProjects = function() {
-        $scope.projects = Project.query(function(projects) {
-            if (projects)
-                $scope.currentProject = projects[0];
+        Project.query(function(projects) {
+            if (projects) {
+                $scope.projects = projects;
+                if (!$scope.currentProject)
+                    $scope.currentProject = projects[0];
+            }
         });
     };
     $scope.fetchProjects();
