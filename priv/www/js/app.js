@@ -69,10 +69,21 @@ function ProjectCtrl($scope, $location, Project) {
         }
     });
 
-    $scope.projects = Project.query(function(projects) {
-        if (projects)
-            $scope.currentProject = projects[0];
+    $scope.fetchProjects = function() {
+        $scope.projects = Project.query(function(projects) {
+            if (projects)
+                $scope.currentProject = projects[0];
+        });
+    };
+    $scope.fetchProjects();
+
+    $scope.$on('event:auth-loginConfirmed', function() {
+        $scope.fetchProjects();
     });
+    $scope.$on('event:auth-logout', function() {
+        $scope.fetchProjects();
+    });
+
     $scope.currentProject = null;
     $scope.currentBuild = null;
     $scope.getProjectClass = function(project) {
