@@ -34,7 +34,8 @@ do_send(Email, Title, Content, ConfigPath) ->
     file:write_file("/tmp/kha_temp", MailData),
     Cmd0 = "cat /tmp/kha_temp | ssmtp -C ~s ~s",
     Cmd = io_lib:format(Cmd0, [ConfigPath, Email]),
-    io:fwrite("DATA: ~p~n", [Cmd]),
+    ?LOG("Mail: ~s~n", [MailData]),
+    ?LOG("CMD: ~s~n", [Cmd]),
     kha_utils:sh(Cmd).
 
 check_args(Args) ->
