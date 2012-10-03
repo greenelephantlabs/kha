@@ -8,7 +8,9 @@
 
 -module(kha_utils).
 
--include("kha.hrl").
+-include_lib("kha/include/common.hrl").
+-include_lib("kha/include/kha.hrl").
+-include_lib("kha/include/auth.hrl").
 
 -export([list_convert/2,
          convert/2,
@@ -19,61 +21,30 @@
          a2b/1,
          i2b/1,
          b2i/1,
+         binarize/1,
 
          now_to_nice/1]).
 
 -export([sh/1,sh/2,sh/3, mktemp_dir/0]).
 
 -export([record_field/1,
-         update_project/2,
-         project_to_plist/1,
+
          build_to_plist/1,
+         notification_to_plist/1,
+
          headers/0,
          get_app_path/0,
          get_app_path/1]).
 
-record_field(project) ->
-    record_info(fields, project);
-record_field(build) ->
-    record_info(fields, build);
-record_field(id_seq) ->
-    record_info(fields, id_seq).
-
-update_project(P, []) ->
-    P;
-update_project(P, [{<<"id">>, V}|R]) ->
-    update_project(P#project{id = kha_utils:convert(V, int)}, R);
-update_project(P, [{<<"name">>, V}|R]) ->
-    update_project(P#project{name = kha_utils:convert(V, bin)}, R);
-update_project(P, [{<<"local">>, V}|R]) ->
-    update_project(P#project{local = kha_utils:convert(V, bin)}, R);
-update_project(P, [{<<"remote">>, V}|R]) ->
-    update_project(P#project{remote = kha_utils:convert(V, bin)}, R);
-update_project(P, [{<<"build">>, V}|R]) ->
-    update_project(P#project{build = kha_utils:list_convert(V, bin)}, R);
-update_project(P, [{<<"params">>, V}|R]) ->
-    update_project(P#project{params = kha_utils:list_convert(V, bin)}, R);
-update_project(P, [{<<"notifications">>, _V}|R]) ->
-    update_project(P, R).
+record_field(acl) ->     record_info(fields, acl);
+record_field(session) -> record_info(fields, session);
+record_field(user) ->    record_info(fields, user);
+record_field(project) -> record_info(fields, project);
+record_field(build) ->   record_info(fields, build);
+record_field(id_seq) ->  record_info(fields, id_seq).
 
 binarize(L) when is_list(L) ->
     [ {convert(K, bin), V} || {K, V} <- L ].
-
-project_to_plist(#project{id           = Id,
-                          name          = Name,
-                          local         = Local,
-                          remote        = Remote,
-                          build         = Build,
-                          params        = Params,
-                          notifications = Notification}) ->
-    [{<<"id">>, Id},
-     {<<"name">>, kha_utils:convert(Name, bin)},
-     {<<"local">>, kha_utils:convert(Local, bin)},
-     {<<"remote">>, kha_utils:convert(Remote, bin)},
-     {<<"build">>, kha_utils:list_convert(Build, bin)},
-     {<<"params">>, binarize(Params)},
-     {<<"notifications">>, [ notification_to_plist(N) || N <- Notification ]}
-    ].
 
 notification_to_plist(#notification{type = Type,
                                     params = Params}) ->

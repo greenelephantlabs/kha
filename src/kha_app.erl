@@ -13,6 +13,8 @@
 
 start() ->
     db:init(),
+    ok = application:start(crypto, permanent),
+    ok = application:start(bcrypt, permanent),
     ok = application:start(ranch, permanent),
     ok = application:start(cowboy, permanent),
     ok = application:start(mimetypes, permanent),
@@ -43,6 +45,8 @@ configure_cowboy() ->
     Dispatch = [
                 {'_', [
                        %% PROJECT
+                       {[<<"user">>, '_'], kha_user_handler, []},
+
                        {[<<"project">>], kha_project_handler, []},
                        {[<<"project">>, '_'], kha_project_handler, []},
 

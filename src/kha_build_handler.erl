@@ -11,19 +11,21 @@
          handle/2,
          terminate/2]).
 
+-include_lib("kha/include/common.hrl").
 -include("kha.hrl").
 
 init({_Any, http}, Req, []) ->
     {ok, Req, undefined}.
 
-
-
-handle(Req, State) ->
+handle(Req0, State) ->
+    Req = session:init(Req0),
     {Method0, Req2} = cowboy_req:method(Req),
     Method = list_to_existing_atom(binary_to_list(Method0)),
     {Url, Req3} = cowboy_req:path(Req2),
     Ids = cut_url(Url),
-    {ResponseData, Code, Req4} = do(Method, Ids, Req3),
+    {ResponseData, Code, Req4} = acl:web(fun() ->
+                                                 do(Method, Ids, Req3)
+                                         end),
     {ok, Req5} = cowboy_req:reply(Code, kha_utils:headers(),
                                        jsx:to_json(ResponseData), Req4),
     {ok, Req5, State}.
@@ -31,6 +33,7 @@ handle(Req, State) ->
 %% Get all builds
 do('GET', [PId], Req0) ->
     {QS, Req} = cowboy_req:qs_vals(Req0),
+    check(Req, {project, PId}, read),
     Opts = case proplists:get_value(<<"limit">>, QS) of
                <<>> -> all;
                undefined -> all;
@@ -49,6 +52,7 @@ do('GET', [PId], Req0) ->
 
 %% Get build
 do('DELETE', [PId, BId], Req) ->
+    check(Req, {project, PId}, write),
     {ok, E} = kha_build:get(PId, BId),
     kha_build:delete(E),
     Response = [],%%kha_utils:build_to_plist(E),
@@ -56,37 +60,30 @@ do('DELETE', [PId, BId], Req) ->
 
 %% Get build
 do('GET', [PId, BId], Req) ->
+    check(Req, {project, PId}, read),
     {ok, E} = kha_build:get(PId, BId),
     Response = kha_utils:build_to_plist(E),
     {Response, 200, Req};
 
 %% Rerun build by copying
 do('POST', [PId], Req) ->
+    check(Req, {project, PId}, write),
     {ok, Data0, Req2} = cowboy_req:body(Req),
     Data = jsx:to_term(Data0),
     Message = proplists:get_value(<<"title">>, Data, ""),
     case string:str(kha_utils:convert(Message, str), "[ci skip]") of 
         0 ->
-            case proplists:get_value(<<"copy">>, Data) of
-                undefined ->
-                    {R, C} = create_build(PId, Data),
-                    {R, C, Req2};
-                BId ->
-                    {R, C} = copy_build(PId, BId, Data),
-                    {R,C, Req2}
-            end;
+            {ok, Build} = case proplists:get_value(<<"copy">>, Data) of
+                              undefined ->
+                                  create_build(PId, Data);
+                              BId ->
+                                  copy_build(PId, BId, Data)
+                          end,
+            Response = kha_utils:build_to_plist(Build),
+            {Response, 200, Req2};
         _ ->
             {[{}], 204, Req2}
     end.
-
-%% Rerun existing build
-%% do('POST', [PId, BId], Req) ->
-%%     {ok, Old0} = kha_build:get(PId, BId),
-%%     Old = Old0#build{start = now()},
-%%     kha_build:update(Old),
-%%     kha_builder:add_to_queue(PId, BId),
-%%     R = kha_utils:build_to_plist(Old),
-%%     {R, 200, Req}.
 
 %% Create new build
 create_build(ProjectId, Data) ->
@@ -95,21 +92,17 @@ create_build(ProjectId, Data) ->
     Revision = proplists:get_value(<<"revision">>, Data),
     Author   = proplists:get_value(<<"author">>, Data),
     Tags     = proplists:get_value(<<"tags">>, kha_utils:list_convert(Data, bin)),
-    {ok, Build} = kha_build:create_and_add_to_queue(ProjectId, Title, Branch,
-                                                    Revision, Author, Tags),
-    Response = kha_utils:build_to_plist(Build),
-    {Response, 200}.
+    kha_build:create_and_add_to_queue(ProjectId, Title, Branch,
+                                                    Revision, Author, Tags).
 
 copy_build(ProjectId, BuildId, _Data) ->
     {ok, Old} = kha_build:get(ProjectId, BuildId),
-    {ok, Build} = kha_build:create_and_add_to_queue(ProjectId,
-                                                    Old#build.title,
-                                                    Old#build.branch,
-                                                    Old#build.revision,
-                                                    Old#build.author,
-                                                    Old#build.tags),
-    Response = kha_utils:build_to_plist(Build),
-    {Response, 200}.
+    kha_build:create_and_add_to_queue(ProjectId,
+                                      Old#build.title,
+                                      Old#build.branch,
+                                      Old#build.revision,
+                                      Old#build.author,
+                                      Old#build.tags).
 
 
 terminate(_Req, _State) ->
@@ -125,3 +118,6 @@ cut_url0([<<"project">>, Id, <<"build">>]) ->
 cut_url0([<<"project">>, PId, <<"build">>, BId]) ->
     [kha_utils:convert(PId, int),
      kha_utils:convert(BId, int)].
+
+check(Req, PId, Operation) ->
+    acl:web_check(Req, PId, Operation).

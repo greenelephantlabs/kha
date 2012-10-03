@@ -30,6 +30,29 @@ input {
   cursor: pointer;
 }
 
+#login-container {
+  position: absolute;
+  top: 0;
+  right: 15em;
+  border-radius: 0px 0px 10px 10px; 
+  -moz-border-radius: 0px 0px 10px 10px; 
+  -webkit-border-radius: 0px 0px 10px 10px; 
+  border-width: 0 1px 1px 1px;
+  border-style: solid;
+  border-color: #aaa;
+  padding: 0 7px 7px 7px;
+}
+
+#login-container.urgent {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding-left: 30%;
+  padding-top: 30%;
+  background-color: #fdd;
+}
+
 #github {
   background-color: #a00;
   overflow: hidden;
@@ -68,4 +91,9 @@ input {
 }
 .builds .btn {
   width: 80px;
+}
+
+
+.hide {
+  display: none;
 }

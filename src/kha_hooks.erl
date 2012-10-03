@@ -8,7 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(kha_hooks).
 
--include("kha.hrl").
+-include_lib("kha/include/common.hrl").
+-include_lib("kha/include/kha.hrl").
 
 -export([run/3]).
 

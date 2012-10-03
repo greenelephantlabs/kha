@@ -1,5 +1,6 @@
 -module(kha_notification).
 
+-include_lib("kha/include/common.hrl").
 -include("kha.hrl").
 
 -export([run/2, type_to_module/1]).

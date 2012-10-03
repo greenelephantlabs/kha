@@ -6,16 +6,6 @@
 %%% @end
 %%% Created : 30 Jul 2012 by Paul Peter Flis <pawel@flycode.pl>
 
--type project_id() :: integer().
--type build_id()   :: integer().
--type time()       :: {integer(), integer(), integer()}.
--type tag()        :: string().
--type command()    :: string().
--type b_string()   :: binary().
--type key()        :: binary().
--type pvalue()     :: binary() | number() | [binary()] | [number()].
--type params()     :: [{key(), pvalue()}].
-
 -record(notification,
         {type               :: atom(), %% kha_notification_[type].erl
          params             :: params()
