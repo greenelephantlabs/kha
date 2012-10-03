@@ -203,8 +203,7 @@ set_private(#project{id = Id}, Private) ->
                true -> deny;
                false -> allow
            end,
-    acl:define(default, {project, Id}, [read, write], Resp).
-
+    acl:define(not_logged, {project, Id}, [read, write], Resp).
 
 create_from_plist(L) ->
     P = from_plist(L),
@@ -256,5 +255,6 @@ to_plist(#project{id            = Id,
 
 annotate(P) when is_list(P) ->
     PId = proplists:get_value(<<"id">>, P),
-    Private = acl:read(default, {project, PId}, write) == deny,
+    Private = acl:read(not_logged, {project, PId}, write) == deny orelse
+        acl:read(not_logged, {project, PId}, read) == deny,
     lists:keystore(<<"private">>, 1, P, {<<"private">>, Private}).

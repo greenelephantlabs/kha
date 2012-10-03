@@ -51,6 +51,7 @@ check_user(User, Thing, Operation, Fun) ->
     end.
 
 accessor(default = X) -> X;
+accessor(not_logged = X) -> X;
 accessor(logged = X) -> X;
 accessor({user, Email} = X) when is_binary(Email) -> X.
 resource(default = X) -> X;
