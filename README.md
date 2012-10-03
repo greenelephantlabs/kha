@@ -52,14 +52,14 @@ v0.6
 * DONE user authentication
 
 v0.7
-* branch list page, 
 * DONE Build list paging
 * DONE email notifications
+* Jabber/XMPP notifications
 
 v0.8
+* branch list page, 
 * basic .travis.yml support,
 * remote builders, 
-* IRC notifications
 
 v0.9
 * line-by-line build log updates
@@ -68,6 +68,7 @@ v0.9
 
 v1.0
 * Stable release
+* IRC notifications
 
 v1.1
 * Support for multiple Erlang versions via kerl
