@@ -146,8 +146,8 @@ code_change(_OldVsn, State, _Extra) ->
 validate(P = #project{}) ->
     PaB = lists:all(fun({K, _V}) -> is_binary(K) end, P#project.params),
     {params_are_binaries, true} = {params_are_binaries, PaB},
-    NaV = lists:all(fun(#notification{type = Type, params = Params}) -> 
-                            is_atom(Type) andalso is_params(Params) 
+    NaV = lists:all(fun(#notification{type = Type, params = Params}) ->
+                            is_atom(Type) andalso is_params(Params)
                     end, P#project.notifications),
     {notifications_are_valid, true} = {notifications_are_valid, NaV},
     true.
@@ -199,10 +199,11 @@ from_plist(P) when is_list(P) ->
     from_plist0(#project{}, P).
 
 set_private(#project{id = Id}, Private) ->
-    acl:define(default, {project, Id}, write, case Private of
-                                                  true -> deny;
-                                                  false -> allow
-                                              end).
+    Resp = case Private of
+               true -> deny;
+               false -> allow
+           end,
+    acl:define(default, {project, Id}, [read, write], Resp).
 
 
 create_from_plist(L) ->

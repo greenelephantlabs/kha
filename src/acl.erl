@@ -61,6 +61,13 @@ response(allow = X) -> X;
 response(deny = X) -> X.
 
 define(Accessor, Resource, Operation, Response) ->
+    db:transaction(fun() ->
+                           [ define0(A, R, O, Response) || A <- lst(Accessor),
+                                                           R <- lst(Resource),
+                                                           O <- lst(Operation) ]
+                   end).
+
+define0(Accessor, Resource, Operation, Response) ->
     Key = {accessor(Accessor), resource(Resource), operation(Operation)},
     Acl =
         #acl{key = Key,
