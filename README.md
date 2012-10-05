@@ -67,8 +67,9 @@ v0.9
 * use user/project convention
 
 v1.0
-* Stable release
+* Complex notification options
 * IRC notifications
+* Stable release
 
 v1.1
 * Support for multiple Erlang versions via kerl
