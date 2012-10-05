@@ -57,12 +57,12 @@ v0.7
 * Jabber/XMPP notifications
 
 v0.8
-* branch list page, 
+* line-by-line build log updates
 * basic .travis.yml support,
 * remote builders, 
 
 v0.9
-* line-by-line build log updates
+* branch list page
 * realtime data push
 * use user/project convention
 
