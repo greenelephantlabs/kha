@@ -27,7 +27,7 @@ handle(Req0, State) ->
                                                  do(Method, Ids, Req3)
                                          end),
     {ok, Req5} = cowboy_req:reply(Code, kha_utils:headers(),
-                                       jsx:to_json(ResponseData), Req4),
+                                  jsx:to_json(ResponseData, [replaced_bad_utf8]), Req4), %% replaced_bad_utf8 is added to handle bad utf8 output of build commands
     {ok, Req5, State}.
 
 %% Get all builds
@@ -71,7 +71,7 @@ do('POST', [PId], Req) ->
     {ok, Data0, Req2} = cowboy_req:body(Req),
     Data = jsx:to_term(Data0),
     Message = proplists:get_value(<<"title">>, Data, ""),
-    case string:str(kha_utils:convert(Message, str), "[ci skip]") of 
+    case string:str(kha_utils:convert(Message, str), "[ci skip]") of
         0 ->
             {ok, Build} = case proplists:get_value(<<"copy">>, Data) of
                               undefined ->
@@ -93,7 +93,7 @@ create_build(ProjectId, Data) ->
     Author   = proplists:get_value(<<"author">>, Data),
     Tags     = proplists:get_value(<<"tags">>, kha_utils:list_convert(Data, bin)),
     kha_build:create_and_add_to_queue(ProjectId, Title, Branch,
-                                                    Revision, Author, Tags).
+                                      Revision, Author, Tags).
 
 copy_build(ProjectId, BuildId, _Data) ->
     {ok, Old} = kha_build:get(ProjectId, BuildId),
