@@ -1,16 +1,15 @@
--module(kha_notification_mail).
+-module(kha_notification_email).
 
 -include_lib("kha/include/common.hrl").
 -include("kha.hrl").
 
--export([send/3,
-         mail_template/4]).
+-export([send/4]).
 
 -define(SSMTP_CONFIG, "support/ssmtp.conf").
 -define(SSMTP, "ssmtp").
 -define(FROM, "Kha").
 
-send(Title, Content, Args) ->
+send(_Project, Title, Content, Args) ->
     case check_args(Args) of
         ok                       -> do_send(Title, Content, Args);
         {error, _Reason} = Error -> Error

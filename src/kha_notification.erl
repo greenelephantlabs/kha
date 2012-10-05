@@ -33,11 +33,11 @@ run(Project, Build) ->
     [ begin
           ModuleName = type_to_module(Type),
           Content = [ More | lists:reverse(Output)],
-          do_run(ModuleName, Title, Content, Params)
+          do_run(ModuleName, Project, Title, Content, Params)
       end || #notification{type = Type, params = Params} <- Notif ].
 
-do_run(ModuleName, Title, Content, Params) ->
-    ModuleName:send(Title, Content, Params).
+do_run(ModuleName, Project, Title, Content, Params) ->
+    ModuleName:send(Project, Title, Content, Params).
 
 type_to_module(Type) ->
     Name = io_lib:format("kha_notification_~p", [Type]),
