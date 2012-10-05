@@ -40,12 +40,14 @@ start(Id) ->
 %% =============================================================================
 
 create(Project) ->
+    validate(Project),
     {ok, Response} = db:transaction(fun() -> do_create(Project) end),
     Response.
 
 do_create(Project) ->
     ProjectId = db:get_next_id(project),
     R = Project#project{id = ProjectId},
+    validate(R),
     ok = db:add_record(R),
     {ok, R}.
 
@@ -153,7 +155,7 @@ validate(P = #project{}) ->
     PaB = lists:all(fun({K, _V}) -> is_binary(K) end, P#project.params),
     {params_are_binaries, true} = {params_are_binaries, PaB},
     NaV = lists:all(fun(#notification{type = Type, params = Params}) ->
-                            is_atom(Type) andalso is_params(Params)
+                            is_atom(Type) andalso is_pvalue(Params)
                     end, P#project.notifications),
     {notifications_are_valid, true} = {notifications_are_valid, NaV},
     true.
@@ -165,8 +167,8 @@ is_pvalue(B) when is_binary(B) ->
 is_pvalue(L) when is_list(L) ->
     lists:all(fun(X) -> is_binary(X) orelse is_number(X) end, L).
 
-is_params(L) when is_list(L) ->
-    lists:all(fun({K, V}) -> is_atom(K) andalso is_pvalue(V) end, L).
+%% is_params(L) when is_list(L) ->
+%%     lists:all(fun({K, V}) -> is_atom(K) andalso is_pvalue(V) end, L).
 
 %% =============================================================================
 %% DEBUG
@@ -187,6 +189,7 @@ create_fake() ->
                   params = [{<<"build_timeout">>, 600}], %% 10 min
                   notifications = []}
         ],
+    [ validate(X) || X <- R ],
     [ begin
           {ok, Project} = kha_project:create(X),
           PId = Project#project.id,

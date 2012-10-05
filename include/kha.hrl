@@ -8,7 +8,7 @@
 
 -record(notification,
         {type               :: atom(), %% kha_notification_[type].erl
-         params             :: params()
+         params             :: pvalue()
         }).
 
 -record(project,
