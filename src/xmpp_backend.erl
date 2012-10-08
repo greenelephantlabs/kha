@@ -135,7 +135,7 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast({send, Project, Title, Contents, Args}, State) ->
-    Emails = proplists:get_value(<<"emails">>, Args),
+    Emails = proplists:get_value(<<"jids">>, Args),
     P1 = template_packet(Title, Contents, Args, ?s.bot_jid),
     F = fun(To) ->
                 P2 = exmpp_xml:set_attribute(P1, <<"to">>, To),
