@@ -16,7 +16,7 @@
 
 -export([create/1,
          get/1,
-         update/1,
+         update/1, set_param/3,
 
          to_plist/1, from_plist/1,
 
@@ -58,6 +58,12 @@ get(Id) ->
 
 do_get(Id) ->
     db:get_record(project, Id).
+
+set_param(Id, Param0, Value) ->
+    Param = kha_utils:convert(Param0, bin),
+    {ok, #project{params = Params} = P} = kha_project:get(Id),
+    Params2 = lists:keystore(Param, 1, Params, {Param, Value}),
+    update(P#project{params = Params2}).
 
 update(Project) ->
     validate(Project),
