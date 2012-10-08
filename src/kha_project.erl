@@ -47,7 +47,6 @@ create(Project) ->
 do_create(Project) ->
     ProjectId = db:get_next_id(project),
     R = Project#project{id = ProjectId},
-    validate(R),
     ok = db:add_record(R),
     {ok, R}.
 
@@ -63,7 +62,7 @@ do_get(Id) ->
 
 set_param(Id, Param0, Value) ->
     Param = kha_utils:convert(Param0, bin),
-    {ok, #project{params = Params} = P} = kha_project:get(Id),
+    {ok, #project{params = Params} = P} = ?MODULE:get(Id),
     Params2 = lists:keystore(Param, 1, Params, {Param, Value}),
     update(P#project{params = Params2}).
 
@@ -83,7 +82,7 @@ update(Project) ->
 
 init([Id]) ->
     {ok, Self = #project{server = OldServer,
-                         params = Params}} = kha_project:get(Id),
+                         params = Params}} = ?MODULE:get(Id),
     mnesia:subscribe({table, project, detailed}),
     case OldServer of
         undefined -> ok;
@@ -121,7 +120,7 @@ handle_info({mnesia_table_event, _}, #state{} = State) ->
 handle_info({timeout, Timer, poll}, #state{id = Id,
                                            polling = Timer} = State) ->
     ?LOG("starting poll", []),
-    {ok, #project{remote = Remote}} = kha_project:get(Id),
+    {ok, #project{remote = Remote}} = ?MODULE:get(Id),
     Refs = git:refs(Remote),
     ?LOG("remote branches: ~p~n", [Refs]),
     [ begin
@@ -155,7 +154,7 @@ validate(P = #project{}) ->
     PaB = lists:all(fun({K, _V}) -> is_binary(K) end, P#project.params),
     {params_are_binaries, true} = {params_are_binaries, PaB},
     NaV = lists:all(fun(#notification{type = Type, params = Params}) ->
-                            is_atom(Type) andalso is_pvalue(Params)
+                            is_atom(Type) andalso is_params(Params)
                     end, P#project.notifications),
     {notifications_are_valid, true} = {notifications_are_valid, NaV},
     true.
@@ -167,8 +166,8 @@ is_pvalue(B) when is_binary(B) ->
 is_pvalue(L) when is_list(L) ->
     lists:all(fun(X) -> is_binary(X) orelse is_number(X) end, L).
 
-%% is_params(L) when is_list(L) ->
-%%     lists:all(fun({K, V}) -> is_atom(K) andalso is_pvalue(V) end, L).
+is_params(L) when is_list(L) ->
+    lists:all(fun({K, V}) -> is_binary(K) andalso is_pvalue(V) end, L).
 
 %% =============================================================================
 %% DEBUG
@@ -191,14 +190,14 @@ create_fake() ->
         ],
     [ validate(X) || X <- R ],
     [ begin
-          {ok, Project} = kha_project:create(X),
+          {ok, Project} = ?MODULE:create(X),
           PId = Project#project.id,
           ?LOG("Create fake project - ID: ~b", [PId])
       end || X <- R ].
 
 upgrade() ->
     {ok, Ps} = db:get_all(project),
-    [ kha_project:update(binarize(P)) || P <- Ps ].
+    [ ?MODULE:update(binarize(P)) || P <- Ps ].
 
 binarize(#project{params = Params} = P) ->
     Params2 = [ {kha_utils:convert(K, bin), V} || {K, V} <- Params ],
@@ -218,13 +217,13 @@ create_from_plist(L) ->
     P = from_plist(L),
     Private = proplists:get_value(<<"private">>, L, false),
     set_private(P, Private),
-    kha_project:create(P).
+    ?MODULE:create(P).
 
 update_from_plist(P, L) ->
     P2 = from_plist0(P, L),
     Private = proplists:get_value(<<"private">>, L, false),
     set_private(P, Private),
-    kha_project:update(P2),
+    ?MODULE:update(P2),
     P2.
 
 from_plist0(P, []) ->
