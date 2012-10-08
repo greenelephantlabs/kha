@@ -135,12 +135,13 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast({send, Project, Title, Contents, Args}, State) ->
+    Emails = proplists:get_value(<<"emails">>, Args),
     P1 = template_packet(Title, Contents, Args, ?s.bot_jid),
     F = fun(To) ->
                 P2 = exmpp_xml:set_attribute(P1, <<"to">>, To),
                 exmpp_session:send_packet(?s.session, P2)
         end,
-    [ F(Mail) || Mail <- filter_mutes(Project, Args, State) ],
+    [ F(Mail) || Mail <- filter_mutes(Project, Emails, State) ],
     {noreply, State};
 handle_cast(_Msg, State) ->
     {stop, {odd_cast, _Msg}, State}.
