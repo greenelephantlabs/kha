@@ -16,7 +16,7 @@ send(_Project, Title, Content, Args) ->
     end.
 
 do_send(Title, Content, Args) ->
-    Emails = proplists:get_value(emails, Args),
+    Emails = proplists:get_value(<<"emails">>, Args),
     SelfPath = kha_utils:get_app_path(),
     ConfigPath = filename:join([SelfPath, ?SSMTP_CONFIG]),
     case filelib:is_file(ConfigPath) of
@@ -38,7 +38,7 @@ do_send(Email, Title, Content, ConfigPath) ->
     kha_utils:sh(Cmd).
 
 check_args(Args) ->
-    case proplists:get_value(emails, Args) of
+    case proplists:get_value(<<"emails">>, Args) of
         undefined -> {error, not_found_emails_field};
         _X        -> ok
     end.
