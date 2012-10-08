@@ -207,13 +207,13 @@ set_private(#project{id = Id}, Private) ->
 
 create_from_plist(L) ->
     P = from_plist(L),
-    Private = proplists:get_value(<<"private">>, L),
+    Private = proplists:get_value(<<"private">>, L, false),
     set_private(P, Private),
     kha_project:create(P).
 
 update_from_plist(P, L) ->
     P2 = from_plist0(P, L),
-    Private = proplists:get_value(<<"private">>, L),
+    Private = proplists:get_value(<<"private">>, L, false),
     set_private(P, Private),
     kha_project:update(P2),
     P2.
