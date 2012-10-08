@@ -199,9 +199,16 @@ upgrade() ->
     {ok, Ps} = db:get_all(project),
     [ ?MODULE:update(binarize(P)) || P <- Ps ].
 
-binarize(#project{params = Params} = P) ->
-    Params2 = [ {kha_utils:convert(K, bin), V} || {K, V} <- Params ],
-    P#project{params = Params2}.
+binarize(#project{params = Params, notifications = Notifications} = P) ->
+    Params2 = binarize(Params),
+    Notifications2 = [ binarize(N) || N <- Notifications ],
+    P#project{params = Params2, notifications = Notifications2};
+
+binarize(#notification{params = Param} = N) ->
+    N#notification{params = binarize(Param)};
+
+binarize(L) ->
+    [ {kha_utils:convert(K, bin), V} || {K, V} <- L ].
 
 from_plist(P) when is_list(P) ->
     from_plist0(#project{}, P).
