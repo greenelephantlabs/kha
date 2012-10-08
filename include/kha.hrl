@@ -8,7 +8,7 @@
 
 -record(notification,
         {type               :: atom(), %% kha_notification_[type].erl
-         params             :: params()
+         params             :: pvalue()
         }).
 
 -record(project,
@@ -44,4 +44,4 @@
         }).
 
 %%FIXME: PF: A temporary solution -> should by replace by alog or lager
--define(LOG(X,Y), (fun() -> io:fwrite("[~p] LOG [~p:~b]: ~s~n", [calendar:local_time(), ?MODULE, ?LINE, io_lib:fwrite(X, Y)]) end)()).
+-define(LOG(X,Y), io:fwrite("[~p] log [~p:~b]: "++ X ++ "~n", [calendar:local_time(), ?MODULE, ?LINE] ++ Y)).

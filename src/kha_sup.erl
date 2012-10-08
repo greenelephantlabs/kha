@@ -11,6 +11,10 @@
 
 %% Helper macro for declaring children of supervisor
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
+-define(CHILD(I, Type, StartupParams), {I, {I, start_link, StartupParams}, permanent, 5000, Type, [I]}).
+
+-include_lib("kha/include/common.hrl").
+-include_lib("kha/include/kha.hrl").
 
 %% ===================================================================
 %% API functions
@@ -31,6 +35,7 @@ init([project_sup]) ->
     {ok, {{simple_one_for_one, 5, 1}, [ProjectSpec]}};
 
 init([]) ->
+    Optional = optional_specs([xmpp_backend]),
     Builder = ?CHILD(kha_builder, worker),
     ProjectManager = ?CHILD(kha_project_manager, worker),
     PollerSup = {kha_project_sup,
@@ -41,4 +46,16 @@ init([]) ->
                  supervisor,
                  []
                 },
-    {ok, { {one_for_one, 5, 10}, [Builder, PollerSup, ProjectManager]} }.
+    {ok, { {one_for_one, 5, 10}, [Builder, PollerSup, ProjectManager] ++ Optional} }.
+
+optional_specs(Servers) ->
+    F = fun(Module) -> 
+                ParamName = Module, 
+                case application:get_env(ParamName) of
+                    {ok, Params} ->
+                        ?CHILD(Module, worker, Params);
+                    undefined ->
+                        []
+                end
+        end,
+    lists:flatten(lists:map(F, Servers)).

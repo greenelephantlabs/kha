@@ -23,7 +23,9 @@
          b2i/1,
          binarize/1,
 
-         now_to_nice/1]).
+         now_to_nice/1,
+         now_sum/2
+        ]).
 
 -export([sh/1,sh/2,sh/3, mktemp_dir/0]).
 
@@ -213,3 +215,15 @@ sh(Cmd, Args, Opts) ->
 
 mktemp_dir() ->
     sh("mktemp -d kha_build.XXXXX").
+
+%% Interval is specified in milliseconds
+-spec now_sum(erlang:timestamp(), integer()) -> erlang:timestamp().
+now_sum({A0, B0, C0}, T0) ->
+    T = T0 * 1000,
+    M = 1000000,
+    C = (C0 + T) rem M,
+    CC = trunc((C0 + T) / M),
+    B = (B0 + CC) rem M,
+    CB = trunc((B0 + CC) / M),
+    A = (A0 + CB) rem M,
+    {A, B, C}.
