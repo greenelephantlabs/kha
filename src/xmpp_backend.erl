@@ -103,7 +103,7 @@ session(MySession, JID) ->
     %% We explicitely send presence:
     exmpp_session:send_packet(MySession,
 			      exmpp_presence:set_status(
-				exmpp_presence:available(), "bot: write me help")),
+				exmpp_presence:available(), "say help for info")),
     {ok, Timer} = timer:send_interval(timer:minutes(1), check_mutes),
     {ok, #state{session = MySession, bot_jid = JID, mutes_expire_timer = Timer}}.
 
