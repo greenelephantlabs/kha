@@ -119,10 +119,10 @@ handle_info({mnesia_table_event, _}, #state{} = State) ->
 
 handle_info({timeout, Timer, poll}, #state{id = Id,
                                            polling = Timer} = State) ->
-    ?LOG("starting poll", []),
+    ?LOG("starting poll for ~p", [Id]),
     {ok, #project{remote = Remote}} = ?MODULE:get(Id),
     Refs = git:refs(Remote),
-    ?LOG("remote branches: ~p~n", [Refs]),
+    %% ?LOG("remote branches: ~p~n", [Refs]),
     [ begin
           case kha_build:get_by_revision(Cid) of
               {ok, []} ->
@@ -130,7 +130,7 @@ handle_info({timeout, Timer, poll}, #state{id = Id,
                                                                    Cid, "polling", []),
                   ?LOG("revision ~s added to queue as ~p", [Cid, _Build#build.key]);
               {ok, _L} ->
-                  ?LOG("revision ~s was build ~b times", [Cid, length(_L)]),
+                  %% ?LOG("revision ~s was build ~b times", [Cid, length(_L)]),
                   ok
           end
       end || {Name, Type, Cid} <- Refs, Type /= 'HEAD' ],
