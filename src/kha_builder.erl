@@ -141,7 +141,8 @@ handle_info({'DOWN', _, process, Pid, NormalOrTimeout}, #state{busy = {Pid, _}} 
 handle_info({'DOWN', _, process, Pid, _Reason}, #state{busy = {Pid, Job}} = State) ->
     {ProjectId, BuildId} = Job,
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    kha_build:update(Build0#build{status = fail}),
+    kha_build:update(Build0#build{output = [ io_lib:format("# reason: ~w~n", [_Reason]) | Build0#build.output ],
+                                  status = fail}),
     kha_builder:process(),
     {noreply, State#state{busy = false}};
 
@@ -256,7 +257,8 @@ process_step({Cmd, F}, B) ->
             kha_build:update(B3),
             B3;
         {error, {ExitCode, Reason}} ->
-            Be = B#build{output = [Reason,
+            Be = B#build{output = [io_lib:format("# exit code: ~b~n", [ExitCode]),
+                                   Reason,
                                    io_lib:format("$ ~s~n", [Cmd])
                                    | B#build.output],
                          stop = now(),
