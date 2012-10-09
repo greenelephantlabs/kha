@@ -141,8 +141,7 @@ handle_info({'DOWN', _, process, Pid, NormalOrTimeout}, #state{busy = {Pid, _}} 
 handle_info({'DOWN', _, process, Pid, _Reason}, #state{busy = {Pid, Job}} = State) ->
     {ProjectId, BuildId} = Job,
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    kha_build:update(Build0#build{output = [ io_lib:format("# reason: ~w~n", [_Reason]) | Build0#build.output ],
-                                  status = fail}),
+    build_append(io_lib:format("# reason: ~w~n", [_Reason]), Build0#build{status = fail}),
     kha_builder:process(),
     {noreply, State#state{busy = false}};
 
@@ -225,10 +224,10 @@ create_clone_step(Local, Remote) ->
     case filelib:is_dir(Local) of
         true ->
             {"# no need to checkout\n",
-             fun() -> {ok, ""} end};
+             fun(_Ref, _Parent) -> {ok, ""} end};
         false ->
             {git:clone_cmd(Remote, Local, []),
-             fun() -> kha_utils:sh(git:clone_cmd(Remote, Local, [])) end}
+             fun(_Ref, _Parent) -> kha_utils:sh(git:clone_cmd(Remote, Local, [])) end}
     end.
 
 get_user_steps(P, Build) ->
@@ -245,23 +244,39 @@ get_user_steps(P, Build) ->
                git:checkout_cmd(Local, Ref, [force])
                | P#project.build ],
 
-    UserSteps = [ {C, fun() -> kha_utils:sh(C, [{cd, Local}]) end} || C <- Steps0 ],
-    UserSteps.
+    [ {Command,
+       fun(_Ref, _Parent) ->
+               kha_utils:sh(Command, [{cd, Local}])
+       end} || Command <- Steps0 ].
 
 process_step({Cmd, F}, B) ->
     B2 = build_append(io_lib:format("$ ~s~n", [Cmd]), B),
-    case F() of
-        {ok, D} ->
-            build_append(D, B2);
-        {error, {ExitCode, Reason}} ->
-            Be = B#build{output = [io_lib:format("# exit code: ~b~n", [ExitCode]),
-                                   Reason,
-                                   io_lib:format("$ ~s~n", [Cmd])
-                                   | B#build.output],
-                         stop = now(),
-                         exit = ExitCode,
-                         status = fail},
-            throw({error, Be})
+    Parent = self(),
+    Ref = make_ref(),
+    proc_lib:spawn_link(fun() ->
+                                Res = F(Ref, Parent),
+                                Parent ! {Ref, done, Res}
+                        end),
+    process_loop(Ref, Parent, Cmd, B2).
+
+process_loop(Ref, Parent, Cmd, Build) ->
+    receive
+        {Ref, done, Res} ->
+            case Res of
+                {ok, D} ->
+                    build_append(D, Build);
+                {error, {ExitCode, Reason}} ->
+                    Be = Build#build{output = [io_lib:format("# exit code: ~b~n", [ExitCode]),
+                                               Reason
+                                               | Build#build.output],
+                                     stop = now(),
+                                     exit = ExitCode,
+                                     status = fail},
+                    throw({error, Be})
+            end;
+        {Ref, line, Line} ->
+            build_append(Line, Build),
+            process_loop(Ref, Parent, Cmd, Build)
     end.
 
 build_append(Line, #build{output = Output0} = Build) ->
