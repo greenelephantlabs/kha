@@ -46,14 +46,14 @@ v0.4 DONE
 v0.5 DONE
 * Hooks, build timeouts
 
-v0.6
-* DONE [ci skip] support,
-* DONE project git change polling
-* DONE user authentication
+v0.6 DONE
+* [ci skip] support,
+* project git change polling
+* user authentication
 
-v0.7
-* DONE Build list paging
-* DONE email notifications
+v0.7 DONE
+* Build list paging 
+* email notifications
 * Jabber/XMPP notifications
 
 v0.8
@@ -67,11 +67,12 @@ v0.9
 * use user/project convention
 
 v1.0
-* Complex notification options
-* IRC notifications
+* complex notification options
+* fully working UI
 * Stable release
 
 v1.1
+* IRC notifications
 * Support for multiple Erlang versions via kerl
 
 v1.2 DONE
