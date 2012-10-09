@@ -229,7 +229,7 @@ create_clone_step(Local, Remote) ->
         false ->
             {git:clone_cmd(Remote, Local, []),
              fun() -> kha_utils:sh(git:clone_cmd(Remote, Local, [])) end}
-    end.    
+    end.
 
 get_user_steps(P, Build) ->
     Local = kha_utils:convert(P#project.local, str),
@@ -249,13 +249,10 @@ get_user_steps(P, Build) ->
     UserSteps.
 
 process_step({Cmd, F}, B) ->
-    B2 = B#build{output = [io_lib:format("$ ~s~n", [Cmd]) | B#build.output]},
-    kha_build:update(B2),
+    B2 = build_append(io_lib:format("$ ~s~n", [Cmd]), B),
     case F() of
         {ok, D} ->
-            B3 = B#build{output = [D | B2#build.output]},
-            kha_build:update(B3),
-            B3;
+            build_append(D, B2);
         {error, {ExitCode, Reason}} ->
             Be = B#build{output = [io_lib:format("# exit code: ~b~n", [ExitCode]),
                                    Reason,
@@ -266,6 +263,11 @@ process_step({Cmd, F}, B) ->
                          status = fail},
             throw({error, Be})
     end.
+
+build_append(Line, #build{output = Output0} = Build) ->
+    B2 = Build#build{output = [ Line | Output0 ]},
+    kha_build:update(B2),
+    B2.
 
 set_timeout(Time, {M, F, A}) ->
     timer:apply_after(timer:seconds(Time), M, F, A).

@@ -197,15 +197,17 @@ create_fake() ->
 
 upgrade() ->
     {ok, Ps} = db:get_all(project),
-    [ ?MODULE:update(binarize(P)) || P <- Ps ].
+    [ ?MODULE:update(upgrade(P)) || P <- Ps ].
 
-binarize(#project{params = Params, notifications = Notifications} = P) ->
+upgrade(#project{params = Params, notifications = Notifications} = P) ->
     Params2 = binarize(Params),
-    Notifications2 = [ binarize(N) || N <- Notifications ],
+    Notifications2 = [ upgrade(N) || N <- Notifications ],
     P#project{params = Params2, notifications = Notifications2};
 
-binarize(#notification{params = Param} = N) ->
-    N#notification{params = binarize(Param)};
+upgrade(#notification{type = mail} = N) ->
+    upgrade(N#notification{type = email});
+upgrade(#notification{params = Param} = N) ->
+    N#notification{params = binarize(Param)}.
 
 binarize(L) ->
     [ {kha_utils:convert(K, bin), V} || {K, V} <- L ].
