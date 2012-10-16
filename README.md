@@ -57,7 +57,7 @@ v0.7 DONE
 * Jabber/XMPP notifications
 
 v0.8
-* line-by-line build log updates
+* line-by-line build log updates [DONE]
 * basic .travis.yml support,
 * remote builders, 
 
