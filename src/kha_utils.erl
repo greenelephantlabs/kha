@@ -27,7 +27,8 @@
          now_sum/2
         ]).
 
--export([sh/1,sh/2,sh/3, mktemp_dir/0]).
+-export([sh_stream/4,
+         sh/1,sh/2,sh/3, mktemp_dir/0]).
 
 -export([record_field/1,
 
@@ -204,6 +205,14 @@ get_app_path(App) ->
     FilePath = code:where_is_file(AppFile),
     FilePath2 = filename:dirname(filename:absname(FilePath)),
     filename:join([FilePath2, "../"]).
+
+
+sh_stream(Cmd, Ref, Parent, Opts) ->
+    Send = fun(Line, []) ->
+                   Parent ! {Ref, line, Line},
+                   []
+           end,
+    sh:sh(lists:flatten(convert(Cmd, str)), Opts ++ [{output_handler, Send}, return_on_error]).
 
 sh(Cmd) ->
     sh(Cmd, []).
