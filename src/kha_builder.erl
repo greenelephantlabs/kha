@@ -227,26 +227,26 @@ create_clone_step(Local, Remote) ->
              fun(_Ref, _Parent) -> {ok, ""} end};
         false ->
             {git:clone_cmd(Remote, Local, []),
-             fun(_Ref, _Parent) -> kha_utils:sh(git:clone_cmd(Remote, Local, [])) end}
+             fun(Ref, Parent) -> kha_utils:sh_stream(git:clone_cmd(Remote, Local, []), Ref, Parent, []) end}
     end.
 
 get_user_steps(P, Build) ->
     Local = kha_utils:convert(P#project.local, str),
     Branch = kha_utils:convert(Build#build.branch, str),
     Revision = kha_utils:convert(Build#build.revision, str),
-    Ref = case Revision of
+    Rev = case Revision of
               undefined -> Branch;
               "" -> Branch;
               _ -> Revision
           end,
 
     Steps0 = [ git:fetch_cmd(Local),
-               git:checkout_cmd(Local, Ref, [force])
+               git:checkout_cmd(Local, Rev, [force])
                | P#project.build ],
 
     [ {Command,
-       fun(_Ref, _Parent) ->
-               kha_utils:sh(Command, [{cd, Local}])
+       fun(Ref, Parent) ->
+               kha_utils:sh_stream(Command, Ref, Parent, [{cd, Local}])
        end} || Command <- Steps0 ].
 
 process_step({Cmd, F}, B) ->
@@ -275,8 +275,8 @@ process_loop(Ref, Parent, Cmd, Build) ->
                     throw({error, Be})
             end;
         {Ref, line, Line} ->
-            build_append(Line, Build),
-            process_loop(Ref, Parent, Cmd, Build)
+            B2 = build_append(Line, Build),
+            process_loop(Ref, Parent, Cmd, B2)
     end.
 
 build_append(Line, #build{output = Output0} = Build) ->
