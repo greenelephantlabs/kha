@@ -133,15 +133,20 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_info({'DOWN', _, process, Pid, NormalOrTimeout}, #state{busy = {Pid, _}} = State) when NormalOrTimeout == normal;
-                                                                                              NormalOrTimeout == timeout ->
+handle_info({'DOWN', _, process, Pid, normal}, #state{busy = {Pid, _}} = State) ->
     kha_builder:process(),
     {noreply, State#state{busy = false}};
 
-handle_info({'DOWN', _, process, Pid, _Reason}, #state{busy = {Pid, Job}} = State) ->
+handle_info({'DOWN', _, process, Pid, Reason}, #state{busy = {Pid, Job}} = State) ->
     {ProjectId, BuildId} = Job,
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    build_append(io_lib:format("# reason: ~w~n", [_Reason]), Build0#build{status = fail}),
+    Build2 = case Reason of
+                 timeout ->
+                     Build0#build{status = timeout};
+                 _ ->
+                     Build0#build{status = fail}
+             end,
+    build_append(io_lib:format("# reason: ~w~n", [Reason]), Build2),
     kha_builder:process(),
     {noreply, State#state{busy = false}};
 
@@ -177,11 +182,8 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-build_timeout(Pid, ProjectId, BuildId) ->
-    exit(Pid, timeout),
-    {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    Build = Build0#build{status = timeout},
-    kha_build:update(Build).
+build_timeout(Pid, _ProjectId, _BuildId) ->
+    exit(Pid, timeout).
 
 do_process({ProjectId, BuildId}) ->
     {ok, P} = kha_project:get(ProjectId),
