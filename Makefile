@@ -19,6 +19,9 @@ clean:  $(REBAR)
 tests:  $(REBAR)
 	$(REBAR) eunit
 
+sh:
+	erl -pa ebin/ deps/*/ebin/
+
 ALL=    priv/coffee/app.js \
 	priv/models/build.js \
 	priv/controllers/builds_controller.js
