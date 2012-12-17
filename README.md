@@ -59,19 +59,20 @@ v0.7 DONE
 v0.8
 * line-by-line build log updates [DONE]
 * basic .travis.yml support,
-* remote builders, 
+* build sandboxing using lxc
 
 v0.9
 * branch list page
 * realtime data push
-* use user/project convention
+* remote builders
 
 v1.0
-* complex notification options
+* use user/project convention
 * fully working UI
-* Stable release
+* stable release
 
 v1.1
+* complex notification options
 * IRC notifications
 * Support for multiple Erlang versions via kerl
 
@@ -82,7 +83,7 @@ v1.3
 * SVN/CVS support
 
 v1.4
-* Build sandboxing using chroot
+* Build sandboxing using Vagrant
 
 v1.5
 * Replace distributed Erlang with some MQ protocol
