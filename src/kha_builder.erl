@@ -115,7 +115,9 @@ handle_cast(process, #state{queue = Queue} = S) ->
         {empty, _} ->
             {noreply, S#state{busy = false}};
         {{value, Job}, NewQueue} ->
-            Pid = proc_lib:spawn(fun() -> do_process(Job) end),
+            Pid = proc_lib:spawn(fun() ->
+                                         do_process(Job, "")
+                                 end),
             erlang:monitor(process, Pid),
             {noreply, S#state{busy = {Pid, Job}, queue = NewQueue}}
     end;
@@ -185,7 +187,7 @@ code_change(_OldVsn, State, _Extra) ->
 build_timeout(Pid, _ProjectId, _BuildId) ->
     exit(Pid, timeout).
 
-do_process({ProjectId, BuildId}) ->
+do_process({ProjectId, BuildId}, Prefix) ->
     {ok, P} = kha_project:get(ProjectId),
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
     Build = Build0#build{status = building},
@@ -197,8 +199,8 @@ do_process({ProjectId, BuildId}) ->
 
     {ok, Timer} = set_timeout(BuildTimeout, {?MODULE, build_timeout, [self(), ProjectId, BuildId]}),
 
-    UserSteps = get_user_steps(P, Build),
-    CloneStep = create_clone_step(Local, Remote),
+    UserSteps = get_user_steps(Prefix, P, Build),
+    CloneStep = create_clone_step(Local, Remote, Prefix),
 
     Steps = [ CloneStep | UserSteps ],
 
@@ -222,17 +224,19 @@ do_process({ProjectId, BuildId}) ->
     kha_notification:run(P, Build2),
     Build2.
 
-create_clone_step(Local, Remote) ->
+create_clone_step(Local, Remote, Prefix) ->
     case filelib:is_dir(Local) of
         true ->
             {"# no need to checkout\n",
              fun(_Ref, _Parent) -> {ok, ""} end};
         false ->
             {git:clone_cmd(Remote, Local, []),
-             fun(Ref, Parent) -> kha_utils:sh_stream(git:clone_cmd(Remote, Local, []), Ref, Parent, []) end}
+             fun(Ref, Parent) ->
+                     kha_utils:sh_stream([Prefix, git:clone_cmd(Remote, Local, [])], Ref, Parent, [])
+             end}
     end.
 
-get_user_steps(P, Build) ->
+get_user_steps(Prefix, P, Build) ->
     Local = kha_utils:convert(P#project.local, str),
     Branch = kha_utils:convert(Build#build.branch, str),
     Revision = kha_utils:convert(Build#build.revision, str),
@@ -248,7 +252,7 @@ get_user_steps(P, Build) ->
 
     [ {Command,
        fun(Ref, Parent) ->
-               kha_utils:sh_stream(Command, Ref, Parent, [{cd, Local}])
+               kha_utils:sh_stream([Prefix, Command], Ref, Parent, [{cd, Local}])
        end} || Command <- Steps0 ].
 
 process_step({Cmd, F}, B) ->
