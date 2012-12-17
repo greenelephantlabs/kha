@@ -15,6 +15,7 @@ start() ->
     db:init(),
     ok = application:start(crypto, permanent),
     ok = application:start(bcrypt, permanent),
+    ok = application:start(yamerl, permanent),
     ok = application:start(ranch, permanent),
     ok = application:start(cowboy, permanent),
     ok = application:start(mimetypes, permanent),
