@@ -26,6 +26,7 @@
 
 -record(state, {original_name,
                 name,
+                ref = undefined,
                 opts = [],
                 ready = false,
                 waiters = ordsets:new()}).
@@ -144,9 +145,9 @@ handle_info({'EXIT', _, Reason}, State) ->
     {stop, Reason, State};
 handle_info(timeout, State) ->
     ?LOG("Starting container ~s with opts ~p~n", [?s.original_name, ?s.opts]),
-    {ok, Name, _Ref} = lxc:start(?s.original_name, ?s.opts),
+    {ok, Name, Ref} = lxc:start(?s.original_name, ?s.opts),
     timer:send_after(1000, do_ping),
-    {noreply, State#state{name = Name}};
+    {noreply, State#state{name = Name, ref = Ref}};
 
 handle_info(do_ping, State) ->
     case lxc:exec(?s.name, ?s.opts, "uname -a", []) of
@@ -172,8 +173,9 @@ handle_info(_Info, State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
-terminate(_Reason, #state{name = Name} = _State) ->
-    lxc:stop(Name),
+terminate(_Reason, State) ->
+    lxc:stop(?s.name),
+    sh:join(?s.ref),
     ok.
 
 %%--------------------------------------------------------------------
