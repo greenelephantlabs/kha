@@ -12,7 +12,7 @@
                  ]},
   {mod, { kha_app, []}},
   {env, [{host, "example.host"},
-         {container, lxc},
+         {container, lxc}, %% {container, dummy}
          {container_name, "ci_erl"},
          {container_opts, [{ephemeral, true},
                            {username, "ubuntu"}]}]}

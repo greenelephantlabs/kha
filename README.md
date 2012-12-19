@@ -28,6 +28,13 @@ Notifications:
 * Email
 * other via plugins
 
+Sandboxing
+==========
+
+Kha supports sandboxing via "lxc" containers. Tested on Ubuntu
+12.10. Requires a kernel at least 3.5.0-21. For "lxc" to work, Kha has
+to be run under a user with password-less sudo permissions.
+
 Road map
 ========
 
@@ -59,7 +66,7 @@ v0.7 DONE
 v0.8
 * line-by-line build log updates [DONE]
 * basic .travis.yml support,
-* build sandboxing using lxc
+* build sandboxing using lxc [DONE]
 
 v0.9
 * branch list page
