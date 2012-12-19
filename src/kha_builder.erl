@@ -258,11 +258,11 @@ do_process({ProjectId, BuildId}, Container) ->
     container_stop(Container, Build3).
 
 create_clone_step(Container, Local, Remote) ->
-    case filelib:is_dir(Local) of
-        true ->
+    case kha_cont:exec(Container, io_lib:format("file \"~s\"", [Local]), []) of
+        {ok, _} ->
             {"# no need to checkout\n",
              fun(_Ref, _Parent) -> {ok, ""} end};
-        false ->
+        {error, {1, _}} ->
             {git:clone_cmd(Remote, Local, []),
              fun(Ref, Parent) ->
                      kha_cont:exec_stream(Container, git:clone_cmd(Remote, Local, []), Ref, Parent, [])
