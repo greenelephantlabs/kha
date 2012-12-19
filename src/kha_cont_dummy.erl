@@ -67,6 +67,10 @@ handle_call({exec_stream, Command, Ref, Parent, Opts}, _From, State) ->
     Res = kha_utils:sh_stream(Command, Ref, Parent, Opts),
     {reply, Res, State};
 
+handle_call({exec, Command, Opts}, _From, State) ->
+    Res = kha_utils:sh_stream(Command, Opts),
+    {reply, Res, State};
+
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State};
 

@@ -110,6 +110,16 @@ handle_call({exec_stream, Command, Ref, Parent, Opts0}, _From, State) ->
     Res = kha_utils:sh_stream([Prefix, Command, Postfix], Ref, Parent, Opts),
     {reply, Res, State};
 
+handle_call({exec, Command, Opts0}, _From, State) ->
+    Prefix0 = lxc:exec_prefix(?s.name, ?s.opts),
+    [Prefix, Postfix] = case proplists:get_value(cd, Opts0) of
+                            undefined -> [Prefix0, ""];
+                            X -> [[Prefix0, "'cd \"", X, "\" && "], "'"]
+                        end,
+    Opts = lists:keydelete(cd, 1, Opts0),
+    Res = kha_utils:sh([Prefix, Command, Postfix], Opts),
+    {reply, Res, State};
+
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State};
 
