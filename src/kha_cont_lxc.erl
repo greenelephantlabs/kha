@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/2]).
+-export([start/2, start_link/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -24,8 +24,11 @@
 
 -define(s, State#state).
 
--record(state, {name,
-                opts = []}).
+-record(state, {original_name,
+                name,
+                opts = [],
+                ready = false,
+                waiters = ordsets:new()}).
 
 %%%===================================================================
 %%% API
@@ -38,6 +41,9 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+start(Name, Opts) ->
+    gen_server:start(?MODULE, [Name, Opts], []).
+
 start_link(Name, Opts) ->
     gen_server:start_link(?MODULE, [Name, Opts], []).
 
@@ -58,7 +64,7 @@ start_link(Name, Opts) ->
 %%--------------------------------------------------------------------
 init([Name, Opts]) ->
     process_flag(trap_exit, true),
-    {ok, #state{name = Name,
+    {ok, #state{original_name = Name,
                 opts = Opts}, 0}.
 
 %%--------------------------------------------------------------------
@@ -75,9 +81,39 @@ init([Name, Opts]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call({attach, Pid}, _From, State) ->
+    link(Pid),
+    {reply, ok, State};
+
+handle_call(get_exec_prefix, _From, #state{ready = true} = State) ->
+    Prefix = lxc:exec_prefix(?s.name, ?s.opts),
+    {reply, {ok, Prefix}, State};
+handle_call(get_exec_prefix, _From, #state{ready = false} = State) ->
+    {reply, {error, not_ready}, State};
+
+handle_call(get_name, _From, #state{} = State) ->
+    {reply, {ok, ?s.name}, State};
+
+handle_call(wait, _From, #state{ready = true} = State) ->
+    {reply, true, State};
+handle_call(wait, From, State) ->
+    {noreply, ?s{waiters = ordsets:add_element(From, ?s.waiters)}};
+
+handle_call({exec_stream, Command, Ref, Parent, Opts0}, _From, State) ->
+    Prefix0 = lxc:exec_prefix(?s.name, ?s.opts),
+    [Prefix, Postfix] = case proplists:get_value(cd, Opts0) of
+                            undefined -> [Prefix0, ""];
+                            X -> [[Prefix0, "'cd \"", X, "\" && "], "'"]
+                        end,
+    Opts = lists:keydelete(cd, 1, Opts0),
+    Res = kha_utils:sh_stream([Prefix, Command, Postfix], Ref, Parent, Opts),
+    {reply, Res, State};
+
+handle_call(stop, _From, State) ->
+    {stop, normal, ok, State};
+
 handle_call(_Request, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State}.
+    {stop, {unknown_call, _Request}, {error, {unknown_call, _Request}}, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -102,11 +138,25 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_info({'EXIT', _, _}, State) ->
-    {stop, State};
-handle_info(timeout, State) ->
-    ?LOG("Starting container ~s with opts ~p~n", [?s.name, ?s.opts]),
+handle_info({'EXIT', _, normal}, State) ->
     {noreply, State};
+handle_info({'EXIT', _, Reason}, State) ->
+    {stop, Reason, State};
+handle_info(timeout, State) ->
+    ?LOG("Starting container ~s with opts ~p~n", [?s.original_name, ?s.opts]),
+    {ok, Name, _Ref} = lxc:start(?s.original_name, ?s.opts),
+    timer:send_after(1000, do_ping),
+    {noreply, State#state{name = Name}};
+
+handle_info(do_ping, State) ->
+    case lxc:exec(?s.name, ?s.opts, "uname -a", []) of
+        {ok, _} ->
+            [ gen_server:reply(X, true) || X <- ordsets:to_list(?s.waiters) ],
+            {noreply, State#state{waiters = undefined, ready = true}};
+        _ ->
+            timer:send_after(1000, do_ping),
+            {noreply, State}
+    end;
 
 handle_info(_Info, State) ->
     {noreply, State}.

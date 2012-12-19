@@ -152,6 +152,10 @@ convert(Val, str)
   when is_binary(Val) ->
     binary_to_list(Val);
 
+convert(Val, str)
+  when is_list(Val) ->
+    binary_to_list(iolist_to_binary(Val));
+
 convert(Val, bin)
   when is_list(Val) ->
     iolist_to_binary(Val);

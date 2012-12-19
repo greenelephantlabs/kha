@@ -13,7 +13,7 @@
   {mod, { kha_app, []}},
   {env, [{host, "first.lan"},
          {container, lxc},
-         {container_name, "ci_erl"},
+         {container_name, "ci1"},
          {container_opts, [{ephemeral, true},
                            {username, "ubuntu"}]}]}
  ]}.

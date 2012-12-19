@@ -115,9 +115,17 @@ handle_cast(process, #state{queue = Queue} = S) ->
         {empty, _} ->
             {noreply, S#state{busy = false}};
         {{value, Job}, NewQueue} ->
-            Pid = proc_lib:spawn(fun() ->
-                                         do_process(Job, "")
-                                 end),
+            Pid = case container_start(fetch_container()) of
+                      {ok, CPid} ->
+                          proc_lib:spawn(fun() ->
+                                                 kha_cont:attach(CPid),
+                                                 do_process(Job, CPid)
+                                         end);
+                      _ ->
+                          proc_lib:spawn(fun() ->
+                                                 do_process(Job, undefined)
+                                         end)
+                  end,
             erlang:monitor(process, Pid),
             {noreply, S#state{busy = {Pid, Job}, queue = NewQueue}}
     end;
@@ -148,7 +156,7 @@ handle_info({'DOWN', _, process, Pid, Reason}, #state{busy = {Pid, Job}} = State
                  _ ->
                      Build0#build{status = fail}
              end,
-    build_append(io_lib:format("# reason: ~w~n", [Reason]), Build2),
+    _Build3 = build_append(io_lib:format("# reason: ~w~n", [Reason]), Build2),
     kha_builder:process(),
     {noreply, State#state{busy = false}};
 
@@ -187,25 +195,56 @@ code_change(_OldVsn, State, _Extra) ->
 build_timeout(Pid, _ProjectId, _BuildId) ->
     exit(Pid, timeout).
 
-do_process({ProjectId, BuildId}, Prefix) ->
+fetch_container() ->
+    case application:get_env(container) of
+        undefined ->
+            {dummy, "dummy", []};
+        {ok, ContType} ->
+            {ok, Name} = application:get_env(container_name),
+            Opts = case application:get_env(container_opts) of
+                       {ok, O} -> O;
+                       undefined -> []
+                   end,
+            {ContType, Name, Opts}
+    end.
+
+container_start({Module, Name, Opts}) ->
+    {ok, CPid} = kha_cont:start_link(Module, Name, Opts),
+    {ok, CPid}.
+
+container_wait(CPid, Build) ->
+    {ok, Name} = kha_cont:get_name(CPid),
+    Build2 = build_append(io_lib:format("# waiting for container ~s~n", [Name]), Build),
+    kha_cont:wait(CPid),
+    Build2.
+
+container_stop(CPid, Build) ->
+    {ok, Name} = kha_cont:get_name(CPid),
+    Build2 = build_append(io_lib:format("# stopping container ~s~n", [Name]), Build),
+    kha_cont:stop(CPid),
+    build_append(io_lib:format("# container stopped ~s~n", [Name]), Build2).
+
+do_process({ProjectId, BuildId}, Container) ->
     {ok, P} = kha_project:get(ProjectId),
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    Build = Build0#build{status = building},
-    kha_build:update(Build),
+    Build1 = Build0#build{status = building},
+    kha_build:update(Build1),
     kha_hooks:run(on_building, ProjectId, BuildId),
     Local = kha_utils:convert(P#project.local, str),
     Remote = kha_utils:convert(P#project.remote, str),
     BuildTimeout = proplists:get_value(<<"build_timeout">>, P#project.params, 60),
 
+    Build2 = container_wait(Container, Build1),
+
     {ok, Timer} = set_timeout(BuildTimeout, {?MODULE, build_timeout, [self(), ProjectId, BuildId]}),
 
-    UserSteps = get_user_steps(Prefix, P, Build),
-    CloneStep = create_clone_step(Local, Remote, Prefix),
+    UserSteps = get_user_steps(Container, P, Build2),
+    CloneStep = create_clone_step(Container, Local, Remote),
 
     Steps = [ CloneStep | UserSteps ],
 
-    Build2 = try
-                 B2 = lists:foldl(fun process_step/2, Build, Steps),
+    Build3 = try
+                 B2 = lists:foldl(fun process_step/2, Build2, Steps),
                  B2#build{status = success,
                           stop = now(),
                           exit = 0}
@@ -215,16 +254,16 @@ do_process({ProjectId, BuildId}, Prefix) ->
              end,
 
     cancel_timeout(Timer),
-    kha_build:update(Build2),
-    case Build2#build.status of
+    kha_build:update(Build3),
+    case Build3#build.status of
         success -> kha_hooks:run(on_success,   ProjectId, BuildId);
         fail    -> kha_hooks:run(on_failed, ProjectId, BuildId);
         timeout -> kha_hooks:run(on_failed, ProjectId, BuildId)
     end,
-    kha_notification:run(P, Build2),
-    Build2.
+    kha_notification:run(P, Build3),
+    container_stop(Container, Build3).
 
-create_clone_step(Local, Remote, Prefix) ->
+create_clone_step(Container, Local, Remote) ->
     case filelib:is_dir(Local) of
         true ->
             {"# no need to checkout\n",
@@ -232,11 +271,11 @@ create_clone_step(Local, Remote, Prefix) ->
         false ->
             {git:clone_cmd(Remote, Local, []),
              fun(Ref, Parent) ->
-                     kha_utils:sh_stream([Prefix, git:clone_cmd(Remote, Local, [])], Ref, Parent, [])
+                     kha_cont:exec_stream(Container, git:clone_cmd(Remote, Local, []), Ref, Parent, [])
              end}
     end.
 
-get_user_steps(Prefix, P, Build) ->
+get_user_steps(Container, P, Build) ->
     Local = kha_utils:convert(P#project.local, str),
     Branch = kha_utils:convert(Build#build.branch, str),
     Revision = kha_utils:convert(Build#build.revision, str),
@@ -252,7 +291,7 @@ get_user_steps(Prefix, P, Build) ->
 
     [ {Command,
        fun(Ref, Parent) ->
-               kha_utils:sh_stream([Prefix, Command], Ref, Parent, [{cd, Local}])
+               kha_cont:exec_stream(Container, Command, Ref, Parent, [{cd, Local}])
        end} || Command <- Steps0 ].
 
 process_step({Cmd, F}, B) ->
