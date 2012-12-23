@@ -16,6 +16,8 @@
          get/2,
          get_by_revision/1,
 
+         get_rev/1,
+
          delete/1,
          delete/2,
 
@@ -66,6 +68,15 @@ get_limit(T, D, {PId, _} = Current, C, A) ->
 
 get_by_revision(Revision) ->
     db:get_record_by_index(build, Revision, #build.revision).
+
+get_rev(#build{} = Build) ->
+    Branch = kha_utils:convert(Build#build.branch, str),
+    Revision = kha_utils:convert(Build#build.revision, str),
+    case Revision of
+        undefined -> Branch;
+        "" -> Branch;
+        _ -> Revision
+    end.
 
 get(ProjectId, {prev, Count}) ->
     get(ProjectId, {prev, undefined, Count});

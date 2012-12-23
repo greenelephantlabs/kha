@@ -224,28 +224,18 @@ do_process({ProjectId, BuildId}, Container) ->
     Build1 = Build0#build{status = building},
     kha_build:update(Build1),
     kha_hooks:run(on_building, ProjectId, BuildId),
-    Local = kha_utils:convert(P#project.local, str),
-    Remote = kha_utils:convert(P#project.remote, str),
     BuildTimeout = proplists:get_value(<<"build_timeout">>, P#project.params, 60),
 
     Build2 = container_wait(Container, Build1),
 
     {ok, Timer} = set_timeout(BuildTimeout, {?MODULE, build_timeout, [self(), ProjectId, BuildId]}),
 
+    CloneStep = create_clone_step(Container, P),
     UserSteps = get_user_steps(Container, P, Build2),
-    CloneStep = create_clone_step(Container, Local, Remote),
 
     Steps = [ CloneStep | UserSteps ],
 
-    Build3 = try
-                 B2 = lists:foldl(fun process_step/2, Build2, Steps),
-                 B2#build{status = success,
-                          stop = now(),
-                          exit = 0}
-             catch
-                 throw:{error, Bb} ->
-                     Bb
-             end,
+    Build3 = finalize_build(lists:foldl(fun process_step/2, Build2, Steps)),
 
     cancel_timeout(Timer),
     kha_build:update(Build3),
@@ -257,7 +247,19 @@ do_process({ProjectId, BuildId}, Container) ->
     kha_notification:run(P, Build3),
     container_stop(Container, Build3).
 
-create_clone_step(Container, Local, Remote) ->
+finalize_build(Build) ->
+    case Build of
+        #build{status = building} = BS ->
+            BS#build{status = success,
+                     stop = now(),
+                     exit = 0};
+        #build{status = fail} = BF ->
+            BF
+    end.
+
+create_clone_step(Container, P) ->
+    Local = kha_utils:convert(P#project.local, str),
+    Remote = kha_utils:convert(P#project.remote, str),
     case kha_cont:exec(Container, io_lib:format("file \"~s\"", [Local]), []) of
         {ok, _} ->
             {"# no need to checkout\n",
@@ -271,13 +273,7 @@ create_clone_step(Container, Local, Remote) ->
 
 get_user_steps(Container, P, Build) ->
     Local = kha_utils:convert(P#project.local, str),
-    Branch = kha_utils:convert(Build#build.branch, str),
-    Revision = kha_utils:convert(Build#build.revision, str),
-    Rev = case Revision of
-              undefined -> Branch;
-              "" -> Branch;
-              _ -> Revision
-          end,
+    Rev = kha_build:get_rev(Build),
 
     Steps0 = [ git:fetch_cmd(Local),
                git:checkout_cmd(Local, Rev, [force])
@@ -305,13 +301,12 @@ process_loop(Ref, Parent, Cmd, Build) ->
                 {ok, D} ->
                     build_append(D, Build);
                 {error, {ExitCode, Reason}} ->
-                    Be = Build#build{output = [io_lib:format("# exit code: ~b~n", [ExitCode]),
-                                               Reason
-                                               | Build#build.output],
-                                     stop = now(),
-                                     exit = ExitCode,
-                                     status = fail},
-                    throw({error, Be})
+                    Build#build{output = [io_lib:format("# exit code: ~b~n", [ExitCode]),
+                                          Reason
+                                          | Build#build.output],
+                                stop = now(),
+                                exit = ExitCode,
+                                status = fail}
             end;
         {Ref, line, Line} ->
             B2 = build_append(Line, Build),
