@@ -226,6 +226,9 @@ do_process({ProjectId, BuildId}, Container) ->
     kha_hooks:run(on_building, ProjectId, BuildId),
     BuildTimeout = proplists:get_value(<<"build_timeout">>, P#project.params, 60),
 
+    Config = kha_config:fetch(P, Build0),
+    io:format("Config: ~p~n", [Config]),
+
     Build2 = container_wait(Container, Build1),
 
     {ok, Timer} = set_timeout(BuildTimeout, {?MODULE, build_timeout, [self(), ProjectId, BuildId]}),
