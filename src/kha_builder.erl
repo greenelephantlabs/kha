@@ -228,17 +228,26 @@ do_process({ProjectId, BuildId}, Container) ->
     kha_hooks:run(on_building, ProjectId, BuildId),
     BuildTimeout = proplists:get_value(<<"build_timeout">>, P#project.params, 60),
 
-    Config = kha_config:fetch(P, Build0),
-    io:format("Config: ~p~n", [Config]),
-
     Build2 = container_wait(Container, Build1),
 
     {ok, Timer} = set_timeout(BuildTimeout, {?MODULE, build_timeout, [self(), ProjectId, BuildId]}),
 
     CloneStep = create_clone_step(Container, P),
-    UserSteps = get_user_steps(Container, P, Build2),
 
-    Steps = [ CloneStep | UserSteps ],
+    ProjectBuildSteps = get_project_build_script(P, Build2),
+    BuildSteps = case kha_config:fetch(P, Build2) of
+                     {ok, [Config]} ->
+                         case proplists:get_value("script", Config) of
+                             undefined ->
+                                 ProjectBuildSteps;
+                             Scr ->
+                                 [iolist_to_binary(Scr)]
+                         end;
+                     {error, _} ->
+                         ProjectBuildSteps
+                 end,
+
+    Steps = [ CloneStep | stepify(Container, P, BuildSteps) ],
 
     Build3 = finalize_build(lists:foldl(fun process_step/2, Build2, Steps)),
 
@@ -276,14 +285,16 @@ create_clone_step(Container, P) ->
              end}
     end.
 
-get_user_steps(Container, P, Build) ->
+get_project_build_script(P, Build) ->
     Local = kha_utils:convert(P#project.local, str),
     Rev = kha_build:get_rev(Build),
 
-    Steps0 = [ git:fetch_cmd(Local),
-               git:checkout_cmd(Local, Rev, [force])
-               | P#project.build ],
+    [ git:fetch_cmd(Local),
+      git:checkout_cmd(Local, Rev, [force])
+      | P#project.build ].
 
+stepify(Container, P, Steps0) ->
+    Local = kha_utils:convert(P#project.local, str),
     [ {Command,
        fun(Ref, Parent) ->
                kha_cont:exec_stream(Container, Command, Ref, Parent, [{cd, Local}])
