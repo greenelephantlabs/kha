@@ -289,6 +289,8 @@ get_user_steps(Container, P, Build) ->
                kha_cont:exec_stream(Container, Command, Ref, Parent, [{cd, Local}])
        end} || Command <- Steps0 ].
 
+process_step(_, #build{status = X} = B) when X /= building ->
+    B;
 process_step({Cmd, F}, B) ->
     B2 = build_append(io_lib:format("$ ~s~n", [Cmd]), B),
     Parent = self(),
