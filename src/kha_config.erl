@@ -1,24 +1,25 @@
 -module(kha_config).
 
--export([check/1, fetch/2]).
+-export([fetch/2]).
 
 implementations() ->
     [kha_config_github,
-     kha_config_archive].
-
-check(Project) ->
-    check(Project, implementations()).
-
-check(_Project, [M]) ->
-    M;
-check(Project, [M | R]) ->
-    case M:check(Project) of
-        true ->
-            M;
-        false ->
-            check(Project, R)
-    end.
+     kha_config_archive
+     %% kha_config_clone, %%TODO: naive clone depth=1
+    ].
 
 fetch(Project, Build) ->
-    M = check(Project),
-    M:fetch(Project, Build).
+    fetch(Project, Build, implementations()).
+
+fetch(_Project, _Build, []) ->
+    {error, unable_to_fetch_config};
+
+fetch(Project, Build, [M | R]) ->
+    case M:fetch(Project, Build) of
+        {ok, Data} ->
+            {ok, Data};
+        {error, nofile} ->
+            {error, nofile};
+        {error, _Error} ->
+            fetch(Project, Build, R)
+    end.

@@ -15,6 +15,14 @@ check(P) ->
     end.
 
 fetch(Project, Build) ->
+    case check(Project) of
+        true ->
+            fetch0(Project, Build);
+        false ->
+            {error, incompatible_project}
+    end.
+
+fetch0(Project, Build) ->
     Rev = kha_build:get_rev(Build),
     Remote = kha_utils:convert(Project#project.remote, str),
     Uri = uri:from_string(Remote),
@@ -32,6 +40,8 @@ fetch(Project, Build) ->
         {ok, {{_, 200, _}, _Headers, Data}} ->
             io:format("Data: ~p~n", [Data]),
             yamerl:decode(Data);
+        {ok, {{_, 404, _}, _Headers, Data}} ->
+            {error, nofile};
         {ok, {ErrorCode, _Headers, _Data}} ->
             {error, {http, ErrorCode}};
         {error, E} ->
