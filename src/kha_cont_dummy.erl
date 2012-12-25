@@ -64,11 +64,11 @@ handle_call(wait, _From, State) ->
     {reply, true, State};
 
 handle_call({exec_stream, Command, Ref, Parent, Opts}, _From, State) ->
-    Res = kha_utils:sh_stream(Command, Ref, Parent, Opts),
+    Res = kha_utils:sh_stream(["sh -c '", Command, "'"], Ref, Parent, Opts),
     {reply, Res, State};
 
 handle_call({exec, Command, Opts}, _From, State) ->
-    Res = kha_utils:sh_stream(Command, Opts),
+    Res = kha_utils:sh(["sh -c '", Command, "'"], Opts),
     {reply, Res, State};
 
 handle_call(stop, _From, State) ->

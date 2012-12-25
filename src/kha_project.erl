@@ -175,16 +175,22 @@ is_params(L) when is_list(L) ->
 
 create_fake() ->
     R = [#project{name   = <<"kha test project">>,
-                  local  = <<"/tmp/test_build">>,
+                  local  = <<"/tmp/kha/kha">>,
                   remote = <<"https://github.com/greenelephantlabs/kha.git">>,
                   build  = [<<"rebar get-deps">>, <<"make">>],
                   params = [{<<"build_timeout">>, 60},
                             {<<"polling">>, true}],
                   notifications = []},
          #project{name   = <<"Erlsemver">>,
-                  local  = <<"/tmp/semver_build">>,
+                  local  = <<"/tmp/kha/erlsemver">>,
                   remote = <<"https://github.com/gleber/erlsemver.git">>,
                   build  = [<<"make all tests">>],
+                  params = [{<<"build_timeout">>, 600}], %% 10 min
+                  notifications = []},
+         #project{name   = <<"jsx">>,
+                  local  = <<"/tmp/kha/jsx">>,
+                  remote = <<"https://github.com/talentdeficit/jsx.git">>,
+                  build  = [],
                   params = [{<<"build_timeout">>, 600}], %% 10 min
                   notifications = []}
         ],
