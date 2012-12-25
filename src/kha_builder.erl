@@ -235,17 +235,30 @@ do_process({ProjectId, BuildId}, Container) ->
     CloneStep = create_clone_step(Container, P),
 
     ProjectBuildSteps = get_project_build_script(P, Build2),
-    BuildSteps = case kha_config:fetch(P, Build2) of
-                     {ok, [Config]} ->
-                         case proplists:get_value("script", Config) of
-                             undefined ->
-                                 ProjectBuildSteps;
-                             Scr ->
-                                 [iolist_to_binary(Scr)]
-                         end;
-                     {error, _} ->
-                         ProjectBuildSteps
-                 end,
+    Config = case kha_config:fetch(P, Build2) of
+                 {ok, [C]} ->
+                     C;
+                 {error, _} ->
+                     []
+             end,
+
+    BuildSteps0 = case proplists:get_value("script", Config) of
+                      undefined ->
+                          ProjectBuildSteps;
+                      Scr ->
+                          [iolist_to_binary(Scr)]
+                  end,
+
+    Before = fetch_steps(["before_install",
+                          "install",
+                          "after_install",
+                          "before_script"], Config),
+    After = fetch_steps(["after_success", %% there's no support for after_failure yet
+                         "after_script"], Config),
+
+    BuildSteps = lists:concat([Before,
+                               BuildSteps0,
+                               After]),
 
     Steps = [ CloneStep | stepify(Container, P, BuildSteps) ],
 
@@ -269,6 +282,21 @@ finalize_build(Build) ->
                      exit = 0};
         #build{status = fail} = BF ->
             BF
+    end.
+
+fetch_steps(Params, Config) ->
+    lists:flatmap(fun(P) ->
+                          fetch_step(P, Config)
+                  end, Params).
+
+fetch_step(Param, Config) ->
+    case proplists:get_value(Param, Config, []) of
+        [] ->
+            [];
+        [L|_] = X when is_list(L) ->
+            lists:map(fun iolist_to_binary/1, X);
+        L when is_list(L) ->
+            [iolist_to_binary(L)]
     end.
 
 create_clone_step(Container, P) ->
