@@ -65,7 +65,7 @@ v0.7 DONE
 
 v0.8
 * line-by-line build log updates [DONE]
-* basic .travis.yml support,
+* basic .travis.yml support, [DONE]
 * build sandboxing using lxc [DONE]
 
 v0.9
