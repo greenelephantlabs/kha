@@ -38,9 +38,13 @@ fetch0(Project, Build) ->
                        ),
     case httpc:request(uri:to_string(ConfigUrl)) of
         {ok, {{_, 200, _}, _Headers, Data}} ->
-            io:format("Data: ~p~n", [Data]),
-            yamerl:decode(Data);
-        {ok, {{_, 404, _}, _Headers, Data}} ->
+            try yamerl:decode(Data) of
+                T -> {ok, T}
+            catch
+                ET:ER ->
+                    {error, {ET, ER}}
+            end;
+        {ok, {{_, 404, _}, _Headers, _Data}} ->
             {error, nofile};
         {ok, {ErrorCode, _Headers, _Data}} ->
             {error, {http, ErrorCode}};
