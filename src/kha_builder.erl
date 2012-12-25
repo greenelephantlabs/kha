@@ -69,7 +69,10 @@ process() ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-    {ok, #state{queue = queue:new()}}.
+    {ok, PendingBuilds} = db:get_match_object(#build{status=pending,_='_'}),
+    Keys = [ B#build.key || B <- PendingBuilds ],
+    process(),
+    {ok, #state{queue = queue:from_list(Keys)}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -88,7 +91,6 @@ init([]) ->
 
 handle_call({add_to_queue, ProjectId, BuildId}, _From,
             #state{busy = Busy, queue = Queue} = S) ->
-
     NewQueue = queue:in({ProjectId, BuildId}, Queue),
     NewState = S#state{queue = NewQueue},
     case Busy of
@@ -243,9 +245,9 @@ do_process({ProjectId, BuildId}, Container) ->
     cancel_timeout(Timer),
     kha_build:update(Build3),
     case Build3#build.status of
-        success -> kha_hooks:run(on_success,   ProjectId, BuildId);
-        fail    -> kha_hooks:run(on_failed, ProjectId, BuildId);
-        timeout -> kha_hooks:run(on_failed, ProjectId, BuildId)
+        success -> kha_hooks:run(on_success, ProjectId, BuildId);
+        fail    -> kha_hooks:run(on_failed,  ProjectId, BuildId);
+        timeout -> kha_hooks:run(on_failed,  ProjectId, BuildId)
     end,
     kha_notification:run(P, Build3),
     container_stop(Container, Build3).
