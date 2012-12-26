@@ -117,9 +117,8 @@ handle_cast(process, #state{queue = Queue} = S) ->
         {empty, _} ->
             {noreply, S#state{busy = false}};
         {{value, Job}, NewQueue} ->
-            {ok, CPid} = container_start(fetch_container()),
             Pid = proc_lib:spawn(fun() ->
-                                         kha_cont:attach(CPid),
+                                         {ok, CPid} = container_start(fetch_container()),
                                          do_process(Job, CPid)
                                  end),
             erlang:monitor(process, Pid),
