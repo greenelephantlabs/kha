@@ -11,7 +11,7 @@
 -include_lib("kha/include/common.hrl").
 -include_lib("kha/include/kha.hrl").
 
--export([run/3]).
+-export([run/2, run/3]).
 
 -define(GLOBAL_HOOKS_LOCATION, <<"support/hooks/">>).
 -define(PROJECT_HOOKS_LOCATION, <<"kha_hooks/">>).
@@ -20,6 +20,9 @@ hookfn(on_success)  -> <<"on_success">>;
 hookfn(on_failed)   -> <<"on_failed">>;
 hookfn(on_building) -> <<"on_building">>;
 hookfn(on_timeout)  -> <<"on_timeout">>.
+
+run(Which, #build{id = BId, project = PId} = _Build) ->
+    run(Which, PId, BId).
 
 run(Which, ProjectId, BuildId) ->
     {ok, P} = kha_project:get(ProjectId),
