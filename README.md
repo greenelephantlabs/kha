@@ -69,7 +69,7 @@ v0.8
 * build sandboxing using lxc [DONE]
 
 v0.9
-* branch list page
+* support for multiple Erlang versions via kerl
 * realtime data push
 * remote builders
 
@@ -79,24 +79,21 @@ v1.0
 * stable release
 
 v1.1
+* GitHub webhook support [DONE]
+* branch list page
+
+v1.2
 * complex notification options
 * IRC notifications
-* Support for multiple Erlang versions via kerl
-
-v1.2 DONE
-* GitHub webhook support
 
 v1.3
 * SVN/CVS support
 
 v1.4
-* Build sandboxing using Vagrant
+* Support foreign architectures using Vagrant/KVM
 
 v1.5
 * Replace distributed Erlang with some MQ protocol
-
-v2.0
-* Vagrant-based sandboxing
 
 
 v1.0 architecture
