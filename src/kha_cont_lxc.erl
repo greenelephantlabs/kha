@@ -86,12 +86,6 @@ handle_call({attach, Pid}, _From, State) ->
     link(Pid),
     {reply, ok, State};
 
-handle_call(get_exec_prefix, _From, #state{ready = true} = State) ->
-    Prefix = lxc:exec_prefix(?s.name, ?s.opts),
-    {reply, {ok, Prefix}, State};
-handle_call(get_exec_prefix, _From, #state{ready = false} = State) ->
-    {reply, {error, not_ready}, State};
-
 handle_call(get_name, _From, #state{} = State) ->
     {reply, {ok, ?s.name}, State};
 

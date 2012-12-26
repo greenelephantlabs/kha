@@ -70,12 +70,10 @@ v0.8
 
 v0.9
 * support for multiple Erlang versions via kerl
-* realtime data push
 * remote builders
 
 v1.0
-* use user/project convention
-* fully working UI
+* realtime data push
 * stable release
 
 v1.1
@@ -90,10 +88,11 @@ v1.3
 * SVN/CVS support
 
 v1.4
-* Support foreign architectures using Vagrant/KVM
-
-v1.5
 * Replace distributed Erlang with some MQ protocol
+
+v2.0
+* use user/project convention
+* Support foreign architectures using Vagrant/KVM
 
 
 v1.0 architecture

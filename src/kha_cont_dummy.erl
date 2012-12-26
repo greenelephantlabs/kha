@@ -54,9 +54,6 @@ handle_call({attach, Pid}, _From, State) ->
     link(Pid),
     {reply, ok, State};
 
-handle_call(get_exec_prefix, _From, State) ->
-    {reply, {ok, ""}, State};
-
 handle_call(get_name, _From, State) ->
     {reply, {ok, ?s.name}, State};
 
