@@ -17,7 +17,7 @@ fetch(Project, Build) ->
               {ok, _} ->
                   case filelib:is_file(Cfg) of
                       true ->
-                          try yamerl:decode_file(Cfg) of
+                          try yamerl:decode_file(Cfg, [str_node_as_binary]) of
                               T -> {ok, T}
                           catch
                               ET:ER ->

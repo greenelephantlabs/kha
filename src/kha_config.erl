@@ -11,20 +11,21 @@ implementations() ->
     ].
 
 get_env(Config) ->
-    Env = proplists:get_value("env", Config, []),
-    case Env of
-        [X|_] when is_tuple(X) ->
-            Global0 = proplists:get_value("global", Env, []),
-            Global = parse_env(Global0),
-            Matrix0 = proplists:get_value("matrix", Env, []),
-            Matrix = parse_env(Matrix0),
-            [ lists:concat([M, Global]) || M <- Matrix ];
-        _ ->
-            parse_env(Env)
+    case proplists:get_value(<<"env">>, Config, []) of
+        [X|_] = Env when is_tuple(X) ->
+            Global0 = proplists:get_value(<<"global">>, Env, []),
+            Global = lists:flatten(lists:map(fun parse_env/1, Global0)),
+            Matrix0 = proplists:get_value(<<"matrix">>, Env, []),
+            Matrix = lists:map(fun parse_env/1, Matrix0),
+            [ lists:append(M, Global) || M <- Matrix ];
+        L when is_list(L) ->
+            [ parse_env(B) || B <- L ]; 
+        B when is_binary(B) ->
+            [ parse_env(B) ]
     end.
 
 parse_env(Env0) -> %%TODO: handle quoted values
-    Env = string:tokens(Env0, " "),
+    Env = string:tokens(binary_to_list(Env0), " "),
     [ {K, V} || [K, V] <- [ [_,_] = string:tokens(X, "=") || X <- Env ] ].
 
 fetch(Project, Build) ->

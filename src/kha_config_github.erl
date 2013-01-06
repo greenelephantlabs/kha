@@ -38,7 +38,7 @@ fetch0(Project, Build) ->
                        ),
     case httpc:request(uri:to_string(ConfigUrl)) of
         {ok, {{_, 200, _}, _Headers, Data}} ->
-            try yamerl:decode(Data) of
+            try yamerl:decode(Data, [str_node_as_binary]) of
                 T -> {ok, T}
             catch
                 ET:ER ->
