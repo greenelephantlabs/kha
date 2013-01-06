@@ -82,10 +82,6 @@ init([Name, Opts]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call({attach, Pid}, _From, State) ->
-    link(Pid),
-    {reply, ok, State};
-
 handle_call(get_name, _From, #state{} = State) ->
     {reply, {ok, ?s.name}, State};
 
