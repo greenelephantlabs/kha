@@ -15,7 +15,6 @@
         {id                 :: project_id(),
          server             :: pid(),
          name               :: b_string(),
-         local              :: filename:filename(), %% git clone remote local
          remote             :: b_string(),
          build = []         :: list(command()),
          params = []        :: params(),
@@ -35,7 +34,8 @@
          status             :: 'pending' | 'building' | 'success' | 'fail',
          exit               :: integer(),
          output             :: list(b_string()),
-         tags               :: list(tag())
+         tags               :: list(tag()),
+         dir                :: filename:filename() %% git clone remote local
         }).
 
 -record(id_seq,

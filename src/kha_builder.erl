@@ -219,10 +219,20 @@ container_stop(CPid, Build) ->
     kha_cont:stop(CPid),
     build_append(io_lib:format("# container stopped ~s~n", [Name]), Build2).
 
+ensure_build_dir(P, Build) ->
+    Dir = kha_utils:convert(
+            case Build#build.dir of
+                undefined -> ["/tmp/kha/", kha_utils:clean_filename(P#project.name), "/",
+                              kha_utils:clean_filename(kha_utils:now_to_nice(now())), "-", hex:to(crypto:rand_bytes(2))];
+                D -> D
+            end, str),
+    Build#build{dir = Dir}.
+
+
 do_process({ProjectId, BuildId}, ContData) ->
     {ok, P} = kha_project:get(ProjectId),
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    Build = Build0#build{status = building},
+    Build = ensure_build_dir(P, Build0#build{status = building}),
     kha_build:update(Build),
     kha_hooks:run(on_building, Build),
 
@@ -283,10 +293,9 @@ execute_job(Env, ContData, BuildSteps,
     {ok, Container} = container_start(ContData),
     BB2 = container_wait(Container, Build0),
     {ok, Timer} = set_timeout(Timeout, {?MODULE, build_timeout, [self(), ProjectId, BuildId]}),
-    kha_cont:set_env(Container, proplists:get_value(env, Env)),
     EnvSteps = create_env_steps(Env),
-    Steps = stepify(Container, P, lists:concat([EnvSteps,
-                                                BuildSteps])),
+    Steps = stepify(Container, BB2, P, lists:concat([EnvSteps,
+                                                     BuildSteps])),
     BB3 = finalize_build(lists:foldl(fun process_step/2, BB2, Steps)),
     cancel_timeout(Timer),
     kha_build:update(BB3),
@@ -327,29 +336,29 @@ fetch_step(Param, Config) ->
     end.
 
 create_clone_steps(P, Build) ->
-    Local = kha_utils:convert(P#project.local, str),
+    Dir = Build#build.dir,
     Remote = kha_utils:convert(P#project.remote, str),
     Rev = kha_build:get_rev(Build),
-    [ {io_lib:format("[ -d \"~s\" ] || ~s", [Local, git:clone_cmd(Remote, Local, [])]), []},
-      git:fetch_cmd(Local),
-      git:checkout_cmd(Local, Rev, [force]) ].
+    [ {io_lib:format("[ -d \"~s\" ] || ~s", [Dir, git:clone_cmd(Remote, Dir, [])]), []},
+      git:fetch_cmd(Dir),
+      git:checkout_cmd(Dir, Rev, [force]) ].
 
 get_project_build_script(P) ->
     P#project.build.
 
-stepify(Container, P, Steps0) ->
+stepify(Container, B, P, Steps0) ->
     lists:map(fun(Command) ->
-                      stepify0(Container, P, Command)
+                      stepify0(Container, B, P, Command)
               end, Steps0).
 
-stepify0(Container, _P, {Command, Opts}) ->
+stepify0(Container, _B, _P, {Command, Opts}) ->
     {Command,
      fun(Ref, Parent) ->
              kha_cont:exec_stream(Container, Command, Ref, Parent, Opts)
      end};
-stepify0(Container, P, Command) ->
-    Local = kha_utils:convert(P#project.local, str),
-    stepify0(Container, P, {Command, [{cd, Local}]}).
+stepify0(Container, B, P, Command) ->
+    Dir = kha_utils:convert(B#build.dir, str),
+    stepify0(Container, B, P, {Command, [{cd, Dir}]}).
 
 
 process_step(_, #build{status = X} = B) when X /= building ->

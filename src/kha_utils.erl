@@ -23,6 +23,8 @@
          b2i/1,
          binarize/1,
 
+         clean_filename/1,
+
          now_to_nice/1,
          now_sum/2
         ]).
@@ -67,7 +69,8 @@ build_to_plist(#build{id      = Id,
                       status   = Status,
                       exit     = Exit,
                       output   = Output,
-                      tags     = Tags}) ->
+                      tags     = Tags,
+                      dir      = Dir}) ->
     fltr(
       [{<<"id">>,       Id},
        {<<"project">>,  Project},
@@ -80,7 +83,8 @@ build_to_plist(#build{id      = Id,
        {<<"status">>,   kha_utils:convert_safe(Status, bin)},
        {<<"exit">>,     Exit},
        {<<"output">>,   kha_utils:convert(lists:reverse(Output), bin)},
-       {<<"tags">>,     kha_utils:list_convert(Tags, bin)}
+       {<<"tags">>,     kha_utils:list_convert(Tags, bin)},
+       {<<"dir">>,      kha_utils:list_convert(Dir, bin)}
       ]).
 
 fmt(S, A) ->
@@ -106,6 +110,9 @@ now_to_nice(Now) ->
     {{Y,M,D}, {H,Min, S}} = calendar:now_to_local_time(Now),
     Out = io_lib:fwrite("~4.10.0B-~2.10.0B-~2.10.0B ~2.10.0B:~2.10.0B:~2.10.0B", [Y,M,D, H,Min,S]),
     convert(lists:flatten(Out), bin).
+
+clean_filename(B) ->
+    re:replace(re:replace(B, "[^a-zA-Z0-9]", "-", [global]), "-+", "-", [global, {return, binary}]).
 
 fltr(L) ->
     [ {K, V} || {K,V} <- L, V /= undefined ].

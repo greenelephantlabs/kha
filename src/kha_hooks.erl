@@ -33,8 +33,8 @@ run(Which, ProjectId, BuildId) ->
     do_run(Which, HookPath, P, B),
 
     %%run project hook
-    Local = kha_utils:convert(P#project.local, str),
-    LocalHookPath = filename:join([Local, ?PROJECT_HOOKS_LOCATION, hookfn(Which)]),
+    Dir = kha_utils:convert(B#build.dir, str),
+    LocalHookPath = filename:join([Dir, ?PROJECT_HOOKS_LOCATION, hookfn(Which)]),
     do_run(Which, LocalHookPath, P, B).    
 
 do_run(Which, HookPath, P, B) ->
