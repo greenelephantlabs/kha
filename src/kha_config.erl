@@ -25,7 +25,7 @@ get_env(Config) ->
 
 parse_env(Env0) -> %%TODO: handle quoted values
     Env = string:tokens(Env0, " "),
-    [ {K, V} || [K, V] <- [ [_,_] = string:tokens(X) || X <- Env ] ].
+    [ {K, V} || [K, V] <- [ [_,_] = string:tokens(X, "=") || X <- Env ] ].
 
 fetch(Project, Build) ->
     fetch(Project, Build, implementations()).

@@ -304,8 +304,8 @@ execute_job(Env, ContData, BuildSteps,
 
 create_env_steps([]) ->
     [];
-create_env_steps([{env, _} | Env]) ->
-    create_env_steps(Env);
+create_env_steps([{env, E} | Env]) ->
+    [ [ iolist_to_binary(["export ", K, "=\"", V, "\""]) || {K, V} <- E ] | create_env_steps(Env) ];
 create_env_steps([{Lang, Ver} | Env]) ->
     [ kha_lang:set_runtime_cmd(Lang, Ver) | create_env_steps(Env) ].
 
