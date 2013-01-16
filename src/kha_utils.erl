@@ -112,7 +112,7 @@ now_to_nice(Now) ->
     convert(lists:flatten(Out), bin).
 
 clean_filename(B) ->
-    re:replace(re:replace(B, "[^a-zA-Z0-9]", "-", [global]), "-+", "-", [global, {return, binary}]).
+    iolist_to_binary(string:to_lower(re:replace(B, "[^a-zA-Z0-9]+", "-", [global, {return, list}]))).
 
 fltr(L) ->
     [ {K, V} || {K,V} <- L, V /= undefined ].
