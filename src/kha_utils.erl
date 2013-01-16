@@ -84,7 +84,7 @@ build_to_plist(#build{id      = Id,
        {<<"exit">>,     Exit},
        {<<"output">>,   kha_utils:convert(lists:reverse(Output), bin)},
        {<<"tags">>,     kha_utils:list_convert(Tags, bin)},
-       {<<"dir">>,      kha_utils:list_convert(Dir, bin)}
+       {<<"dir">>,      kha_utils:convert_opt(Dir, bin)}
       ]).
 
 fmt(S, A) ->
