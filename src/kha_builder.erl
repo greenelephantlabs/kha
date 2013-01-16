@@ -244,18 +244,18 @@ do_process({ProjectId, BuildId}, ContData) ->
              end,
 
     ProjectSteps = get_project_build_script(P),
-    Steps0 = case proplists:get_value("script", Config) of
+    Steps0 = case proplists:get_value(<<"script">>, Config) of
                  undefined ->
                      ProjectSteps;
                  Scr ->
-                     [iolist_to_binary(Scr)]
+                     [Scr]
              end,
-    Before = fetch_steps(["before_install",
-                          "install",
-                          "after_install",
-                          "before_script"], Config),
-    After = fetch_steps(["after_success", %% there's no support for after_failure yet
-                         "after_script"], Config),
+    Before = fetch_steps([<<"before_install">>,
+                          <<"install">>,
+                          <<"after_install">>,
+                          <<"before_script">>], Config),
+    After = fetch_steps([<<"after_success">>, %% there's no support for after_failure yet
+                         <<"after_script">>], Config),
     CloneSteps = create_clone_steps(P, Build),
     Steps = lists:concat([CloneSteps,
                           Before,
