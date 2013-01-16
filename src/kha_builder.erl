@@ -220,13 +220,15 @@ container_stop(CPid, Build) ->
     build_append(io_lib:format("# container stopped ~s~n", [Name]), Build2).
 
 ensure_build_dir(P, Build) ->
-    Dir = kha_utils:convert(
-            case Build#build.dir of
-                undefined -> ["/tmp/kha/", kha_utils:clean_filename(P#project.name), "/",
-                              kha_utils:clean_filename(kha_utils:now_to_nice(now())), "-", hex:to(crypto:rand_bytes(2))];
-                D -> D
-            end, str),
-    Build#build{dir = Dir}.
+    Dir = case Build#build.dir of
+              undefined ->
+                  PN = kha_utils:clean_filename(P#project.name),
+                  ["/tmp/kha/", PN, "/",
+                   kha_utils:clean_filename(kha_utils:now_to_nice(now())), "-", hex:to(crypto:rand_bytes(2)), "/",
+                   PN];
+              D -> D
+          end,
+    Build#build{dir = kha_utils:convert(Dir, str)}.
 
 
 do_process({ProjectId, BuildId}, ContData) ->
