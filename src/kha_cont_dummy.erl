@@ -59,21 +59,11 @@ handle_call(wait, _From, State) ->
     {reply, true, State};
 
 handle_call({exec_stream, Command, Ref, Parent, Opts}, _From, #state{runner = Runner} = State) ->
-    case proplists:get_value(cd, Opts) of
-        undefined -> ok;
-        Dir ->
-            runner:exec_aggregate_sync(Runner, ["cd ", Dir])
-    end,
-    Res = runner:exec_stream_sync(Runner, Command, Ref, Parent),
+    Res = runner:exec_stream_sync(Runner, Command, Ref, Parent, Opts),
     {reply, Res, State};
 
 handle_call({exec, Command, Opts}, _From, #state{runner = Runner} = State) ->
-    case proplists:get_value(cd, Opts) of
-        undefined -> ok;
-        Dir ->
-            runner:exec_aggregate_sync(Runner, ["cd ", Dir])
-    end,
-    Res = runner:exec_aggregate_sync(Runner, Command),
+    Res = runner:exec_aggregate_sync(Runner, Command, Opts),
     {reply, Res, State};
 
 handle_call(stop, _From, State) ->
