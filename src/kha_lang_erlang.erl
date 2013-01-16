@@ -1,6 +1,10 @@
 -module(kha_lang_erlang).
 
--export([set_runtime_cmd/1]).
+-export([get_env/1,
+         set_runtime_cmd/1]).
+
+get_env(Config) ->
+    proplists:get_value(<<"otp_release">>, Config, [default]).
 
 set_runtime_cmd(default) ->
     [];

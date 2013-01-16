@@ -264,18 +264,8 @@ do_process({ProjectId, BuildId}, ContData) ->
                           Steps0,
                           After]),
 
-    Envs = [
-            [
-             {erlang, Erl},
-             {nodejs, Nod},
-             {env, Env}
-            ]
-            ||
-               Erl <- proplists:get_value("otp_release", Config, [default]),
-               Nod <- proplists:get_value("node_js", Config, [default]),
-               Env <- kha_config:get_env(Config) ],
+    Envs = kha_lang:get_envs(Config),
 
-    %% Env = hd(Envs), %% OR
     BuildFinal =
         lists:foldl(fun(Env, BB) ->
                             execute_job(Env, ContData, Steps, P, BB)
