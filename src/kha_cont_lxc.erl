@@ -27,6 +27,7 @@
 -record(state, {original_name,
                 name,
                 ref = undefined,
+                runner = undefined,
                 opts = [],
                 ready = false,
                 waiters = ordsets:new()}).
@@ -90,24 +91,12 @@ handle_call(wait, _From, #state{ready = true} = State) ->
 handle_call(wait, From, State) ->
     {noreply, ?s{waiters = ordsets:add_element(From, ?s.waiters)}};
 
-handle_call({exec_stream, Command, Ref, Parent, Opts0}, _From, State) ->
-    Prefix0 = lxc:exec_prefix(?s.name, ?s.opts),
-    [Prefix, Postfix] = case proplists:get_value(cd, Opts0) of
-                            undefined -> [Prefix0, ""];
-                            X -> [[Prefix0, "'cd \"", X, "\" && "], "'"]
-                        end,
-    Opts = lists:keydelete(cd, 1, Opts0),
-    Res = kha_utils:sh_stream([Prefix, Command, Postfix], Ref, Parent, Opts),
+handle_call({exec_stream, Command, Ref, Parent, Opts}, _From, #state{runner = Runner} = State) ->
+    Res = runner:exec_stream_sync(Runner, Command, Ref, Parent, Opts),
     {reply, Res, State};
 
-handle_call({exec, Command, Opts0}, _From, State) ->
-    Prefix0 = lxc:exec_prefix(?s.name, ?s.opts),
-    [Prefix, Postfix] = case proplists:get_value(cd, Opts0) of
-                            undefined -> [Prefix0, ""];
-                            X -> [[Prefix0, "'cd \"", X, "\" && "], "'"]
-                        end,
-    Opts = lists:keydelete(cd, 1, Opts0),
-    Res = kha_utils:sh([Prefix, Command, Postfix], Opts),
+handle_call({exec, Command, Opts}, _From, #state{runner = Runner} = State) ->
+    Res = runner:exec_aggregate_sync(Runner, Command, Opts),
     {reply, Res, State};
 
 handle_call(stop, _From, State) ->
@@ -146,14 +135,15 @@ handle_info({'EXIT', _, Reason}, State) ->
 handle_info(timeout, State) ->
     ?LOG("Starting container ~s with opts ~p~n", [?s.original_name, ?s.opts]),
     {ok, Name, Ref} = lxc:start(?s.original_name, ?s.opts),
-    timer:send_after(1000, do_ping),
+    timer:send_after(300, do_ping),
     {noreply, State#state{name = Name, ref = Ref}};
 
 handle_info(do_ping, State) ->
     case lxc:exec(?s.name, ?s.opts, "uname -a", []) of
         {ok, _} ->
             [ gen_server:reply(X, true) || X <- ordsets:to_list(?s.waiters) ],
-            {noreply, State#state{waiters = undefined, ready = true}};
+            R = runner:spawn([{prefix, lxc:exec_prefix(?s.name, ?s.opts)}]),
+            {noreply, State#state{waiters = undefined, ready = true, runner = R}};
         _ ->
             timer:send_after(1000, do_ping),
             {noreply, State}
