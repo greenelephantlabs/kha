@@ -234,7 +234,7 @@ ensure_build_dir(P, Build) ->
 do_process({ProjectId, BuildId}, ContData) ->
     {ok, P} = kha_project:get(ProjectId),
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    Build = ensure_build_dir(P, Build0#build{status = building}),
+    Build = ensure_build_dir(P, Build0),
     kha_build:update(Build),
     kha_hooks:run(on_building, Build),
 
@@ -278,12 +278,16 @@ do_process({ProjectId, BuildId}, ContData) ->
     end,
     kha_notification:run(P, BuildFinal).
 
+execute_job(_Env, _ContData, _BuildSteps, _P,
+            #build{status = fail} = Build) ->
+    Build;
 execute_job(Env, ContData, BuildSteps,
             #project{id = ProjectId} = P,
             #build{id = BuildId} = Build0) ->
+    Build = Build0#build{status = building},
     Timeout = proplists:get_value(<<"build_timeout">>, P#project.params, 60),
     {ok, Container} = container_start(ContData),
-    BB2 = container_wait(Container, Build0),
+    BB2 = container_wait(Container, Build),
     {ok, Timer} = set_timeout(Timeout, {?MODULE, build_timeout, [self(), ProjectId, BuildId]}),
     EnvSteps = create_env_steps(Env),
     Steps = stepify(Container, BB2, P, lists:concat([EnvSteps,
@@ -291,8 +295,7 @@ execute_job(Env, ContData, BuildSteps,
     BB3 = finalize_build(lists:foldl(fun process_step/2, BB2, Steps)),
     cancel_timeout(Timer),
     kha_build:update(BB3),
-    container_stop(Container, BB3),
-    BB3.
+    container_stop(Container, BB3).
 
 create_env_steps([]) ->
     [];
@@ -304,12 +307,14 @@ create_env_steps([{Lang, Ver} | Env]) ->
 
 finalize_build(Build) ->
     case Build of
-        #build{status = building} = BS ->
-            BS#build{status = success,
-                     stop = now(),
-                     exit = 0};
-        #build{status = fail} = BF ->
-            BF
+        #build{status = building} ->
+            Build#build{status = success,
+                        stop = now(),
+                        exit = 0};
+        #build{status = success} ->
+            Build;
+        #build{status = fail} ->
+            Build
     end.
 
 fetch_steps(Params, Config) ->
