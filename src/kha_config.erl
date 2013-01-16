@@ -11,6 +11,14 @@ implementations() ->
     ].
 
 get_env(Config) ->
+    case get_env0(Config) of
+        [] ->
+            [[]];
+        R ->
+            R
+    end.
+
+get_env0(Config) ->
     case proplists:get_value(<<"env">>, Config, []) of
         [X|_] = Env when is_tuple(X) ->
             Global0 = proplists:get_value(<<"global">>, Env, []),
@@ -19,7 +27,7 @@ get_env(Config) ->
             Matrix = lists:map(fun parse_env/1, Matrix0),
             [ lists:append(M, Global) || M <- Matrix ];
         L when is_list(L) ->
-            [ parse_env(B) || B <- L ]; 
+            [ parse_env(B) || B <- L ];
         B when is_binary(B) ->
             [ parse_env(B) ]
     end.
