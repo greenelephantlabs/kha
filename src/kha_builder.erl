@@ -339,15 +339,17 @@ get_project_build_script(P) ->
     P#project.build.
 
 stepify(Container, B, P, Steps0) ->
-    lists:map(fun(Command) ->
-                      stepify0(Container, B, P, Command)
-              end, Steps0).
+    lists:flatmap(fun(Command) ->
+                          stepify0(Container, B, P, Command)
+                  end, Steps0).
 
+stepify0(_Container, _B, _P, {"", _Opts}) ->
+    [];
 stepify0(Container, _B, _P, {Command, Opts}) ->
-    {Command,
-     fun(Ref, Parent) ->
-             kha_cont:exec_stream(Container, Command, Ref, Parent, Opts)
-     end};
+    [{Command,
+      fun(Ref, Parent) ->
+              kha_cont:exec_stream(Container, Command, Ref, Parent, Opts)
+      end}];
 stepify0(Container, B, P, Command) ->
     Dir = kha_utils:convert(B#build.dir, str),
     stepify0(Container, B, P, {Command, [{cd, Dir}]}).
