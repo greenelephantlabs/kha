@@ -24,7 +24,7 @@
 
 -define(s, State#state).
 
--record(state, {name = "dummy"}).
+-record(state, {name = "dummy", runner}).
 
 %%%===================================================================
 %%% API
@@ -48,7 +48,8 @@ start_link(Name, Opts) ->
 %%%===================================================================
 
 init([Name, _]) ->
-    {ok, #state{name = Name}}.
+    R = runner:spawn([]),
+    {ok, #state{name = Name, runner = R}}.
 
 
 handle_call(get_name, _From, State) ->
@@ -57,12 +58,22 @@ handle_call(get_name, _From, State) ->
 handle_call(wait, _From, State) ->
     {reply, true, State};
 
-handle_call({exec_stream, Command, Ref, Parent, Opts}, _From, State) ->
-    Res = kha_utils:sh_stream(["sh -c '", Command, "'"], Ref, Parent, Opts),
+handle_call({exec_stream, Command, Ref, Parent, Opts}, _From, #state{runner = Runner} = State) ->
+    case proplists:get_value(cd, Opts) of
+        undefined -> ok;
+        Dir ->
+            runner:exec_aggregate_sync(Runner, ["cd ", Dir])
+    end,
+    Res = runner:exec_stream_sync(Runner, Command, Ref, Parent),
     {reply, Res, State};
 
-handle_call({exec, Command, Opts}, _From, State) ->
-    Res = kha_utils:sh(["sh -c '", Command, "'"], Opts),
+handle_call({exec, Command, Opts}, _From, #state{runner = Runner} = State) ->
+    case proplists:get_value(cd, Opts) of
+        undefined -> ok;
+        Dir ->
+            runner:exec_aggregate_sync(Runner, ["cd ", Dir])
+    end,
+    Res = runner:exec_aggregate_sync(Runner, Command),
     {reply, Res, State};
 
 handle_call(stop, _From, State) ->
