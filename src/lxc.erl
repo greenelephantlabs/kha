@@ -83,6 +83,20 @@ wait_for_new(Timeout, Containers) ->
             {ok, Current -- Containers}
     end.
 
+wait_for_stop(Name) ->
+    wait_for_stop(Name, 5).
+
+wait_for_stop(_, 0) ->
+    {error, timeout};
+wait_for_stop(Name, Timeout) ->
+    Current = list(),
+    case lists:member(Name, Current) of
+        true ->
+            timer:sleep(1000),
+            wait_for_stop(Name, Timeout - 1);
+        _ ->
+            ok
+    end.
 
 exec_prefix(Name) ->
     binary_to_list(iolist_to_binary(io_lib:format("lxc-ssh -n \"~s\" -- ", [Name]))).

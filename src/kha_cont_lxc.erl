@@ -172,6 +172,7 @@ handle_info(Info, State) ->
 %%--------------------------------------------------------------------
 terminate(_Reason, State) ->
     lxc:stop(?s.name),
+    lxc:wait_for_stop(?s.name, 10),
     catch exit(?s.lxc, shutdown),
     ok.
 
