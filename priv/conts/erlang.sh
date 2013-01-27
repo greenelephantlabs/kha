@@ -32,3 +32,6 @@ for v in R14B02 R14B03 R14B04 R15B R15B01 R15B02 R15B03; do
     sudo cp rebar $(dirname $(which erl))
     kerl_deactivate
 done
+
+#TODO: ensure that one of erlangs is activated for both interactive
+#and non-interactive shells
