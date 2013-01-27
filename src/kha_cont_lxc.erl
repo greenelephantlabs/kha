@@ -26,7 +26,7 @@
 
 -record(state, {original_name,
                 name,
-                ref = undefined,
+                lxc = undefined,
                 runner = undefined,
                 opts = [],
                 ready = false,
@@ -95,8 +95,8 @@ handle_call({exec_stream, Command, Ref, Parent, Opts}, _From, #state{runner = Ru
     Res = runner:exec_stream_sync(Runner, Command, Ref, Parent, Opts),
     {reply, Res, State};
 
-handle_call({exec, Command, Opts}, _From, #state{runner = Runner} = State) ->
-    Res = runner:exec_aggregate_sync(Runner, Command, Opts),
+handle_call({exec, Command, _Opts}, _From, #state{runner = Runner} = State) ->
+    Res = runner:exec_aggregate_sync(Runner, Command),
     {reply, Res, State};
 
 handle_call(stop, _From, State) ->
@@ -128,15 +128,17 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({'EXIT', Lxc, Reason}, #state{lxc = Lxc} = State) ->
+    {stop, Reason, State};
 handle_info({'EXIT', _, normal}, State) ->
     {noreply, State};
 handle_info({'EXIT', _, Reason}, State) ->
     {stop, Reason, State};
 handle_info(timeout, State) ->
     ?LOG("Starting container ~s with opts ~p~n", [?s.original_name, ?s.opts]),
-    {ok, Name, Ref} = lxc:start(?s.original_name, ?s.opts),
+    {ok, Name, Pid} = lxc:start(?s.original_name, ?s.opts),
     timer:send_after(300, do_ping),
-    {noreply, State#state{name = Name, ref = Ref}};
+    {noreply, State#state{name = Name, lxc = Pid}};
 
 handle_info(do_ping, State) ->
     case lxc:exec(?s.name, ?s.opts, "uname -a", []) of
@@ -149,8 +151,8 @@ handle_info(do_ping, State) ->
             {noreply, State}
     end;
 
-handle_info(_Info, State) ->
-    {noreply, State}.
+handle_info(Info, State) ->
+    {stop, {unknown_info, Info}, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -165,7 +167,7 @@ handle_info(_Info, State) ->
 %%--------------------------------------------------------------------
 terminate(_Reason, State) ->
     lxc:stop(?s.name),
-    sh:join(?s.ref),
+    catch exit(?s.lxc, shutdown),
     ok.
 
 %%--------------------------------------------------------------------

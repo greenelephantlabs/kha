@@ -12,10 +12,13 @@ start(Name, Opts) ->
         false ->
             case lists:member(Name, list()) of
                 true ->
-                    Ref = sh:run(
-                            lists:flatten(
-                              io_lib:format("sudo lxc-start -n \"~s\"", [Name])), [{async, true}]),
-                    {ok, Name, Ref};
+                    Pid = runner:spawn([{exit_on_error, true}]),
+                    runner:exec_aggregate(Pid,
+                                          lists:flatten(
+                                            io_lib:format("sudo lxc-start -d -n \"~s\" && "
+                                                          "sudo lxc-wait -n \"~s\" -s STOPPED && "
+                                                          "exit $?", [Name, Name]))),
+                    {ok, Name, Pid};
                 false ->
                     {error, not_found}
             end
@@ -28,12 +31,17 @@ start_ephemeral(Base, _Opts) ->
     Containers = list(),
     case lists:member(Base, Containers) of
         true ->
-            Ref = sh:run(
-                    lists:flatten(
-                      io_lib:format("sudo lxc-start-ephemeral -d -o \"~s\"", [Base])), [{async, true}]),    
+            Pid = runner:spawn([{exit_on_error, true}]),
+            runner:exec_aggregate(Pid,
+                                  lists:flatten(
+                                    io_lib:format("sudo lxc-start-ephemeral -d -o \"~s\"", [Base]))),
             case wait_for_new(5, Containers) of
                 {ok, [Name]} ->
-                    {ok, Name, Ref};
+                    runner:exec_aggregate(Pid,
+                                          lists:flatten(
+                                            io_lib:format("sudo lxc-wait -n \"~s\" -s STOPPED && "
+                                                          "exit $?", [Name]))),
+                    {ok, Name, Pid};
                 Error ->
                     Error
             end;
@@ -45,7 +53,7 @@ stop(Name) ->
     kha_utils:sh("sudo lxc-stop -n \"~s\"", [Name], []).
 
 destroy(Name) ->
-    kha_utils:sh("sudo lxc-destroy -n \"~s\"", [Name], []).    
+    kha_utils:sh("sudo lxc-destroy -n \"~s\"", [Name], []).
 
 list() ->
     %%[ X || "/var/lib/lxc/" ++ X <- lists:usort(filelib:wildcard("/var/lib/lxc/*")) ].

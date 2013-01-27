@@ -62,8 +62,8 @@ handle_call({exec_stream, Command, Ref, Parent, Opts}, _From, #state{runner = Ru
     Res = runner:exec_stream_sync(Runner, Command, Ref, Parent, Opts),
     {reply, Res, State};
 
-handle_call({exec, Command, Opts}, _From, #state{runner = Runner} = State) ->
-    Res = runner:exec_aggregate_sync(Runner, Command, Opts),
+handle_call({exec, Command, _Opts}, _From, #state{runner = Runner} = State) ->
+    Res = runner:exec_aggregate_sync(Runner, Command),
     {reply, Res, State};
 
 handle_call(stop, _From, State) ->
