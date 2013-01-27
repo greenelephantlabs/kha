@@ -151,6 +151,9 @@ handle_info(do_ping, State) ->
             {noreply, State}
     end;
 
+handle_info({eoc, Lxc, 0, _}, #state{lxc = Lxc} = State) ->
+    {noreply, State};
+
 handle_info(Info, State) ->
     {stop, {unknown_info, Info}, State}.
 
