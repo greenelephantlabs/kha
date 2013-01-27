@@ -130,6 +130,8 @@ handle_cast(_Msg, State) ->
 %%--------------------------------------------------------------------
 handle_info({'EXIT', Lxc, Reason}, #state{lxc = Lxc} = State) ->
     {stop, Reason, State};
+handle_info({'EXIT', Runner, Reason}, #state{runner = Runner} = State) ->
+    {stop, Reason, State};
 handle_info({'EXIT', _, normal}, State) ->
     {noreply, State};
 handle_info({'EXIT', _, Reason}, State) ->
