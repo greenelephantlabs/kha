@@ -109,6 +109,7 @@ update(Build) ->
 
 
 upgrade() ->
+    mnesia:transform_table(build, fun upgrade/1, record_info(fields, build)),
     {ok, Ps} = db:get_all(build),
     [ ?MODULE:update(upgrade(P)) || P <- Ps ].
 

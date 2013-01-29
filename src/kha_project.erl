@@ -199,8 +199,15 @@ create_fake() ->
       end || X <- R ].
 
 upgrade() ->
+    mnesia:transform_table(project,
+                           fun update/1,
+                           record_info(fields, project)),
     {ok, Ps} = db:get_all(project),
     [ ?MODULE:update(upgrade(P)) || P <- Ps ].
+
+upgrade({project, Xid, Xserver, Xname, Xlocal, Xremote, Xbuild, Xparams, Xnotifications}) ->
+    #project{id = Xid, server = Xserver, name = Xname, remote = Xremote,
+             build = Xbuild, params = Xparams, notifications = Xnotifications}.
 
 upgrade(#project{params = Params, notifications = Notifications} = P) ->
     Params2 = binarize(Params),
