@@ -200,7 +200,7 @@ create_fake() ->
 
 upgrade() ->
     mnesia:transform_table(project,
-                           fun update/1,
+                           fun upgrade/1,
                            record_info(fields, project)),
     {ok, Ps} = db:get_all(project),
     [ ?MODULE:update(upgrade(P)) || P <- Ps ].
