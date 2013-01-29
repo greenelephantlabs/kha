@@ -23,12 +23,16 @@
          b2i/1,
          binarize/1,
 
+         clean_filename/1,
+
          now_to_nice/1,
          now_sum/2
         ]).
 
 -export([sh_stream/4,
-         sh/1,sh/2,sh/3, mktemp_dir/0]).
+         sh/1,sh/2,sh/3,
+
+         mktemp_dir/0, mktemp_dir/1, mktemp_dir/2]).
 
 -export([record_field/1,
 
@@ -65,7 +69,8 @@ build_to_plist(#build{id      = Id,
                       status   = Status,
                       exit     = Exit,
                       output   = Output,
-                      tags     = Tags}) ->
+                      tags     = Tags,
+                      dir      = Dir}) ->
     fltr(
       [{<<"id">>,       Id},
        {<<"project">>,  Project},
@@ -78,7 +83,8 @@ build_to_plist(#build{id      = Id,
        {<<"status">>,   kha_utils:convert_safe(Status, bin)},
        {<<"exit">>,     Exit},
        {<<"output">>,   kha_utils:convert(lists:reverse(Output), bin)},
-       {<<"tags">>,     kha_utils:list_convert(Tags, bin)}
+       {<<"tags">>,     kha_utils:list_convert(Tags, bin)},
+       {<<"dir">>,      kha_utils:convert_opt(Dir, bin)}
       ]).
 
 fmt(S, A) ->
@@ -104,6 +110,9 @@ now_to_nice(Now) ->
     {{Y,M,D}, {H,Min, S}} = calendar:now_to_local_time(Now),
     Out = io_lib:fwrite("~4.10.0B-~2.10.0B-~2.10.0B ~2.10.0B:~2.10.0B:~2.10.0B", [Y,M,D, H,Min,S]),
     convert(lists:flatten(Out), bin).
+
+clean_filename(B) ->
+    iolist_to_binary(string:to_lower(re:replace(B, "[^a-zA-Z0-9]+", "-", [global, {return, list}]))).
 
 fltr(L) ->
     [ {K, V} || {K,V} <- L, V /= undefined ].
@@ -149,6 +158,10 @@ convert(Val, str)
 convert(Val, str)
   when is_binary(Val) ->
     binary_to_list(Val);
+
+convert(Val, str)
+  when is_list(Val) ->
+    binary_to_list(iolist_to_binary(Val));
 
 convert(Val, bin)
   when is_list(Val) ->
@@ -223,7 +236,13 @@ sh(Cmd, Args, Opts) ->
 
 
 mktemp_dir() ->
-    sh("mktemp -d kha_build.XXXXX").
+    mktemp_dir("kha_build.").
+
+mktemp_dir(Prefix) ->
+    sh("mktemp -d \"~sXXXXX\"", [Prefix], []).
+
+mktemp_dir(Prefix, Tmpdir) ->
+    sh("mktemp -d \"~sXXXXX\" --tmpdir=\"~s\"", [Prefix, Tmpdir], []).
 
 %% Interval is specified in milliseconds
 -spec now_sum(erlang:timestamp(), integer()) -> erlang:timestamp().

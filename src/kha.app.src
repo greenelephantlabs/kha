@@ -7,8 +7,13 @@
                   kernel,
                   stdlib,
                   cowboy,
-                  mimetypes
+                  mimetypes,
+                  yamerl
                  ]},
   {mod, { kha_app, []}},
-  {env, []}
+  {env, [{host, "first.lan"},
+         {container, lxc},
+         {container_name, "ci1"},
+         {container_opts, [{ephemeral, true},
+                           {username, "ubuntu"}]}]}
  ]}.

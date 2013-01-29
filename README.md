@@ -28,6 +28,13 @@ Notifications:
 * Email
 * other via plugins
 
+Sandboxing
+==========
+
+Kha supports sandboxing via "lxc" containers. Tested on Ubuntu
+12.10. Requires a kernel at least 3.5.0-21. For "lxc" to work, Kha has
+to be run under a user with password-less sudo permissions.
+
 Road map
 ========
 
@@ -58,38 +65,34 @@ v0.7 DONE
 
 v0.8
 * line-by-line build log updates [DONE]
-* basic .travis.yml support,
-* build sandboxing using lxc
+* basic .travis.yml support, [DONE]
+* build sandboxing using lxc [DONE]
 
 v0.9
-* branch list page
-* realtime data push
+* support for multiple Erlang versions via kerl
 * remote builders
 
 v1.0
-* use user/project convention
-* fully working UI
+* realtime data push
 * stable release
 
 v1.1
+* GitHub webhook support [DONE]
+* branch list page
+
+v1.2
 * complex notification options
 * IRC notifications
-* Support for multiple Erlang versions via kerl
-
-v1.2 DONE
-* GitHub webhook support
 
 v1.3
 * SVN/CVS support
 
 v1.4
-* Build sandboxing using Vagrant
-
-v1.5
 * Replace distributed Erlang with some MQ protocol
 
 v2.0
-* Vagrant-based sandboxing
+* use user/project convention
+* Support foreign architectures using Vagrant/KVM
 
 
 v1.0 architecture

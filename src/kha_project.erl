@@ -175,16 +175,19 @@ is_params(L) when is_list(L) ->
 
 create_fake() ->
     R = [#project{name   = <<"kha test project">>,
-                  local  = <<"/tmp/test_build">>,
                   remote = <<"https://github.com/greenelephantlabs/kha.git">>,
                   build  = [<<"rebar get-deps">>, <<"make">>],
                   params = [{<<"build_timeout">>, 60},
                             {<<"polling">>, true}],
                   notifications = []},
          #project{name   = <<"Erlsemver">>,
-                  local  = <<"/tmp/semver_build">>,
                   remote = <<"https://github.com/gleber/erlsemver.git">>,
                   build  = [<<"make all tests">>],
+                  params = [{<<"build_timeout">>, 600}], %% 10 min
+                  notifications = []},
+         #project{name   = <<"jsx">>,
+                  remote = <<"https://github.com/talentdeficit/jsx.git">>,
+                  build  = [],
                   params = [{<<"build_timeout">>, 600}], %% 10 min
                   notifications = []}
         ],
@@ -196,8 +199,15 @@ create_fake() ->
       end || X <- R ].
 
 upgrade() ->
+    mnesia:transform_table(project,
+                           fun upgrade/1,
+                           record_info(fields, project)),
     {ok, Ps} = db:get_all(project),
     [ ?MODULE:update(upgrade(P)) || P <- Ps ].
+
+upgrade({project, Xid, Xserver, Xname, _Xlocal, Xremote, Xbuild, Xparams, Xnotifications}) ->
+    #project{id = Xid, server = Xserver, name = Xname, remote = Xremote,
+             build = Xbuild, params = Xparams, notifications = Xnotifications};
 
 upgrade(#project{params = Params, notifications = Notifications} = P) ->
     Params2 = binarize(Params),
@@ -243,8 +253,6 @@ from_plist0(P, [{<<"id">>, V}|R]) ->
     from_plist0(P#project{id = kha_utils:convert(V, int)}, R);
 from_plist0(P, [{<<"name">>, V}|R]) ->
     from_plist0(P#project{name = kha_utils:convert(V, bin)}, R);
-from_plist0(P, [{<<"local">>, V}|R]) ->
-    from_plist0(P#project{local = kha_utils:convert(V, bin)}, R);
 from_plist0(P, [{<<"remote">>, V}|R]) ->
     from_plist0(P#project{remote = kha_utils:convert(V, bin)}, R);
 from_plist0(P, [{<<"build">>, V}|R]) ->
@@ -256,14 +264,12 @@ from_plist0(P, [{<<"notifications">>, _V}|R]) ->
 
 to_plist(#project{id            = Id,
                   name          = Name,
-                  local         = Local,
                   remote        = Remote,
                   build         = Build,
                   params        = Params,
                   notifications = Notification}) ->
     annotate([{<<"id">>, Id},
               {<<"name">>, kha_utils:convert(Name, bin)},
-              {<<"local">>, kha_utils:convert(Local, bin)},
               {<<"remote">>, kha_utils:convert(Remote, bin)},
               {<<"build">>, kha_utils:list_convert(Build, bin)},
               {<<"params">>, kha_utils:binarize(Params)},
