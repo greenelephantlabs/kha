@@ -21,7 +21,9 @@
          delete/1,
          delete/2,
 
-         update/1]).
+         update/1,
+
+         upgrade/0, upgrade/1]).
 
 create(ProjectId, Build) ->
     {ok, Response} = db:transaction(fun() -> do_create(ProjectId, Build) end),
@@ -103,3 +105,19 @@ delete(ProjectId, BuildId) ->
 
 update(Build) ->
     db:add_record(Build).
+
+
+
+upgrade() ->
+    {ok, Ps} = db:get_all(build),
+    [ ?MODULE:update(upgrade(P)) || P <- Ps ].
+
+upgrade({build,
+         Xkey, Xid, Xproject, Xtitle, Xbranch, Xrevision,
+         Xauthor, Xstart, Xstop, Xstatus, Xexit, Xoutput, Xtags}) ->
+    #build{key = Xkey, id = Xid, project = Xproject, title = Xtitle,
+           branch = Xbranch, revision = Xrevision,
+           author = Xauthor, start = Xstart, stop = Xstop, status = Xstatus, exit = Xexit,
+           output = Xoutput, tags = Xtags, dir = <<"/tmp/">>};
+upgrade(#build{} = B) ->
+    B.
