@@ -24,30 +24,39 @@ fetch(Project, Build) ->
 
 fetch0(Project, Build) ->
     Rev = kha_build:get_rev(Build),
-    Remote = kha_utils:convert(Project#project.remote, str),
+    Remote0 = kha_utils:convert(Project#project.remote, str),
+    Remote = case re:run(Remote0, "://") of
+                 {match, _} -> Remote0;
+                 nomatch -> "http://"++re:replace(Remote0, ":", "/", [{return,list}])
+             end,
     Uri = uri:from_string(Remote),
-    ["/", User, Repo0| _] = filename:split(uri:path(Uri)),
-    Repo = filename:basename(Repo0, ".git"),
-    ConfigUrl = uri:new(uri:scheme(Uri),
-                        "", % userinfo
-                        "raw.github.com",
-                        "", % port
-                        filename:join(["/", User,Repo,Rev,".travis.yml"]),
-                        "", % query
-                        "" % frag
-                       ),
-    case httpc:request(uri:to_string(ConfigUrl)) of
-        {ok, {{_, 200, _}, _Headers, Data}} ->
-            try yamerl:decode(Data, [str_node_as_binary]) of
-                T -> {ok, T}
-            catch
-                ET:ER ->
-                    {error, {ET, ER}}
+    case string:to_lower(uri:host(Uri)) of
+        "github.com" ->
+            ["/", User, Repo0| _] = filename:split(uri:path(Uri)),
+            Repo = filename:basename(Repo0, ".git"),
+            ConfigUrl = uri:new(uri:scheme(Uri),
+                                "", % userinfo
+                                "raw.github.com",
+                                "", % port
+                                filename:join(["/", User,Repo,Rev,".travis.yml"]),
+                                "", % query
+                                "" % frag
+                               ),
+            case httpc:request(uri:to_string(ConfigUrl)) of
+                {ok, {{_, 200, _}, _Headers, Data}} ->
+                    try yamerl:decode(Data, [str_node_as_binary]) of
+                        T -> {ok, T}
+                    catch
+                        ET:ER ->
+                            {error, {ET, ER}}
+                    end;
+                {ok, {{_, 404, _}, _Headers, _Data}} ->
+                    {error, nofile};
+                {ok, {ErrorCode, _Headers, _Data}} ->
+                    {error, {http, ErrorCode}};
+                {error, E} ->
+                    {error, E}
             end;
-        {ok, {{_, 404, _}, _Headers, _Data}} ->
-            {error, nofile};
-        {ok, {ErrorCode, _Headers, _Data}} ->
-            {error, {http, ErrorCode}};
-        {error, E} ->
-            {error, E}
+        _ ->
+            {error, not_github}
     end.
