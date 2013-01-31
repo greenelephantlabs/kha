@@ -69,7 +69,7 @@ v0.8
 * build sandboxing using lxc [DONE]
 
 v0.9
-* support for multiple Erlang versions via kerl
+* support for multiple Erlang versions via kerl [DONE]
 * remote builders
 
 v1.0
