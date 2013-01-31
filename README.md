@@ -35,6 +35,20 @@ Kha supports sandboxing via "lxc" containers. Tested on Ubuntu
 12.10. Requires a kernel at least 3.5.0-21. For "lxc" to work, Kha has
 to be run under a user with password-less sudo permissions.
 
+It is configured by changing `support/kha.config` file:
+```
+[{kha, [{host, "example.com"},
+        {xmpp_backend, ["kha@example.com", "jabber.example.com", "password"]},
+        {container, lxc},
+        {container_name, "cibase"},
+        {container_opts, [{ephemeral, true},
+                          {username, "ubuntu"}]}
+ ]}].
+```
+
+User specified in username in container_ops should have password-less
+sudo access for commands like `sudo apt-get install -y package` to work.
+
 Road map
 ========
 
