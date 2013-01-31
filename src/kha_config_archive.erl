@@ -9,10 +9,10 @@ check(_P) ->
     true.
 
 fetch(Project, Build) ->
-    Remote = Project#project.remote,
     Rev = kha_build:get_rev(Build),
-    Dir = kha_utils:mktemp_dir("config."),
+    {ok, Dir} = kha_utils:mktemp_dir("config."),
     Cfg = filename:join([Dir, ".travis.yml"]),
+    Remote = Project#project.remote,
     Res = case kha_utils:sh("git archive --remote=\"~s\" ~s \".travis.yml\" | tar xvf -C ~s -", [Remote, Rev, Dir], []) of
               {ok, _} ->
                   case filelib:is_file(Cfg) of
