@@ -326,10 +326,10 @@ fetch_step(Param, Config) ->
     case proplists:get_value(Param, Config, []) of
         [] ->
             [];
-        [L|_] = X when is_list(L) ->
-            lists:map(fun iolist_to_binary/1, X);
-        L when is_list(L) ->
-            [iolist_to_binary(L)]
+        [B|_] = L when is_binary(B) ->
+            L;
+        B when is_binary(B) ->
+            [B]
     end.
 
 create_clone_steps(P, Build) ->
