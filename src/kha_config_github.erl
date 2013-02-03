@@ -24,12 +24,21 @@ fetch(Project, Build) ->
 
 fetch0(Project, Build) ->
     Rev = kha_build:get_rev(Build),
+    PParams = Project#project.params,
+    GithubLogin = proplists:get_value(<<"github_login">>, PParams),
+    GithubToken = proplists:get_value(<<"github_token">>, PParams),
     Remote0 = kha_utils:convert(Project#project.remote, str),
     Remote = case re:run(Remote0, "://") of
                  {match, _} -> Remote0;
                  nomatch -> "http://"++re:replace(Remote0, ":", "/", [{return,list}])
              end,
     Uri = uri:from_string(Remote),
+    Query = case {GithubLogin, GithubToken} of
+                {undefined, _} -> "";
+                {_, undefined} -> "";
+                _ ->
+                    io_lib:format("login=~s&token=~s", [GithubLogin, GithubToken])
+            end,
     case string:to_lower(uri:host(Uri)) of
         "github.com" ->
             ["/", User, Repo0| _] = filename:split(uri:path(Uri)),
@@ -39,7 +48,7 @@ fetch0(Project, Build) ->
                                 "raw.github.com",
                                 "", % port
                                 filename:join(["/", User,Repo,Rev,".travis.yml"]),
-                                "", % query
+                                Query, % query
                                 "" % frag
                                ),
             case httpc:request(uri:to_string(ConfigUrl)) of
