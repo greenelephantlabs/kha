@@ -18,7 +18,8 @@
 
 -export([add_to_queue/1,
          add_to_queue/2,
-         process/0]).
+         process/0,
+         abort/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -52,6 +53,9 @@ add_to_queue(ProjectId, BuildId) ->
 
 process() ->
     gen_server:cast(?SERVER, process).
+
+abort() ->
+    gen_server:call(?SERVER, abort).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -98,6 +102,12 @@ handle_call({add_to_queue, ProjectId, BuildId}, _From,
         _ -> do_nothing
     end,
     {reply, ok, NewState};
+
+handle_call(abort, _From, #state{busy = {Pid, _}} = S) ->
+    catch exit(Pid, kill),
+    {reply, true, S};
+handle_call(abort, _From, #state{} = S) ->
+    {reply, false, S};
 
 handle_call(_Request, _From, State) ->
     Reply = ok,
