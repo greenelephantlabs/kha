@@ -90,6 +90,7 @@ v0.9
 v1.0
 * realtime data push
 * stable release
+* UI for user profile
 
 v1.1
 * remote builders
