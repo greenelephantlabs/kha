@@ -64,7 +64,7 @@ set_param(Id, Param0, Value) ->
     Param = kha_utils:convert(Param0, bin),
     {ok, #project{params = Params} = P} = ?MODULE:get(Id),
     Params2 = lists:keystore(Param, 1, Params, {Param, Value}),
-    update(P#project{params = Params2}).
+    update(P#project{params = [ {K, V} || {K, V} <- Params2, V /= undefined ]}).
 
 set_build(Id, Build0) ->
     Build = kha_utils:convert(Build0, bin),
