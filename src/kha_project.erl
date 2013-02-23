@@ -16,7 +16,7 @@
 
 -export([create/1,
          get/1,
-         update/1, set_param/3,
+         update/1, set_param/3, set_build/2,
 
          to_plist/1, from_plist/1,
 
@@ -65,6 +65,12 @@ set_param(Id, Param0, Value) ->
     {ok, #project{params = Params} = P} = ?MODULE:get(Id),
     Params2 = lists:keystore(Param, 1, Params, {Param, Value}),
     update(P#project{params = Params2}).
+
+set_build(Id, Build0) ->
+    Build = kha_utils:convert(Build0, bin),
+    {ok, #project{} = P} = ?MODULE:get(Id),
+    update(P#project{build = Build}).
+
 
 update(Project) ->
     validate(Project),
