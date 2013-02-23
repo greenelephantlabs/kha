@@ -85,7 +85,7 @@ v0.8
 v0.9
 * support for multiple Erlang versions via kerl [DONE]
 * GitHub webhook support [DONE]
-* add support for per-repo ssh keys
+* support GitHub basic OAuth authorization
 
 v1.0
 * realtime data push
@@ -95,6 +95,7 @@ v1.0
 v1.1
 * remote builders
 * branch list page
+* add support for per-repo ssh keys
 
 v1.2
 * complex notification options

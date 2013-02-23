@@ -69,7 +69,7 @@ set_param(Id, Param0, Value) ->
 set_build(Id, Build0) ->
     Build = kha_utils:convert(Build0, bin),
     {ok, #project{} = P} = ?MODULE:get(Id),
-    update(P#project{build = Build}).
+    update(P#project{build = [Build]}).
 
 
 update(Project) ->
