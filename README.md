@@ -1,7 +1,7 @@
 kha
 ===
 
-Lightweight Erlang continious integration server.
+Lightweight Erlang continuous integration server.
 
 Goals:
 
