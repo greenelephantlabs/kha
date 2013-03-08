@@ -1,6 +1,8 @@
 kha installation
 ================
 
+Note, you need an Erlang installation with HiPE support enabled.
+
 Minimal installation:
 
 * cp support/kha.config.example support/kha.config
