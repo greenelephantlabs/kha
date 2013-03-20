@@ -1,8 +1,10 @@
 {application, kha,
  [
+  {id, "Kha"},
   {description, ""},
   {vsn, "0.5.02"},
-  {registered, []},
+  {modules, []},
+  {registered, [kha]},
   {applications, [
                   kernel,
                   stdlib,
