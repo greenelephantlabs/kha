@@ -2,6 +2,11 @@
   padding-bottom: 20px;
 }
 
+#home {
+  text-decoration: none;
+  color: black;
+}
+
 body {
   margin-top: 15px;
 }
