@@ -11,6 +11,7 @@
 -include("kha.hrl").
 
 -export([start/0,
+         start/1,
          init/0
         ]).
 
@@ -43,9 +44,15 @@
 
 %% API
 
-start() ->
+start(no_wait) ->
     ?LOG("Starting mnesia", []),
     ok = mnesia:start().
+
+start() ->
+    ?LOG("Starting mnesia", []),
+    ok = mnesia:start(),
+    wait_until_ready(),
+    ok.
 
 init() ->
     ?LOG("Init mnesia", []),
@@ -56,13 +63,25 @@ init() ->
         {error, Reason} ->
             ?LOG("Error: ~p", [Reason]);
         ok ->
-            start(),
+            start(no_wait),
             init_sequences(),
             init_schema(),
             kha_project:create_fake()
     end.
 
 %%% internal
+
+wait_until_ready() ->
+    F = fun() -> mnesia:first(id_seq) end,
+    case mnesia:transaction(F) of
+        {aborted, _R} ->
+            timer:sleep(1000),
+            ?LOG("Wait for mnesia...", []),
+            wait_until_ready();
+        _ ->
+            ?LOG("Mnesia is ready!", []),
+            ok
+    end.
 
 init_sequences() ->
     add_record(#id_seq{whose = project}).
