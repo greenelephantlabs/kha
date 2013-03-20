@@ -7,6 +7,9 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 
+-include_lib("kha/include/common.hrl").
+-include("kha.hrl").
+
 %% ===================================================================
 %% Application callbacks
 %% ===================================================================
@@ -24,7 +27,7 @@ start() ->
     ok = application:start(mimetypes, permanent),
     ok = application:start(kha, permanent).
 
-start(_Type, _Args) ->       
+start(_Type, _Args) ->
     case validate_env(kha) of
         ok ->
             configure_cowboy(),
@@ -41,28 +44,34 @@ validate_env(kha) ->
         X when X =:= undefined ->
             io:fwrite("Error! Application env 'host' is not defined.~n", []),
             {error, env_variable__host__is_undefined};
-        _X -> 
+        _X ->
             ok
     end.
 
-configure_cowboy() ->    
+configure_cowboy() ->
     Dispatch = [
                 {'_', [
-                       %% PROJECT
-                       {[<<"user">>, '_'], kha_user_handler, []},
+                       %% USER
+                       {"/user/[:user_id]", kha_user_handler, []},
 
-                       {[<<"project">>], kha_project_handler, []},
-                       {[<<"project">>, '_'], kha_project_handler, []},
+                       %% PROJECT
+                       {"/project",                kha_project_handler, []},
+                       {"/project/[:project_id]",  kha_project_handler, []},
 
                        %% BUILD
-                       {[<<"project">>, '_', <<"build">>], kha_build_handler, []},
-                       {[<<"project">>, '_', <<"build">>, '_'], kha_build_handler, []},
+                       {"/project/[:project_id]/build",              kha_build_handler, []},
+                       {"/project/[:project_id]/build/[:build_id]",  kha_build_handler, []},
 
                        %% HOOKS
-                       {[<<"hooks">>, '_', '_'], kha_hooks_handler, []},
+                       {"/hooks/[:type]/[:project_id]", kha_hooks_handler, []},
 
                        %% DEFAULT
-                       {'_', default_handler, []}
+                       {"/[...]", cowboy_static, [{directory, {priv_dir, kha, <<"www">>}},
+                                                  {mimetypes, {fun mimetypes:path_to_mimes/2, default}}
+                                                 ]}
                       ]}
                ],
-    cowboy:start_http(kha_http_listener, 10, [{port, 8093}], [{dispatch, Dispatch}]).
+    cowboy:start_http(kha_http_listener, 10, [{port, 8093}],
+                      [{env, [{dispatch, cowboy_router:compile(Dispatch)}]}
+                      ]),
+    ?LOG("Finish configure cowboy...", []).

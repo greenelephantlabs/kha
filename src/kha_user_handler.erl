@@ -2,7 +2,7 @@
 -behaviour(cowboy_http_handler).
 -export([init/3,
          handle/2,
-         terminate/2]).
+         terminate/3]).
 
 
 init({_Any, http}, Req, []) ->
@@ -19,7 +19,7 @@ handle(Req0, State) ->
                                   jsx:to_json(ResponseData), Req4),
     {ok, Req5, State}.
 
-terminate(_Req, _State) ->
+terminate(_,_,_) ->
     ok.
 
 do('POST', [<<"user">>, <<"logout">>], Req) ->
