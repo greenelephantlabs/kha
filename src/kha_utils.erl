@@ -43,12 +43,13 @@
          get_app_path/0,
          get_app_path/1]).
 
-record_field(acl) ->     record_info(fields, acl);
-record_field(session) -> record_info(fields, session);
-record_field(user) ->    record_info(fields, user);
-record_field(project) -> record_info(fields, project);
-record_field(build) ->   record_info(fields, build);
-record_field(id_seq) ->  record_info(fields, id_seq).
+record_field(acl) ->      record_info(fields, acl);
+record_field(session) ->  record_info(fields, session);
+record_field(user) ->     record_info(fields, user);
+record_field(project) ->  record_info(fields, project);
+record_field(build) ->    record_info(fields, build);
+record_field(id_seq) ->   record_info(fields, id_seq);
+record_field(revision) ->  record_info(fields, revision).
 
 binarize(L) when is_list(L) ->
     [ {convert(K, bin), V} || {K, V} <- L ].

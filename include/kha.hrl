@@ -43,5 +43,10 @@
          id = 10000         :: integer()
         }).
 
+-record(revision,
+        {key                :: {b_string(), b_string}, %% {remote, branch}
+         rev                :: b_string()
+        }
+       ).
 %%FIXME: PF: A temporary solution -> should by replace by alog or lager
 -define(LOG(X,Y), io:fwrite("[~p] log [~p:~b]: "++ X ++ "~n", [calendar:local_time(), ?MODULE, ?LINE] ++ Y)).

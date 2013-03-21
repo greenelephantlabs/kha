@@ -123,28 +123,41 @@ handle_info({mnesia_table_event, {delete, project, #project{id = Id}, _Old, _Act
 handle_info({mnesia_table_event, _}, #state{} = State) ->
     {noreply, State};
 
-handle_info({timeout, Timer, poll}, #state{id = Id,
+handle_info({timeout, Timer, poll}, #state{id      = Id,
                                            polling = Timer} = State) ->
     ?LOG("starting poll for ~p", [Id]),
-    {ok, #project{remote = Remote}} = ?MODULE:get(Id),
-    Refs = git:refs(Remote),
-    %% ?LOG("remote branches: ~p~n", [Refs]),
-    [ begin
-          case kha_build:get_by_revision(Cid) of
-              {ok, []} ->
-                  {ok, _Build} = kha_build:create_and_add_to_queue(Id, "Polling", Name,
-                                                                   Cid, "polling", []),
-                  ?LOG("revision ~s added to queue as ~p", [Cid, _Build#build.key]);
-              {ok, _L} ->
-                  %% ?LOG("revision ~s was build ~b times", [Cid, length(_L)]),
-                  ok
-          end
-      end || {Name, Type, Cid} <- Refs, Type /= 'HEAD' ],
-
+    {ok, #project{remote = Remote, params = Params}} = ?MODULE:get(Id),
+    polling(Id, Remote, project),
+    Deps = proplists:get_value(<<"deps">>, Params, []),
+    [polling(Id, D, deps) || D <- Deps],
     {noreply, State#state{polling = erlang:start_timer(?POLL_TIME, self(), poll)}};
 
 handle_info(Info, State) ->
     {stop, {unknown_info, Info}, State}.
+
+polling(Id, CheckRemote, RemoteType) ->
+    Refs = git:refs(CheckRemote),
+    [ begin
+          case kha_build:check_by_revision(Cid) of
+              false ->
+                  case RemoteType of
+                      deps ->
+                          %% Title = io_lib:format("Handle for ~s", []
+                          {ok, _Build} = kha_build:create_and_add_to_queue(Id, "polling (handle)",
+                                                                           'origin/HEAD', "",
+                                                                           "polling", []),
+                          ?LOG("revision ~p added to queue as ~p", ['origin/HEAD', _Build#build.key]);
+                      project ->
+                          {ok, _Build} = kha_build:create_and_add_to_queue(Id, "polling",
+                                                                           Name, Cid,
+                                                                           "polling", []),
+                          ?LOG("revision ~s added to queue as ~p", [Cid, _Build#build.key])
+                  end,
+                  kha_build:update_revision(CheckRemote, Name, Cid);
+              true -> ok
+          end
+      end || {Name, Type, Cid} <- Refs, Type /= 'HEAD' ].
+
 
 terminate(_Reason, #state{}) ->
     ok.

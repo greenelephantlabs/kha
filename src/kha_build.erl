@@ -18,10 +18,13 @@
 
          get_rev/1,
 
+         check_by_revision/1,
+
          delete/1,
          delete/2,
 
          update/1,
+         update_revision/3,
 
          upgrade/0, upgrade/1]).
 
@@ -97,16 +100,24 @@ get(ProjectId, BuildId) ->
 do_get(ProjectId, BuildId) ->
     db:get_record(build, {ProjectId, BuildId}).
 
+%% return false if revision is new (never built)
+check_by_revision(Revision) ->
+    case db:get_record_by_index(revision, Revision, #revision.rev) of
+        {ok, []} -> false;
+        {ok, _}  -> true
+    end.
+
 delete(#build{} = Build) ->
     db:remove_object(Build).
 
 delete(ProjectId, BuildId) ->
     db:remove_record(build, {ProjectId, BuildId}).
 
+update_revision(Remote, BranchName, Rev) ->
+    db:add_record(#revision{key = {Remote, BranchName},
+                            rev = Rev}).
 update(Build) ->
     db:add_record(Build).
-
-
 
 upgrade() ->
     mnesia:transform_table(build, fun upgrade/1, record_info(fields, build)),
