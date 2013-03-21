@@ -2,7 +2,7 @@
  [
   {id, "Kha"},
   {description, ""},
-  {vsn, "0.5.02"},
+  {vsn, "0.8.5"},
   {modules, []},
   {registered, [kha]},
   {applications, [
