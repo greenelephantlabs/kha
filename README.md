@@ -73,7 +73,7 @@ v0.6 DONE
 * user authentication
 
 v0.7 DONE
-* Build list paging 
+* Build list paging
 * email notifications
 * Jabber/XMPP notifications
 
@@ -85,9 +85,13 @@ v0.8
 v0.9
 * support for multiple Erlang versions via kerl [DONE]
 * GitHub webhook support [DONE]
+* simple tracking depending in the project
+* change project ID from integer to {user, project} (see '0.9 new ID')
 * support GitHub basic OAuth authorization
 
 v1.0
+* implement pubsub
+* non-duplicate process for equal (identical) depending
 * realtime data push
 * stable release
 * UI for user profile
@@ -111,6 +115,26 @@ v2.0
 * use user/project convention
 * Support foreign architectures using Vagrant/KVM
 
+v0.9 new ID
+==================
+My suggestion:
+
+Project ID:
+* erlang: {user_name, project_name}
+* REST API:
+  * get all project: GET /user
+  * get project:     GET /user/project
+  * add new project: POST /user
+  * update project:  POST /user/project
+
+Build ID:
+* erlang: {project_id, integer}
+* REST API:
+  * get all builds: GET /user/project/build
+  * get build:      GET /user/project/build/id
+  * delete build:   DELETE /user/project/build/id
+  * run build:      POST /user/project/build
+  * rerun build:    POST /user/project/build/id
 
 v1.0 architecture
 ==================
