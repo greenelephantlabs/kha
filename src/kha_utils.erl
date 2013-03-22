@@ -35,6 +35,7 @@
          mktemp_dir/0, mktemp_dir/1, mktemp_dir/2]).
 
 -export([record_field/1,
+         record_to_list/1,
 
          build_to_plist/1,
          notification_to_plist/1,
@@ -50,6 +51,11 @@ record_field(project) ->  record_info(fields, project);
 record_field(build) ->    record_info(fields, build);
 record_field(id_seq) ->   record_info(fields, id_seq);
 record_field(revision) ->  record_info(fields, revision).
+
+record_to_list(Record) ->
+    [RecordName | RecordData] = tuple_to_list(Record),
+    Fields = ?MODULE:record_field(RecordName),
+    lists:zip(Fields, RecordData).
 
 binarize(L) when is_list(L) ->
     [ {convert(K, bin), V} || {K, V} <- L ].

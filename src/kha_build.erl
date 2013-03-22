@@ -25,6 +25,7 @@
 
          update/1,
          update_revision/3,
+         update_revision/1,
 
          upgrade/0, upgrade/1]).
 
@@ -112,6 +113,15 @@ delete(#build{} = Build) ->
 
 delete(ProjectId, BuildId) ->
     db:remove_record(build, {ProjectId, BuildId}).
+
+update_revision(Remotes) when is_list(Remotes) ->
+    do_update_revision(Remotes).
+do_update_revision([]) -> ok;
+do_update_revision([X | R]) ->
+    ?LOG("Update revision for ~s", [X]),
+    Refs = git:refs(X),
+    [update_revision(X, Name, Rev) || {Name, Type, Rev} <- Refs, Type /= 'HEAD' ],
+    do_update_revision(R).
 
 update_revision(Remote, BranchName, Rev) ->
     db:add_record(#revision{key = {Remote, BranchName},

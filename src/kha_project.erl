@@ -16,9 +16,9 @@
 
 -export([create/1,
          get/1,
-         update/1, set_param/3, set_build/2,
+         update/1, update/2, set_param/3, set_build/2,
 
-         to_plist/1, from_plist/1,
+         to_plist/1, from_plist/1, diff/2,
 
          create_from_plist/1, update_from_plist/2]).
 
@@ -48,6 +48,7 @@ do_create(Project) ->
     ProjectId = db:get_next_id(project),
     R = Project#project{id = ProjectId},
     ok = db:add_record(R),
+    ?MODULE:diff(#project{id = ProjectId}, R),
     {ok, R}.
 
 get(all) ->
@@ -71,16 +72,24 @@ set_build(Id, Build0) ->
     {ok, #project{} = P} = ?MODULE:get(Id),
     update(P#project{build = [Build]}).
 
-
 update(Project) ->
+    update(Project, true).
+update(Project, Diff) ->
     validate(Project),
-    db:add_record(Project).
+    case Diff of
+        true ->
+            {ok, #project{} = Old} = ?MODULE:get(Project#project.id),
+            Response = db:add_record(Project),
+            ?MODULE:diff(Old, Project),
+            Response;
+        false -> db:add_record(Project)
+    end.
 
 %% =============================================================================
 %% gen_server code
 %% =============================================================================
 
--define(POLL_TIME, 60000).
+-define(POLL_TIME, 10000).
 
 -record(state, {id,
                 polling = undefined
@@ -131,6 +140,17 @@ handle_info({timeout, Timer, poll}, #state{id      = Id,
     Deps = proplists:get_value(<<"deps">>, Params, []),
     [polling(Id, D, deps) || D <- Deps],
     {noreply, State#state{polling = erlang:start_timer(?POLL_TIME, self(), poll)}};
+
+handle_info({update_revision, project}, #state{id = Id} = State) ->
+    {ok, P} = ?MODULE:get(Id),
+    kha_build:update_revision([P#project.remote]),
+    {noreply, State};
+
+handle_info({update_revision, deps}, #state{id = Id} = State) ->
+    {ok, P} = ?MODULE:get(Id),
+    Deps = proplists:get_value(<<"deps">>, P#project.params, []),
+    kha_build:update_revision(Deps),
+    {noreply, State};
 
 handle_info(Info, State) ->
     {stop, {unknown_info, Info}, State}.
@@ -251,6 +271,22 @@ set_private(#project{id = Id}, Private) ->
            end,
     acl:define(not_logged, {project, Id}, [read, write], Resp).
 
+diff(O, N) ->
+    %% Old record to lists
+    Old = kha_utils:record_to_list(O),
+    New = kha_utils:record_to_list(N),
+    Pid = N#project.server,
+    diff0(Old, New, Pid).
+
+diff0([], _, _) -> ok;
+diff0([{K, V} | R], New, Pid) ->
+    NewValue = proplists:get_value(K, New),
+    case V =:= NewValue of
+        true  -> ok;
+        false -> changes_hook(K, V, NewValue, Pid)
+    end,
+    diff0(R, New, Pid).
+
 create_from_plist(L) ->
     P = from_plist(L),
     Private = proplists:get_value(<<"private">>, L, false),
@@ -300,3 +336,41 @@ annotate(P) when is_list(P) ->
     Private = acl:read(not_logged, {project, PId}, write) == deny orelse
         acl:read(not_logged, {project, PId}, read) == deny,
     lists:keystore(<<"private">>, 1, P, {<<"private">>, Private}).
+
+
+%% PROJECT CHANGES HOOKS
+changes_hook(id,            _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(server,        _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(name,          _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(remote,        _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(build,         _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(notification,  _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(params, OldValue, NewValue, Pid) ->
+    check_changes_deps(OldValue, NewValue, Pid),
+    check_polling(OldValue, NewValue, Pid).
+
+check_changes_deps(Old, New, Pid) ->
+    OldDeps = proplists:get_value(<<"deps">>, Old, []),
+    NewDeps = proplists:get_value(<<"deps">>, New, []),
+    case OldDeps =:= NewDeps of
+        true  -> ok;
+        false ->
+            case erlang:is_pid(Pid) of
+                true  -> Pid ! {update_revision, deps};
+                false -> ok
+            end
+    end.
+
+check_polling(Old, New, Pid) ->
+    OldPolling0 = proplists:get_value(<<"polling">>, Old, false),
+    OldPolling  = kha_utils:convert(OldPolling0, bool),
+    NewPolling0 = proplists:get_value(<<"polling">>, New, false),
+    NewPolling  = kha_utils:convert(NewPolling0, bool),
+    case NewPolling =:= (OldPolling =:= NewPolling) of
+        true  -> ok;
+        false ->
+            case erlang:is_pid(Pid) of
+                true  -> Pid ! {update_revision, project};
+                false -> ok
+            end
+    end.
