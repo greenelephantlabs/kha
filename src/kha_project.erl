@@ -271,12 +271,12 @@ set_private(#project{id = Id}, Private) ->
            end,
     acl:define(not_logged, {project, Id}, [read, write], Resp).
 
-diff(O, N) ->
+diff(O, N) -> %%GP: bad name. diff/2 should just return the diff. If you want to do something based on this diff, this name is incorrect
     %% Old record to lists
     Old = kha_utils:record_to_list(O),
     New = kha_utils:record_to_list(N),
     Pid = N#project.server,
-    diff0(Old, New, Pid).
+    diff0(Old, New, Pid). %%GP: it's probably easier to pass whole #project as third parameter
 
 diff0([], _, _) -> ok;
 diff0([{K, V} | R], New, Pid) ->
@@ -289,13 +289,13 @@ diff0([{K, V} | R], New, Pid) ->
 
 create_from_plist(L) ->
     P = from_plist(L),
-    Private = proplists:get_value(<<"private">>, L, false),
+    Private = proplists:get_value(<<"private">>, L, false), %%GP: handling of private should be moved into changes_hook
     set_private(P, Private),
     ?MODULE:create(P).
 
 update_from_plist(P, L) ->
     P2 = from_plist0(P, L),
-    Private = proplists:get_value(<<"private">>, L, false),
+    Private = proplists:get_value(<<"private">>, L, false), %%GP: handling of private should be moved into changes_hook
     set_private(P, Private),
     ?MODULE:update(P2),
     P2.
@@ -370,7 +370,7 @@ check_polling(Old, New, Pid) ->
         true  -> ok;
         false ->
             case erlang:is_pid(Pid) of
-                true  -> Pid ! {update_revision, project};
+                true  -> Pid ! {update_revision, project}; %%GP: it's bad to send messages directly. Introduce an API for that
                 false -> ok
             end
     end.

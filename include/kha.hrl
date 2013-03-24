@@ -43,7 +43,7 @@
          id = 10000         :: integer()
         }).
 
--record(revision,
+-record(revision, %%GP: this name does not say much. What's the purpose of this table?
         {key                :: {b_string(), b_string}, %% {remote, branch}
          rev                :: b_string()
         }
