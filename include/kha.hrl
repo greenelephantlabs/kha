@@ -49,4 +49,9 @@
         }
        ).
 %%FIXME: PF: A temporary solution -> should by replace by alog or lager
--define(LOG(X,Y), io:fwrite("[~p] log [~p:~b]: "++ X ++ "~n", [calendar:local_time(), ?MODULE, ?LINE] ++ Y)).
+-define(LOG(X,Y), case application:get_env(debug) of
+                      undefined   -> ok;
+                      {ok, false} -> ok;
+                      {ok, _} -> io:fwrite("[~p] log [~p:~b]: "++ X ++ "~n",
+                                               [calendar:local_time(), ?MODULE, ?LINE] ++ Y)
+                  end).

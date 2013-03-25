@@ -26,7 +26,8 @@
          clean_filename/1,
 
          now_to_nice/1,
-         now_sum/2
+         now_sum/2,
+         debug/1
         ]).
 
 -export([sh_stream/4,
@@ -262,3 +263,8 @@ now_sum({A0, B0, C0}, T0) ->
     CB = trunc((B0 + CC) / M),
     A = (A0 + CB) rem M,
     {A, B, C}.
+
+debug(true) ->
+    application:set_env(kha, debug, true);
+debug(false) ->
+    application:set_env(kha, debug, false).

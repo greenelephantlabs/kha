@@ -127,7 +127,7 @@ handle_cast(process, #state{queue = Queue} = S) ->
         {empty, _} ->
             {noreply, S#state{busy = false}};
         {{value, Job}, NewQueue} ->
-            ContData = fetch_container_data(),
+            ContData = fetch_container_data(Job),
             Pid = proc_lib:spawn(fun() ->
                                          do_process(Job, ContData)
                                  end),
@@ -200,17 +200,31 @@ code_change(_OldVsn, State, _Extra) ->
 build_timeout(Pid, _ProjectId, _BuildId) ->
     exit(Pid, timeout).
 
-fetch_container_data() ->
-    case application:get_env(container) of
+
+fetch_container_data({ProjectId, _BuildId}) ->
+    {ok, Project} = kha_project:get(ProjectId),
+    Params  = Project#project.params,
+    ContType = case proplists:get_value(<<"container">>, Params) of
+                   undefined -> application:get_env(container);
+                   ContType0 -> {ok, ContType0}
+               end,
+    case ContType of
         undefined ->
             {dummy, "dummy", []};
-        {ok, ContType} ->
-            {ok, Name} = application:get_env(container_name),
-            Opts = case application:get_env(container_opts) of
-                       {ok, O} -> O;
-                       undefined -> []
-                   end,
-            {ContType, Name, Opts}
+        {ok, ContType1} ->
+            {ok, ContName} = case proplists:get_value(<<"container_name">>, Params) of
+                                 undefined -> application:get_env(container_name);
+                                 ContName0 -> {ok, ContName0}
+                             end,
+            {ok, ContOpts} = case proplists:get_value(<<"container_opts">>, Params) of
+                                 undefined ->
+                                     case application:get_env(container_opts) of
+                                         {ok, O} -> {ok, O};
+                                         undefined  -> {ok, []}
+                                     end;
+                                 ContOpts0 -> {ok, ContOpts0}
+                             end,
+            {ContType1, ContName, ContOpts}
     end.
 
 container_start({Module, Name, Opts}) ->
