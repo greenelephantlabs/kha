@@ -205,7 +205,7 @@ fetch_container_data({ProjectId, _BuildId}) ->
     {ok, Project} = kha_project:get(ProjectId),
     Params  = Project#project.params,
     ContType = case proplists:get_value(<<"container">>, Params) of
-                   undefined -> application:get_env(container);
+                   undefined -> application:get_env(kha, container);
                    ContType0 -> {ok, ContType0}
                end,
     case ContType of
@@ -213,12 +213,12 @@ fetch_container_data({ProjectId, _BuildId}) ->
             {dummy, "dummy", []};
         {ok, ContType1} ->
             {ok, ContName} = case proplists:get_value(<<"container_name">>, Params) of
-                                 undefined -> application:get_env(container_name);
+                                 undefined -> application:get_env(kha, container_name);
                                  ContName0 -> {ok, ContName0}
                              end,
             {ok, ContOpts} = case proplists:get_value(<<"container_opts">>, Params) of
                                  undefined ->
-                                     case application:get_env(container_opts) of
+                                     case application:get_env(kha, container_opts) of
                                          {ok, O} -> {ok, O};
                                          undefined  -> {ok, []}
                                      end;
