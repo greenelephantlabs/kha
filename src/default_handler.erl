@@ -2,8 +2,7 @@
 -behaviour(cowboy_http_handler).
 -export([init/3,
          handle/2,
-         terminate/2]).
-
+         terminate/3]).
 
 init({_Any, http}, Req, []) ->
     {ok, Req, undefined}.
@@ -29,7 +28,7 @@ handle(Req, State) ->
             {ok, Req1, State}
     end.
 
-terminate(_Req, _State) ->
+terminate(_,_,_) ->
     ok.
 
 get_priv_path(App) ->

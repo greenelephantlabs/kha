@@ -9,7 +9,7 @@
 -behaviour(cowboy_http_handler).
 -export([init/3,
          handle/2,
-         terminate/2]).
+         terminate/3]).
 
 -include_lib("kha/include/common.hrl").
 -include("kha.hrl").
@@ -64,7 +64,7 @@ do('POST', [PId], Req) ->
     Response = kha_project:to_plist(P2),
     {Response, 200, Req2}.
 
-terminate(_Req, _State) ->
+terminate(_,_,_) ->
     ok.
 
 cut_url(<<"/project">>) ->
