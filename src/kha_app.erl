@@ -66,7 +66,12 @@ configure_cowboy() ->
                        {"/hooks/[:type]/[:project_id]", kha_hooks_handler, []},
 
                        %% DEFAULT
-                       {"/[...]", cowboy_static, [{directory, {priv_dir, kha, <<"www">>}},
+                       {"/", cowboy_static, [{directory, {priv_dir, kha_app, <<"www">>}},
+                                             {mimetypes, {fun mimetypes:path_to_mimes/2, default}},
+                                             {file, <<"index.html">>}
+                                            ]},
+
+                       {"/[...]", cowboy_static, [{directory, {priv_dir, kha_app, <<"www">>}},
                                                   {mimetypes, {fun mimetypes:path_to_mimes/2, default}}
                                                  ]}
                       ]}
