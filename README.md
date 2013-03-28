@@ -87,18 +87,19 @@ v0.9
 * GitHub webhook support [DONE]
 * simple tracking depending in the project
 * change project ID from integer to {user, project} (see '0.9 new ID')
-* support GitHub basic OAuth authorization
 
 v1.0
+* implement global build queue page as a main page
 * implement pubsub
-* non-duplicate process for equal (identical) depending
+* non-duplicate process for equal (identical) depending using internal pubsub
 * realtime data push
 * stable release
-* UI for user profile
 
 v1.1
+* support GitHub basic OAuth authorization
 * remote builders
 * branch list page
+* UI for user profile
 * add support for per-repo ssh keys
 
 v1.2
