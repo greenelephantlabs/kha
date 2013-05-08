@@ -361,7 +361,13 @@ create_clone_steps(P, Build) ->
     Dir = Build#build.dir,
     Remote = kha_utils:convert(P#project.remote, str),
     Rev = kha_build:get_rev(Build),
-    [ {io_lib:format("[ -d \"~s\" ] || ~s", [Dir, git:clone_cmd(Remote, Dir, [])]), []},
+    GitCached0 = proplists:get_value(<<"git_cached">>, P#project.params, false),
+    GitCached  = kha_utils:convert(GitCached0, bool),
+    CloneCmd = case GitCached of
+                   true  -> git_utils:fformat("git-cached clone ~s \"~s\" \"~s\"", [[], Remote, Dir]);
+                   false -> git:clone_cmd(Remote, Dir, [])
+               end,
+    [ {io_lib:format("[ -d \"~s\" ] || ~s", [Dir, CloneCmd]), []},
       git:fetch_cmd(Dir),
       git:checkout_cmd(Dir, Rev, [force]) ].
 
