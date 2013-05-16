@@ -127,6 +127,11 @@
             <div class="builds" ng-controller="BuildCtrl" ng:show="tab == 'builds'">
               <input ng-model="branch"/><button class="btn" ng-click="run(branch)"><i class="icon-play"></i>Build!</button><br/>
               <table class="table table-condensed">
+                <tr style="background-color: #CCC;">
+                  <td ng-repeat="header in ['ID', 'Status', 'Branch', 'Title', 'Author', 'Create time', 'Start time', 'Stop time', 'Operations']">
+                    <label>{{header}}</label>
+                  </td>
+                </tr>
                 <tr ng-repeat="build in values(builds) | orderBy:predicate:true"
                     class="build-{{build.status}} build-row"
                     ng-click="showBuildDetails(build)">

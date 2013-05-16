@@ -23,7 +23,7 @@
 
 -record(build,
         {key                :: {project_id(), build_id()},
-         pid_ref            :: {pid(), reference()},
+         pid_ref            :: {pid(), reference()} | 'undefined',
          id                 :: build_id(),
          project            :: project_id(),
          title              :: b_string() | 'undefined',
