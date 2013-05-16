@@ -18,6 +18,7 @@
 
 -export([add_to_queue/1,
          add_to_queue/2,
+         stop_build/2,
          process/0,
          abort/0]).
 
@@ -50,6 +51,9 @@ add_to_queue(#build{project = Project, id = Id} = _Build) ->
     add_to_queue(Project, Id).
 add_to_queue(ProjectId, BuildId) ->
     gen_server:call(?SERVER, {add_to_queue, ProjectId, BuildId}).
+
+stop_build(ProjectId, BuildId) ->
+    gen_server:call(?SERVER, {stop_build, ProjectId, BuildId}).
 
 process() ->
     gen_server:cast(?SERVER, process).
@@ -102,6 +106,17 @@ handle_call({add_to_queue, ProjectId, BuildId}, _From,
         _ -> do_nothing
     end,
     {reply, ok, NewState};
+
+handle_call({stop_build, ProjectId, BuildId}, _From, State) ->
+    {ok, Build} = kha_build:get(ProjectId, BuildId),
+    case Build#build.pid_ref of
+        {PId, Ref} ->
+            Reason = <<"Forced stop (by user)">>,
+            PId ! {Ref, done, {error, {1, Reason}} };
+        _ -> %% build not run now
+            ok
+    end,
+    {reply, ok, State};
 
 handle_call(abort, _From, #state{busy = {Pid, _}} = S) ->
     catch exit(Pid, kill),
@@ -258,7 +273,8 @@ ensure_build_dir(P, Build) ->
 do_process({ProjectId, BuildId}, ContData) ->
     {ok, P} = kha_project:get(ProjectId),
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    Build = ensure_build_dir(P, Build0),
+    Build1 = ensure_build_dir(P, Build0),
+    Build  = Build1#build{start = now()},
     kha_build:update(Build),
     kha_hooks:run(on_building, Build),
 
@@ -397,11 +413,13 @@ process_step({Cmd, F}, B) ->
     B2 = build_append(io_lib:format("$ ~s~n", [Cmd]), B),
     Parent = self(),
     Ref = make_ref(),
+    B3 = B2#build{pid_ref = {Parent, Ref}},
+    kha_build:update(B3),
     proc_lib:spawn_link(fun() ->
                                 Res = F(Ref, Parent),
                                 Parent ! {Ref, done, Res}
                         end),
-    process_loop(Ref, Parent, Cmd, B2).
+    process_loop(Ref, Parent, Cmd, B3).
 
 process_loop(Ref, Parent, Cmd, Build) ->
     receive

@@ -10,7 +10,7 @@ angular.module('Kha', ['http-auth-interceptor', 'ngResource']).
         return r;
     }).
     factory('Build', function($resource){
-        var b = $resource('/project/:projectId/build/:id?limit=:limit&last=:last',
+        var b = $resource('/project/:projectId/build/:id?limit=:limit&last=:last&stop=:stop',
                           {projectId: '@project',
                            id: '@id',
                            limit: '@limit',
@@ -19,7 +19,11 @@ angular.module('Kha', ['http-auth-interceptor', 'ngResource']).
                                        params: {limit: 0},
                                        isArray:true},
                                do_rerun: {method: 'POST',
-                                          params: {id: ''}}
+                                          params: {id: ''}},
+                               stop:  {method: 'POST',
+                                       params: {stop: true,
+                                                last: ''}}
+
                            });
         b.rerun = function(build, $scope) {
             b.do_rerun({project: build.project,
@@ -192,6 +196,13 @@ function BuildCtrl($scope, $window, $timeout, Build, authService) {
         Build.rerun(build, $scope);
         $event.stopPropagation();
     }
+
+    $scope.stop = function(build, $event) {
+        console.log(build);
+        Build.stop({project: build.project, id: build.id});
+        $event.stopPropagation();
+    }
+
     $scope.delete = function(build, $event) {
         build.$delete(function() {
             delete $scope.builds[build.id];

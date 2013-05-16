@@ -36,12 +36,12 @@ create(ProjectId, Build) ->
 do_create(ProjectId, Build) ->
     BuildId = db:get_next_id({build, ProjectId}),
     R = Build#build{key = {ProjectId, BuildId},
-                    id = BuildId,
-                    project = ProjectId,
-                    start = now(),
-                    status = 'pending',
-                    exit = -1, %% FIXME: PF: Should by 'undefined'
-                    output = []},
+                    id          = BuildId,
+                    project     = ProjectId,
+                    create_time = now(),
+                    status      = 'pending',
+                    exit        = -1, %% FIXME: PF: Should by 'undefined'
+                    output      = []},
     ok = db:add_record(R),
     {ok, R}.
 

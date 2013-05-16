@@ -50,7 +50,7 @@ do('GET', [PId], Req0) ->
     Response = [ kha_utils:build_to_plist(X) || X <- E ],
     {Response, 200, Req};
 
-%% Get build
+%% Delete build
 do('DELETE', [PId, BId], Req) ->
     check(Req, {project, PId}, write),
     {ok, E} = kha_build:get(PId, BId),
@@ -65,8 +65,22 @@ do('GET', [PId, BId], Req) ->
     Response = kha_utils:build_to_plist(E),
     {Response, 200, Req};
 
+do('POST', IDs, Req0) ->
+    {QS, Req} = cowboy_req:qs_vals(Req0),
+    case proplists:get_value(<<"stop">>, QS) of
+        <<"true">> -> stop(IDs, Req);
+        _          -> rerun(IDs, Req)
+    end.
+
+%% Force Stop build
+stop([PId, BId], Req) ->
+    check(Req, {project, PId}, write),
+    kha_builder:stop_build(PId, BId),
+    Response = [],
+    {Response, 200, Req}.
+
 %% Rerun build by copying
-do('POST', [PId], Req) ->
+rerun([PId], Req) ->
     check(Req, {project, PId}, write),
     {ok, Data0, Req2} = cowboy_req:body(Req),
     Data = jsx:to_term(Data0),

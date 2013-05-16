@@ -59,8 +59,9 @@ configure_cowboy() ->
                        {"/project/[:project_id]",  kha_project_handler, []},
 
                        %% BUILD
-                       {"/project/[:project_id]/build",              kha_build_handler, []},
-                       {"/project/[:project_id]/build/[:build_id]",  kha_build_handler, []},
+                       {"/project/[:project_id]/build",                   kha_build_handler, []},
+                       {"/project/[:project_id]/build/[:build_id]",       kha_build_handler, []},
+                       {"/project/[:project_id]/build/[:build_id]/stop",  kha_build_handler, []},
 
                        %% HOOKS
                        {"/hooks/[:type]/[:project_id]", kha_hooks_handler, []},
