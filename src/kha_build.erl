@@ -134,6 +134,7 @@ upgrade() ->
     {ok, Ps} = db:get_all(build),
     [ ?MODULE:update(upgrade(P)) || P <- Ps ].
 
+%% for commit: 5e640e9c
 upgrade({build,
          Xkey, Xid, Xproject, Xtitle, Xbranch, Xrevision,
          Xauthor, Xstart, Xstop, Xstatus, Xexit, Xoutput, Xtags}) ->
@@ -141,5 +142,27 @@ upgrade({build,
            branch = Xbranch, revision = Xrevision,
            author = Xauthor, start = Xstart, stop = Xstop, status = Xstatus, exit = Xexit,
            output = Xoutput, tags = Xtags, dir = <<"/tmp/">>};
+
+%% for commit: 81c0428b
+upgrade({build,
+         Xkey, Xid, Xproject, Xtitle, Xbranch, Xrevision, Xauthor,
+         Xstart, Xstop, Xstatus, Xexit, Xoutput, Xtags, Xdir}) ->
+    #build{key         = Xkey,
+           pid_ref     = undefined,
+           id          = Xid,
+           project     = Xproject,
+           title       = Xtitle,
+           branch      = Xbranch,
+           revision    = Xrevision,
+           author      = Xauthor,
+           create_time = Xstart,
+           start       = Xstart,
+           stop        = Xstop,
+           status      = Xstatus,
+           exit        = Xexit,
+           output      = Xoutput,
+           tags        = Xtags,
+           dir         = Xdir};
+
 upgrade(#build{} = B) ->
     B.
