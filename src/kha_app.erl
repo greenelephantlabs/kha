@@ -16,12 +16,14 @@
 
 start() ->
     db:init(),
+    ok = application:start(asn1, permanent),
     ok = application:start(crypto, permanent),
     ok = application:start(public_key, permanent),
     ok = application:start(inets, permanent),
     ok = application:start(ssl, permanent),
     ok = application:start(bcrypt, permanent),
     ok = application:start(yamerl, permanent),
+    ok = application:start(cowlib, permanent),
     ok = application:start(ranch, permanent),
     ok = application:start(cowboy, permanent),
     ok = application:start(mimetypes, permanent),
