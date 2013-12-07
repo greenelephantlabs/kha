@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(kha_builder).
 
--include_lib("kha/include/common.hrl").
+-include("common.hrl").
 -include("kha.hrl").
 
 -behaviour(gen_server).

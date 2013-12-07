@@ -1,7 +1,7 @@
 -module(acl).
 
--include_lib("kha/include/common.hrl").
--include_lib("kha/include/auth.hrl").
+-include("common.hrl").
+-include("auth.hrl").
 
 -export([read/3,
 

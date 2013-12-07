@@ -8,9 +8,9 @@
 
 -module(kha_utils).
 
--include_lib("kha/include/common.hrl").
--include_lib("kha/include/kha.hrl").
--include_lib("kha/include/auth.hrl").
+-include("common.hrl").
+-include("kha.hrl").
+-include("auth.hrl").
 
 -export([list_convert/2,
          convert/2,

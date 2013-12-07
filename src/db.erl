@@ -7,7 +7,7 @@
 
 -module(db).
 
--include_lib("kha/include/common.hrl").
+-include("common.hrl").
 -include("kha.hrl").
 
 -export([start/0,

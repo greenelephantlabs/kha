@@ -2,7 +2,7 @@
 
 -export([check/1, fetch/2]).
 
--include_lib("kha/include/common.hrl").
+-include("common.hrl").
 -include("kha.hrl").
 
 check(_P) ->

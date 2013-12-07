@@ -1,10 +1,14 @@
 REBAR=$(shell which rebar || echo ./rebar)
 
+.PHONY: default all deps normal fast clean test tests sh
+
 default: normal
 
-all:    $(REBAR)
-	$(REBAR) get-deps
+all: $(REBAR) deps
 	$(REBAR) compile
+
+deps:
+	$(REBAR) get-deps
 
 normal:
 	$(REBAR) compile
@@ -16,8 +20,9 @@ clean:  $(REBAR)
 	$(REBAR) clean
 	make distclean
 
+test: tests
 tests:  $(REBAR)
-	$(REBAR) eunit
+	$(REBAR) eunit skip_deps=true
 
 sh:
 	erl -pa ebin/ deps/*/ebin/
@@ -32,6 +37,7 @@ ALL=    priv/coffee/app.js \
 priv/js/kha.js: $(ALL)
 	cat $^ > $@
 
+include dialyzer.mkf
 
 # Detect or download rebar
 
@@ -42,7 +48,7 @@ REBAR_URL=http://cloud.github.com/downloads/basho/rebar/rebar
 		-s init stop
 	chmod +x ./rebar
 
-distclean:
+distclean: dialyzer_distclean
 	rm -f ./rebar
 
 # For update code

@@ -4,8 +4,8 @@
 
          add/2]).
 
--include_lib("kha/include/common.hrl").
--include_lib("kha/include/auth.hrl").
+-include("common.hrl").
+-include("auth.hrl").
 
 fetch(Email) ->
     db:get_record(user, Email).

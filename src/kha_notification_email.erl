@@ -1,6 +1,6 @@
 -module(kha_notification_email).
 
--include_lib("kha/include/common.hrl").
+-include("common.hrl").
 -include("kha.hrl").
 
 -export([send/4]).

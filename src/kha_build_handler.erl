@@ -6,12 +6,14 @@
 %%% Created : 30 Jul 2012 by Paul Peter Flis <pawel@flycode.pl>
 
 -module(kha_build_handler).
+
 -behaviour(cowboy_http_handler).
+
 -export([init/3,
          handle/2,
          terminate/3]).
 
--include_lib("kha/include/common.hrl").
+-include("common.hrl").
 -include("kha.hrl").
 
 init({_Any, http}, Req, []) ->

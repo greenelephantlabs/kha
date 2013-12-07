@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE).
 
--include_lib("kha/include/common.hrl").
+-include("common.hrl").
 -include("kha.hrl").
 
 -define(s, State#state).

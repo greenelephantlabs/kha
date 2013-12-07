@@ -8,8 +8,17 @@
   {applications, [
                   kernel,
                   stdlib,
+                  confetti,
+                  bcrypt,
                   cowboy,
+                  erlgit,
+                  erlpass,
+                  erlsemver, 
+                  gproc,
+                  jsx,
                   mimetypes,
+                  sh,
+                  uri,
                   yamerl
                  ]},
   {mod, { kha_app, []}},

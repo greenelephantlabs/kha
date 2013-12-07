@@ -13,8 +13,8 @@
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 -define(CHILD(I, Type, StartupParams), {I, {I, start_link, StartupParams}, permanent, 5000, Type, [I]}).
 
--include_lib("kha/include/common.hrl").
--include_lib("kha/include/kha.hrl").
+-include("common.hrl").
+-include("kha.hrl").
 
 %% ===================================================================
 %% API functions

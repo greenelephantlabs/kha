@@ -1,0 +1,58 @@
+# -*- mode: Makefile; fill-column: 80; comment-column: 75; -*-
+
+ERLANG_DIALYZER_APPS = asn1 \
+	compiler \
+	crypto \
+	edoc \
+	erts \
+	eunit \
+	gs \
+	hipe \
+	inets \
+	kernel \
+	mnesia \
+	observer \
+	public_key \
+	runtime_tools \
+	ssl \
+	stdlib \
+	syntax_tools \
+	tools \
+	webtool \
+	xmerl
+
+OTP_REL=$(shell erl -noshell -eval 'io:format(erlang:system_info(otp_release)), halt().')
+OTP_PLT=$(HOME)/.dialyzer_plt.$(OTP_REL)
+
+DIALYZER_OPTS = -Wunderspecs -Wrace_conditions
+
+PROJECT_PLT=$(CURDIR)/.project_plt
+DEPS_PLT=${CURDIR}/.deps_plt
+
+${OTP_PLT}:
+	@echo "ERROR: Missing ~/.dialyzer_plt.${OTP_REL}. Please wait while a new PLT is compiled."
+	dialyzer --build_plt --apps $(ERLANG_DIALYZER_APPS) --output_plt ${OTP_PLT}
+	@echo "Building global PLT is done"
+
+.PHONY: dialyzer typer dialyzer_distclean
+
+# $(PROJECT_PLT): $(shell find src -type f -name \*.erl) $(shell find include -type f -name \*.hrl)
+# 	dialyzer --output_plt $(PROJECT_PLT) --build_plt -r ebin
+
+$(DEPS_PLT): $(shell find deps -type f -name \*.erl) $(shell find deps -type f -name \*.hrl)
+	@echo "ERROR: Missing dependencies PLT. Building..."
+	dialyzer --output_plt $(DEPS_PLT) --build_plt -r deps
+	@echo "Building dependencies PLT is done."
+
+ALL_PLTS = ${OTP_PLT} ${DEPS_PLT}
+DEPS_BIN_DIRS = $(shell find deps -type d -name ebin)
+
+dialyzer: ${ALL_PLTS}
+	dialyzer --plts ${ALL_PLTS} ${DIALYZER_OPTS} -pa ebin/ $(addprefix -pa ,$(DEPS_BIN_DIRS)) -I include/ --src src
+
+typer: $(PROJECT_PLT)
+	typer --plt $(PROJECT_PLT) -r ./src
+
+dialyzer_distclean: clean
+	rm -f $(PROJECT_PLT)
+	rm -f ${DEPS_PLT}

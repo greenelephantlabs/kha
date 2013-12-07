@@ -2,12 +2,12 @@
 
 -behaviour(application).
 
--export([start/0]).
+-export([start/0, stop/0]).
 
 %% Application callbacks
 -export([start/2, stop/1]).
 
--include_lib("kha/include/common.hrl").
+-include("common.hrl").
 -include("kha.hrl").
 
 %% ===================================================================
@@ -16,18 +16,21 @@
 
 start() ->
     db:init(),
-    ok = application:start(asn1, permanent),
-    ok = application:start(crypto, permanent),
-    ok = application:start(public_key, permanent),
-    ok = application:start(inets, permanent),
-    ok = application:start(ssl, permanent),
-    ok = application:start(bcrypt, permanent),
-    ok = application:start(yamerl, permanent),
-    ok = application:start(cowlib, permanent),
-    ok = application:start(ranch, permanent),
-    ok = application:start(cowboy, permanent),
-    ok = application:start(mimetypes, permanent),
-    ok = application:start(kha, permanent).
+    ok = application:ensure_started(asn1, permanent),
+    ok = application:ensure_started(crypto, permanent),
+    ok = application:ensure_started(public_key, permanent),
+    ok = application:ensure_started(bcrypt, permanent),
+    ok = application:ensure_started(inets, permanent),
+    ok = application:ensure_started(ssl, permanent),
+    ok = application:ensure_started(yamerl, permanent),
+    ok = application:ensure_started(cowlib, permanent),
+    ok = application:ensure_started(ranch, permanent),
+    ok = application:ensure_started(cowboy, permanent),
+    ok = application:ensure_started(mimetypes, permanent),
+    ok = application:ensure_started(kha, permanent).
+
+stop() ->
+    ok = application:stop(kha).
 
 start(_Type, _Args) ->
     case validate_env(kha) of
