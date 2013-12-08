@@ -16,9 +16,9 @@
 
 -export([create/1,
          get/1,
-         update/1, set_param/3, set_build/2,
+         update/1, update/2, set_param/3, set_build/2,
 
-         to_plist/1, from_plist/1,
+         to_plist/1, from_plist/1, diff/2,
 
          create_from_plist/1, update_from_plist/2]).
 
@@ -48,6 +48,7 @@ do_create(Project) ->
     ProjectId = db:get_next_id(project),
     R = Project#project{id = ProjectId},
     ok = db:add_record(R),
+    ?MODULE:diff(#project{id = ProjectId}, R),
     {ok, R}.
 
 get(all) ->
@@ -71,16 +72,24 @@ set_build(Id, Build0) ->
     {ok, #project{} = P} = ?MODULE:get(Id),
     update(P#project{build = [Build]}).
 
-
 update(Project) ->
+    update(Project, true).
+update(Project, Diff) ->
     validate(Project),
-    db:add_record(Project).
+    case Diff of
+        true ->
+            {ok, #project{} = Old} = ?MODULE:get(Project#project.id),
+            Response = db:add_record(Project),
+            ?MODULE:diff(Old, Project),
+            Response;
+        false -> db:add_record(Project)
+    end.
 
 %% =============================================================================
 %% gen_server code
 %% =============================================================================
 
--define(POLL_TIME, 60000).
+-define(POLL_TIME, 10000).
 
 -record(state, {id,
                 polling = undefined
@@ -123,28 +132,52 @@ handle_info({mnesia_table_event, {delete, project, #project{id = Id}, _Old, _Act
 handle_info({mnesia_table_event, _}, #state{} = State) ->
     {noreply, State};
 
-handle_info({timeout, Timer, poll}, #state{id = Id,
+handle_info({timeout, Timer, poll}, #state{id      = Id,
                                            polling = Timer} = State) ->
     ?LOG("starting poll for ~p", [Id]),
-    {ok, #project{remote = Remote}} = ?MODULE:get(Id),
-    Refs = git:refs(Remote),
-    %% ?LOG("remote branches: ~p~n", [Refs]),
-    [ begin
-          case kha_build:get_by_revision(Cid) of
-              {ok, []} ->
-                  {ok, _Build} = kha_build:create_and_add_to_queue(Id, "Polling", Name,
-                                                                   Cid, "polling", []),
-                  ?LOG("revision ~s added to queue as ~p", [Cid, _Build#build.key]);
-              {ok, _L} ->
-                  %% ?LOG("revision ~s was build ~b times", [Cid, length(_L)]),
-                  ok
-          end
-      end || {Name, Type, Cid} <- Refs, Type /= 'HEAD' ],
-
+    {ok, #project{remote = Remote, params = Params}} = ?MODULE:get(Id),
+    polling(Id, Remote, project),
+    Deps = proplists:get_value(<<"deps">>, Params, []),
+    [polling(Id, D, deps) || D <- Deps],
     {noreply, State#state{polling = erlang:start_timer(?POLL_TIME, self(), poll)}};
+
+handle_info({update_revision, project}, #state{id = Id} = State) ->
+    {ok, P} = ?MODULE:get(Id),
+    kha_build:update_revision([P#project.remote]),
+    {noreply, State};
+
+handle_info({update_revision, deps}, #state{id = Id} = State) ->
+    {ok, P} = ?MODULE:get(Id),
+    Deps = proplists:get_value(<<"deps">>, P#project.params, []),
+    kha_build:update_revision(Deps),
+    {noreply, State};
 
 handle_info(Info, State) ->
     {stop, {unknown_info, Info}, State}.
+
+polling(Id, CheckRemote, RemoteType) ->
+    Refs = git:refs(CheckRemote),
+    [ begin
+          case kha_build:check_by_revision(Cid) of
+              false ->
+                  case RemoteType of
+                      deps ->
+                          %% Title = io_lib:format("Handle for ~s", []
+                          {ok, _Build} = kha_build:create_and_add_to_queue(Id, "polling (handle)",
+                                                                           'origin/HEAD', "",
+                                                                           "polling", []),
+                          ?LOG("revision ~p added to queue as ~p", ['origin/HEAD', _Build#build.key]);
+                      project ->
+                          {ok, _Build} = kha_build:create_and_add_to_queue(Id, "polling",
+                                                                           Name, Cid,
+                                                                           "polling", []),
+                          ?LOG("revision ~s added to queue as ~p", [Cid, _Build#build.key])
+                  end,
+                  kha_build:update_revision(CheckRemote, Name, Cid);
+              true -> ok
+          end
+      end || {Name, Type, Cid} <- Refs, Type /= 'HEAD' ].
+
 
 terminate(_Reason, #state{}) ->
     ok.
@@ -238,15 +271,31 @@ set_private(#project{id = Id}, Private) ->
            end,
     acl:define(not_logged, {project, Id}, [read, write], Resp).
 
+diff(O, N) -> %%GP: bad name. diff/2 should just return the diff. If you want to do something based on this diff, this name is incorrect
+    %% Old record to lists
+    Old = kha_utils:record_to_list(O),
+    New = kha_utils:record_to_list(N),
+    Pid = N#project.server,
+    diff0(Old, New, Pid). %%GP: it's probably easier to pass whole #project as third parameter
+
+diff0([], _, _) -> ok;
+diff0([{K, V} | R], New, Pid) ->
+    NewValue = proplists:get_value(K, New),
+    case V =:= NewValue of
+        true  -> ok;
+        false -> changes_hook(K, V, NewValue, Pid)
+    end,
+    diff0(R, New, Pid).
+
 create_from_plist(L) ->
     P = from_plist(L),
-    Private = proplists:get_value(<<"private">>, L, false),
+    Private = proplists:get_value(<<"private">>, L, false), %%GP: handling of private should be moved into changes_hook
     set_private(P, Private),
     ?MODULE:create(P).
 
 update_from_plist(P, L) ->
     P2 = from_plist0(P, L),
-    Private = proplists:get_value(<<"private">>, L, false),
+    Private = proplists:get_value(<<"private">>, L, false), %%GP: handling of private should be moved into changes_hook
     set_private(P, Private),
     ?MODULE:update(P2),
     P2.
@@ -287,3 +336,41 @@ annotate(P) when is_list(P) ->
     Private = acl:read(not_logged, {project, PId}, write) == deny orelse
         acl:read(not_logged, {project, PId}, read) == deny,
     lists:keystore(<<"private">>, 1, P, {<<"private">>, Private}).
+
+
+%% PROJECT CHANGES HOOKS
+changes_hook(id,            _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(server,        _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(name,          _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(remote,        _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(build,         _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(notification,  _OldValue, _NewValue, _Pid) -> ok;
+changes_hook(params, OldValue, NewValue, Pid) ->
+    check_changes_deps(OldValue, NewValue, Pid),
+    check_polling(OldValue, NewValue, Pid).
+
+check_changes_deps(Old, New, Pid) ->
+    OldDeps = proplists:get_value(<<"deps">>, Old, []),
+    NewDeps = proplists:get_value(<<"deps">>, New, []),
+    case OldDeps =:= NewDeps of
+        true  -> ok;
+        false ->
+            case erlang:is_pid(Pid) of
+                true  -> Pid ! {update_revision, deps};
+                false -> ok
+            end
+    end.
+
+check_polling(Old, New, Pid) ->
+    OldPolling0 = proplists:get_value(<<"polling">>, Old, false),
+    OldPolling  = kha_utils:convert(OldPolling0, bool),
+    NewPolling0 = proplists:get_value(<<"polling">>, New, false),
+    NewPolling  = kha_utils:convert(NewPolling0, bool),
+    case NewPolling =:= (OldPolling =:= NewPolling) of
+        true  -> ok;
+        false ->
+            case erlang:is_pid(Pid) of
+                true  -> Pid ! {update_revision, project}; %%GP: it's bad to send messages directly. Introduce an API for that
+                false -> ok
+            end
+    end.

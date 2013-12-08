@@ -18,6 +18,7 @@
 
 -export([add_to_queue/1,
          add_to_queue/2,
+         stop_build/2,
          process/0,
          abort/0]).
 
@@ -50,6 +51,9 @@ add_to_queue(#build{project = Project, id = Id} = _Build) ->
     add_to_queue(Project, Id).
 add_to_queue(ProjectId, BuildId) ->
     gen_server:call(?SERVER, {add_to_queue, ProjectId, BuildId}).
+
+stop_build(ProjectId, BuildId) ->
+    gen_server:call(?SERVER, {stop_build, ProjectId, BuildId}).
 
 process() ->
     gen_server:cast(?SERVER, process).
@@ -103,6 +107,17 @@ handle_call({add_to_queue, ProjectId, BuildId}, _From,
     end,
     {reply, ok, NewState};
 
+handle_call({stop_build, ProjectId, BuildId}, _From, State) ->
+    {ok, Build} = kha_build:get(ProjectId, BuildId),
+    case Build#build.pid_ref of
+        {PId, Ref} ->
+            Reason = <<"Forced stop (by user)">>,
+            PId ! {Ref, done, {error, {1, Reason}} };
+        _ -> %% build not run now
+            ok
+    end,
+    {reply, ok, State};
+
 handle_call(abort, _From, #state{busy = {Pid, _}} = S) ->
     catch exit(Pid, kill),
     {reply, true, S};
@@ -127,7 +142,7 @@ handle_cast(process, #state{queue = Queue} = S) ->
         {empty, _} ->
             {noreply, S#state{busy = false}};
         {{value, Job}, NewQueue} ->
-            ContData = fetch_container_data(),
+            ContData = fetch_container_data(Job),
             Pid = proc_lib:spawn(fun() ->
                                          do_process(Job, ContData)
                                  end),
@@ -200,17 +215,31 @@ code_change(_OldVsn, State, _Extra) ->
 build_timeout(Pid, _ProjectId, _BuildId) ->
     exit(Pid, timeout).
 
-fetch_container_data() ->
-    case application:get_env(container) of
+
+fetch_container_data({ProjectId, _BuildId}) ->
+    {ok, Project} = kha_project:get(ProjectId),
+    Params  = Project#project.params,
+    ContType = case proplists:get_value(<<"container">>, Params) of
+                   undefined -> application:get_env(kha, container);
+                   ContType0 -> {ok, ContType0}
+               end,
+    case ContType of
         undefined ->
             {dummy, "dummy", []};
-        {ok, ContType} ->
-            {ok, Name} = application:get_env(container_name),
-            Opts = case application:get_env(container_opts) of
-                       {ok, O} -> O;
-                       undefined -> []
-                   end,
-            {ContType, Name, Opts}
+        {ok, ContType1} ->
+            {ok, ContName} = case proplists:get_value(<<"container_name">>, Params) of
+                                 undefined -> application:get_env(kha, container_name);
+                                 ContName0 -> {ok, ContName0}
+                             end,
+            {ok, ContOpts} = case proplists:get_value(<<"container_opts">>, Params) of
+                                 undefined ->
+                                     case application:get_env(kha, container_opts) of
+                                         {ok, O} -> {ok, O};
+                                         undefined  -> {ok, []}
+                                     end;
+                                 ContOpts0 -> {ok, ContOpts0}
+                             end,
+            {ContType1, ContName, ContOpts}
     end.
 
 container_start({Module, Name, Opts}) ->
@@ -244,7 +273,8 @@ ensure_build_dir(P, Build) ->
 do_process({ProjectId, BuildId}, ContData) ->
     {ok, P} = kha_project:get(ProjectId),
     {ok, Build0} = kha_build:get(ProjectId, BuildId),
-    Build = ensure_build_dir(P, Build0),
+    Build1 = ensure_build_dir(P, Build0),
+    Build  = Build1#build{start = now()},
     kha_build:update(Build),
     kha_hooks:run(on_building, Build),
 
@@ -347,7 +377,13 @@ create_clone_steps(P, Build) ->
     Dir = Build#build.dir,
     Remote = kha_utils:convert(P#project.remote, str),
     Rev = kha_build:get_rev(Build),
-    [ {io_lib:format("[ -d \"~s\" ] || ~s", [Dir, git:clone_cmd(Remote, Dir, [])]), []},
+    GitCached0 = proplists:get_value(<<"git_cached">>, P#project.params, false),
+    GitCached  = kha_utils:convert(GitCached0, bool),
+    CloneCmd = case GitCached of
+                   true  -> git_utils:fformat("git-cached clone ~s \"~s\" \"~s\"", [[], Remote, Dir]);
+                   false -> git:clone_cmd(Remote, Dir, [])
+               end,
+    [ {io_lib:format("[ -d \"~s\" ] || ~s", [Dir, CloneCmd]), []},
       git:fetch_cmd(Dir),
       git:checkout_cmd(Dir, Rev, [force]) ].
 
@@ -377,11 +413,13 @@ process_step({Cmd, F}, B) ->
     B2 = build_append(io_lib:format("$ ~s~n", [Cmd]), B),
     Parent = self(),
     Ref = make_ref(),
+    B3 = B2#build{pid_ref = {Parent, Ref}},
+    kha_build:update(B3),
     proc_lib:spawn_link(fun() ->
                                 Res = F(Ref, Parent),
                                 Parent ! {Ref, done, Res}
                         end),
-    process_loop(Ref, Parent, Cmd, B2).
+    process_loop(Ref, Parent, Cmd, B3).
 
 process_loop(Ref, Parent, Cmd, Build) ->
     receive

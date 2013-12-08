@@ -23,12 +23,14 @@
 
 -record(build,
         {key                :: {project_id(), build_id()},
+         pid_ref            :: {pid(), reference()} | 'undefined',
          id                 :: build_id(),
          project            :: project_id(),
          title              :: b_string() | 'undefined',
          branch             :: b_string(),
          revision           :: b_string(),
          author             :: b_string(),
+         create_time        :: time(),
          start              :: time(),
          stop               :: time(),
          status             :: 'pending' | 'building' | 'success' | 'fail',
@@ -43,5 +45,15 @@
          id = 10000         :: integer()
         }).
 
+-record(revision, %%GP: this name does not say much. What's the purpose of this table?
+        {key                :: {b_string(), b_string}, %% {remote, branch}
+         rev                :: b_string()
+        }
+       ).
 %%FIXME: PF: A temporary solution -> should by replace by alog or lager
--define(LOG(X,Y), io:fwrite("[~p] log [~p:~b]: "++ X ++ "~n", [calendar:local_time(), ?MODULE, ?LINE] ++ Y)).
+-define(LOG(X,Y), case application:get_env(debug) of
+                      undefined   -> ok;
+                      {ok, false} -> ok;
+                      {ok, _} -> io:fwrite("[~p] log [~p:~b]: "++ X ++ "~n",
+                                               [calendar:local_time(), ?MODULE, ?LINE] ++ Y)
+                  end).

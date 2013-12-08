@@ -92,6 +92,7 @@ init_schema() ->
     create_table(acl),
 
     create_table(project),
+    create_table(revision, set, [{index, [#revision.rev]}]),
     create_table(build, ordered_set, [{index, [#build.revision]}]),
     create_table(id_seq).
 

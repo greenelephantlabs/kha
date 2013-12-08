@@ -10,7 +10,7 @@ start(Name, Opts) ->
         true ->
             start_ephemeral(Name, Opts);
         false ->
-            case lists:member(Name, list()) of
+            case lists:member(kha_utils:convert(Name, str), list()) of
                 true ->
                     Pid = runner:spawn([{exit_on_error, true}]),
                     runner:exec_aggregate(Pid,
@@ -29,7 +29,7 @@ start_ephemeral(Base) ->
 
 start_ephemeral(Base, _Opts) ->
     Containers = list(),
-    case lists:member(Base, Containers) of
+    case lists:member(kha_utils:convert(Base, str), Containers) of
         true ->
             Pid = runner:spawn([{exit_on_error, true}]),
             runner:exec_aggregate(Pid,
@@ -90,7 +90,7 @@ wait_for_stop(_, 0) ->
     {error, timeout};
 wait_for_stop(Name, Timeout) ->
     Current = list(),
-    case lists:member(Name, Current) of
+    case lists:member(kha_utils:convert(Name, str), Current) of
         true ->
             timer:sleep(1000),
             wait_for_stop(Name, Timeout - 1);

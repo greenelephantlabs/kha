@@ -26,7 +26,8 @@
          clean_filename/1,
 
          now_to_nice/1,
-         now_sum/2
+         now_sum/2,
+         debug/1
         ]).
 
 -export([sh_stream/4,
@@ -35,6 +36,7 @@
          mktemp_dir/0, mktemp_dir/1, mktemp_dir/2]).
 
 -export([record_field/1,
+         record_to_list/1,
 
          build_to_plist/1,
          notification_to_plist/1,
@@ -43,12 +45,18 @@
          get_app_path/0,
          get_app_path/1]).
 
-record_field(acl) ->     record_info(fields, acl);
-record_field(session) -> record_info(fields, session);
-record_field(user) ->    record_info(fields, user);
-record_field(project) -> record_info(fields, project);
-record_field(build) ->   record_info(fields, build);
-record_field(id_seq) ->  record_info(fields, id_seq).
+record_field(acl) ->      record_info(fields, acl);
+record_field(session) ->  record_info(fields, session);
+record_field(user) ->     record_info(fields, user);
+record_field(project) ->  record_info(fields, project);
+record_field(build) ->    record_info(fields, build);
+record_field(id_seq) ->   record_info(fields, id_seq);
+record_field(revision) ->  record_info(fields, revision).
+
+record_to_list(Record) ->
+    [RecordName | RecordData] = tuple_to_list(Record),
+    Fields = ?MODULE:record_field(RecordName),
+    lists:zip(Fields, RecordData).
 
 binarize(L) when is_list(L) ->
     [ {convert(K, bin), V} || {K, V} <- L ].
@@ -58,19 +66,20 @@ notification_to_plist(#notification{type = Type,
     [{<<"type">>, convert(Type, bin)},
      {<<"params">>, binarize(Params)}].
 
-build_to_plist(#build{id      = Id,
-                      project  = Project,
-                      title    = Title,
-                      branch   = Branch,
-                      revision = Revision,
-                      author   = Author,
-                      start    = Start,
-                      stop     = Stop,
-                      status   = Status,
-                      exit     = Exit,
-                      output   = Output,
-                      tags     = Tags,
-                      dir      = Dir}) ->
+build_to_plist(#build{id          = Id,
+                      project     = Project,
+                      title       = Title,
+                      branch      = Branch,
+                      revision    = Revision,
+                      author      = Author,
+                      create_time = CreateTime,
+                      start       = Start,
+                      stop        = Stop,
+                      status      = Status,
+                      exit        = Exit,
+                      output      = Output,
+                      tags        = Tags,
+                      dir         = Dir}) ->
     fltr(
       [{<<"id">>,       Id},
        {<<"project">>,  Project},
@@ -78,6 +87,7 @@ build_to_plist(#build{id      = Id,
        {<<"branch">>,   kha_utils:convert_safe(Branch, bin)},
        {<<"revision">>, kha_utils:convert_opt(Revision, bin)},
        {<<"author">>,   kha_utils:convert_opt(Author, bin)},
+       {<<"create">>,   kha_utils:now_to_nice(CreateTime)},
        {<<"start">>,    kha_utils:now_to_nice(Start)},
        {<<"stop">>,     kha_utils:now_to_nice(Stop)},
        {<<"status">>,   kha_utils:convert_safe(Status, bin)},
@@ -255,3 +265,8 @@ now_sum({A0, B0, C0}, T0) ->
     CB = trunc((B0 + CC) / M),
     A = (A0 + CB) rem M,
     {A, B, C}.
+
+debug(true) ->
+    application:set_env(kha, debug, true);
+debug(false) ->
+    application:set_env(kha, debug, false).

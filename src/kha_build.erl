@@ -18,10 +18,14 @@
 
          get_rev/1,
 
+         check_by_revision/1,
+
          delete/1,
          delete/2,
 
          update/1,
+         update_revision/3,
+         update_revision/1,
 
          upgrade/0, upgrade/1]).
 
@@ -32,12 +36,12 @@ create(ProjectId, Build) ->
 do_create(ProjectId, Build) ->
     BuildId = db:get_next_id({build, ProjectId}),
     R = Build#build{key = {ProjectId, BuildId},
-                    id = BuildId,
-                    project = ProjectId,
-                    start = now(),
-                    status = 'pending',
-                    exit = -1, %% FIXME: PF: Should by 'undefined'
-                    output = []},
+                    id          = BuildId,
+                    project     = ProjectId,
+                    create_time = now(),
+                    status      = 'pending',
+                    exit        = -1, %% FIXME: PF: Should by 'undefined'
+                    output      = []},
     ok = db:add_record(R),
     {ok, R}.
 
@@ -97,22 +101,40 @@ get(ProjectId, BuildId) ->
 do_get(ProjectId, BuildId) ->
     db:get_record(build, {ProjectId, BuildId}).
 
+%% return false if revision is new (never built)
+check_by_revision(Revision) ->
+    case db:get_record_by_index(revision, Revision, #revision.rev) of
+        {ok, []} -> false;
+        {ok, _}  -> true
+    end.
+
 delete(#build{} = Build) ->
     db:remove_object(Build).
 
 delete(ProjectId, BuildId) ->
     db:remove_record(build, {ProjectId, BuildId}).
 
+update_revision(Remotes) when is_list(Remotes) ->
+    do_update_revision(Remotes).
+do_update_revision([]) -> ok;
+do_update_revision([X | R]) ->
+    ?LOG("Update revision for ~s", [X]),
+    Refs = git:refs(X),
+    [update_revision(X, Name, Rev) || {Name, Type, Rev} <- Refs, Type /= 'HEAD' ],
+    do_update_revision(R).
+
+update_revision(Remote, BranchName, Rev) ->
+    db:add_record(#revision{key = {Remote, BranchName},
+                            rev = Rev}).
 update(Build) ->
     db:add_record(Build).
-
-
 
 upgrade() ->
     mnesia:transform_table(build, fun upgrade/1, record_info(fields, build)),
     {ok, Ps} = db:get_all(build),
     [ ?MODULE:update(upgrade(P)) || P <- Ps ].
 
+%% for commit: 5e640e9c
 upgrade({build,
          Xkey, Xid, Xproject, Xtitle, Xbranch, Xrevision,
          Xauthor, Xstart, Xstop, Xstatus, Xexit, Xoutput, Xtags}) ->
@@ -120,5 +142,27 @@ upgrade({build,
            branch = Xbranch, revision = Xrevision,
            author = Xauthor, start = Xstart, stop = Xstop, status = Xstatus, exit = Xexit,
            output = Xoutput, tags = Xtags, dir = <<"/tmp/">>};
+
+%% for commit: 81c0428b
+upgrade({build,
+         Xkey, Xid, Xproject, Xtitle, Xbranch, Xrevision, Xauthor,
+         Xstart, Xstop, Xstatus, Xexit, Xoutput, Xtags, Xdir}) ->
+    #build{key         = Xkey,
+           pid_ref     = undefined,
+           id          = Xid,
+           project     = Xproject,
+           title       = Xtitle,
+           branch      = Xbranch,
+           revision    = Xrevision,
+           author      = Xauthor,
+           create_time = Xstart,
+           start       = Xstart,
+           stop        = Xstop,
+           status      = Xstatus,
+           exit        = Xexit,
+           output      = Xoutput,
+           tags        = Xtags,
+           dir         = Xdir};
+
 upgrade(#build{} = B) ->
     B.
