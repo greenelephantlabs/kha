@@ -8,9 +8,7 @@
   {applications, [
                   kernel,
                   stdlib,
-                  confetti,
                   bcrypt,
-                  cowboy,
                   erlgit,
                   erlpass,
                   erlsemver, 
