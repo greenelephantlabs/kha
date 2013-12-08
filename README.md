@@ -1,7 +1,8 @@
 kha
 ===
 
-Lightweight Erlang continuous integration server.
+Lightweight continuous integration and deployment server. Written in
+Erlang.
 
 Goals:
 
@@ -15,12 +16,14 @@ Planned features:
 * Support for rebar
 * Git support
   * per branch builds
- * Git config setup
-* Support for unixy build scripts
+* Git config setup
+* Support for unixy build scripts for compilation, testing and deployment
 * Plugins support
   * Notifications
   * Hooks - pre-build, post-build, etc.
-* One file deployment
+  * Output plugins - extensible interpreting of commands' outputs
+  * Runner plugins - support running non-Makefile tests out of the box
+  * Deployment plugins - deploy over ssh, to EC2, Heroku, with Chef, etc.
 * Web UI for reports
 
 Notifications:
@@ -31,9 +34,12 @@ Notifications:
 Sandboxing
 ==========
 
-Kha supports sandboxing via "lxc" containers. Tested on Ubuntu
-12.10. Requires a kernel at least 3.5.0-21. For "lxc" to work, Kha has
-to be run under a user with password-less sudo permissions.
+LXC
+===
+
+Currently Kha supports sandboxing via "lxc" containers. Tested on
+Ubuntu 12.10. Requires a kernel at least 3.5.0-21. For "lxc" to work,
+Kha has to be run under a user with password-less sudo permissions.
 
 It is configured by changing `support/kha.config` file:
 ```
@@ -48,6 +54,13 @@ It is configured by changing `support/kha.config` file:
 
 User specified in username in container_ops should have password-less
 sudo access for commands like `sudo apt-get install -y package` to work.
+
+Docker
+======
+
+Currently Kha is being rewritten to use Docker instead of pure LXC to
+make installation easier, to avoid giving Kha root permissions and
+benefit from Docker infrastructure.
 
 Road map
 ========
@@ -89,6 +102,7 @@ v0.9
 * change project ID from integer to {user, project} (see '0.9 new ID')
 
 v1.0
+* switch to Docker instead of LXC
 * implement global build queue page as a main page
 * implement pubsub
 * non-duplicate process for equal (identical) depending using internal pubsub
