@@ -65,6 +65,7 @@ start_link(Name, Opts) ->
 %% @end
 %%--------------------------------------------------------------------
 init([Name, Opts]) ->
+    io:format("LXC containers were deprecated in favor of Docker!~n"),
     process_flag(trap_exit, true),
     {ok, #state{original_name = Name,
                 opts = Opts}, 0}.
