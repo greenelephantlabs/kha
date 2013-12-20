@@ -27,6 +27,7 @@ get_name(Server) ->
 stop(Server) ->
     gen_server:call(Server, stop).
 
+mod(docker) -> kha_cont_docker;
 mod(lxc) -> kha_cont_lxc;
 mod(dummy) -> kha_cont_dummy.
     

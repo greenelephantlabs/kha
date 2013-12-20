@@ -48,7 +48,7 @@ start_link(Name, Opts) ->
 %%%===================================================================
 
 init([Name, _]) ->
-    R = runner:spawn([]),
+    {ok, R} = runner:spawn([]),
     {ok, #state{name = Name, runner = R}}.
 
 

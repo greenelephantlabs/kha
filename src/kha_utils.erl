@@ -16,7 +16,7 @@
          convert/2,
          convert_opt/2,
          convert_safe/2,
-         fmt/2,
+         fmt/2, fmts/2,
          b2a/1,
          a2b/1,
          i2b/1,
@@ -99,6 +99,9 @@ build_to_plist(#build{id          = Id,
 
 fmt(S, A) ->
     convert(io_lib:format(S, A), bin).
+
+fmts(S, A) ->
+    convert(io_lib:format(S, A), str).
 
 b2a(B) when is_binary(B) ->
     binary_to_atom(B, latin1).

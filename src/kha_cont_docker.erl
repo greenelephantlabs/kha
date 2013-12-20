@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 14 Dec 2012 by  <gleber@first.lan>
 %%%-------------------------------------------------------------------
--module(kha_cont_lxc).
+-module(kha_cont_docker).
 
 -behaviour(gen_server).
 
@@ -24,13 +24,10 @@
 
 -define(s, State#state).
 
--record(state, {original_name,
+-record(state, {image,
                 name,
-                lxc = undefined,
                 runner = undefined,
-                opts = [],
-                ready = false,
-                waiters = ordsets:new()}).
+                opts = []}).
 
 %%%===================================================================
 %%% API
@@ -43,11 +40,11 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-start(Name, Opts) ->
-    gen_server:start(?MODULE, [Name, Opts], []).
+start(Image, Opts) ->
+    gen_server:start(?MODULE, [Image, Opts], []).
 
-start_link(Name, Opts) ->
-    gen_server:start_link(?MODULE, [Name, Opts], []).
+start_link(Image, Opts) ->
+    gen_server:start_link(?MODULE, [Image, Opts], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -64,10 +61,9 @@ start_link(Name, Opts) ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([Name, Opts]) ->
-    io:format("LXC containers were deprecated in favor of Docker!~n"),
+init([Image, Opts]) ->
     process_flag(trap_exit, true),
-    {ok, #state{original_name = Name,
+    {ok, #state{image = Image,
                 opts = Opts}, 0}.
 
 %%--------------------------------------------------------------------
@@ -84,13 +80,11 @@ init([Name, Opts]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call(wait, _From, #state{} = State) ->
+    {reply, true, State};
+
 handle_call(get_name, _From, #state{} = State) ->
     {reply, {ok, ?s.name}, State};
-
-handle_call(wait, _From, #state{ready = true} = State) ->
-    {reply, true, State};
-handle_call(wait, From, State) ->
-    {noreply, ?s{waiters = ordsets:add_element(From, ?s.waiters)}};
 
 handle_call({exec_stream, Command, Ref, Parent, Opts}, _From, #state{runner = Runner} = State) ->
     Res = runner:exec_stream_sync(Runner, Command, Ref, Parent, Opts),
@@ -129,8 +123,6 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_info({'EXIT', Lxc, Reason}, #state{lxc = Lxc} = State) ->
-    {stop, Reason, State};
 handle_info({'EXIT', Runner, Reason}, #state{runner = Runner} = State) ->
     {stop, Reason, State};
 handle_info({'EXIT', _, normal}, State) ->
@@ -138,24 +130,14 @@ handle_info({'EXIT', _, normal}, State) ->
 handle_info({'EXIT', _, Reason}, State) ->
     {stop, Reason, State};
 handle_info(timeout, State) ->
-    ?LOG("Starting container ~s with opts ~p~n", [?s.original_name, ?s.opts]),
-    {ok, Name, Pid} = lxc:start(?s.original_name, ?s.opts),
-    timer:send_after(300, do_ping),
-    {noreply, State#state{name = Name, lxc = Pid}};
+    ?LOG("Starting container ~s with opts ~p~n", [?s.image, ?s.opts]),
+    {ok, Prefix} = docker:runner_str(?s.image, ?s.opts),
+    {ok, R} = runner:spawn([{prefix, Prefix}]),
+    {ok, Name} = runner:exec_aggregate_sync(R, "hostname"),
+    {noreply, State#state{name = Name, runner = R}};
 
-handle_info(do_ping, State) ->
-    case lxc:exec(?s.name, ?s.opts, "uname -a", []) of
-        {ok, _} ->
-            [ gen_server:reply(X, true) || X <- ordsets:to_list(?s.waiters) ],
-            {ok, R} = runner:spawn([{prefix, lxc:exec_prefix(?s.name, ?s.opts)}]),
-            {noreply, State#state{waiters = undefined, ready = true, runner = R}};
-        _ ->
-            timer:send_after(1000, do_ping),
-            {noreply, State}
-    end;
-
-handle_info({eoc, Lxc, 0, _}, #state{lxc = Lxc} = State) ->
-    {noreply, State};
+%% handle_info({eoc, Runner, 0, _}, #state{runner = Runner} = State) ->
+%%     {noreply, State};
 
 handle_info(Info, State) ->
     {stop, {unknown_info, Info}, State}.
@@ -171,10 +153,8 @@ handle_info(Info, State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
-terminate(_Reason, State) ->
-    lxc:stop(?s.name),
-    lxc:wait_for_stop(?s.name, 10),
-    catch exit(?s.lxc, shutdown),
+terminate(_Reason, #state{runner = Runner} = _State) ->
+    runner:stop(Runner),
     ok.
 
 %%--------------------------------------------------------------------

@@ -21,8 +21,8 @@
                  ]},
   {mod, { kha_app, []}},
   {env, [{host, "first.lan"},
-         {container, lxc},
-         {container_name, "ci1"},
+         {container, docker},
+         {container_name, "ubuntu"},
          {container_opts, [{ephemeral, true},
                            {username, "ubuntu"}]}]}
  ]}.

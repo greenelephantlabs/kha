@@ -1,16 +1,18 @@
 set -e
 
-sudo apt-get update
-sudo apt-get install -y git build-essential erlang
-sudo apt-get build-dep -y erlang
+SUDO=sudo
+
+$SUDO apt-get update
+$SUDO apt-get install -y git build-essential erlang
+$SUDO apt-get build-dep -y erlang
 
 cd ~
 curl -O https://raw.github.com/spawngrid/kerl/master/kerl
 chmod a+x kerl
-sudo cp kerl /usr/local/bin/
+$SUDO cp kerl /usr/local/bin/
 kerl update releases
 
-for v in R14B02 R14B03 R14B04 R15B R15B01 R15B02 R15B03; do
+for v in R14B02 R14B03 R14B04 R15B R15B01 R15B02 R15B03 R16B R16B01 R16B02 R16B03; do
     cd
     echo
     echo "Fetching and building $v"
@@ -29,7 +31,7 @@ for v in R14B02 R14B03 R14B04 R15B R15B01 R15B02 R15B03; do
     cd `mktemp -d`
     git clone git://github.com/rebar/rebar.git .
     ./bootstrap
-    sudo cp rebar $(dirname $(which erl))
+    $SUDO cp rebar $(dirname $(which erl))
     kerl_deactivate
 done
 

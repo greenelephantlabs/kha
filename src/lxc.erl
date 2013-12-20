@@ -12,7 +12,7 @@ start(Name, Opts) ->
         false ->
             case lists:member(kha_utils:convert(Name, str), list()) of
                 true ->
-                    Pid = runner:spawn([{exit_on_error, true}]),
+                    {ok, Pid} = runner:spawn([{exit_on_error, true}]),
                     runner:exec_aggregate(Pid,
                                           lists:flatten(
                                             io_lib:format("sudo lxc-start -d -n \"~s\" && "
@@ -31,7 +31,7 @@ start_ephemeral(Base, _Opts) ->
     Containers = list(),
     case lists:member(kha_utils:convert(Base, str), Containers) of
         true ->
-            Pid = runner:spawn([{exit_on_error, true}]),
+            {ok, Pid} = runner:spawn([{exit_on_error, true}]),
             runner:exec_aggregate(Pid,
                                   lists:flatten(
                                     io_lib:format("sudo lxc-start-ephemeral -d -o \"~s\"", [Base]))),
