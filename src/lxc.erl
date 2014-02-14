@@ -99,13 +99,13 @@ wait_for_stop(Name, Timeout) ->
     end.
 
 exec_prefix(Name) ->
-    binary_to_list(iolist_to_binary(io_lib:format("lxc-ssh -n \"~s\" -- ", [Name]))).
+    binary_to_list(iolist_to_binary(io_lib:format("ssh \"~s.lxc\" -- ", [Name]))).
 
 exec_prefix(Name, Opts) ->
     case proplists:get_value(username, Opts) of
         undefined -> exec_prefix(Name);
         Username ->
-            binary_to_list(iolist_to_binary(io_lib:format("lxc-ssh -n \"~s\" -u \"~s\" -- ", [Name, Username])))
+            binary_to_list(iolist_to_binary(io_lib:format("ssh \"~s@~s.lxc\" -- ", [Username, Name])))
     end.
 
 exec(Name, Command, Args) ->

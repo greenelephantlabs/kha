@@ -46,6 +46,19 @@ It is configured by changing `support/kha.config` file:
  ]}].
 ```
 
+Add to your `~/.ssh/config` file:
+```
+Host *.lxc
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  User ubuntu
+  ProxyCommand nc $(host $(echo %h | sed "s/\.lxc//g") 10.0.3.1 | tail -1 | awk '{print $NF}') %p
+```
+and copy ssh pub key on lxc container:
+```
+ssh-copy-id -i ~/.ssh/your_key.pub container_name.lxc
+```
+
 User specified in username in container_ops should have password-less
 sudo access for commands like `sudo apt-get install -y package` to work.
 
